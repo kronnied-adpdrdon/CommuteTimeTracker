@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+}
+
+.brand {
+  margin-bottom: 40px;
+}
+
+.brand h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.brand p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 400px;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.otpInfo {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.resendLink {
+  color: var(--accent-color);
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.resendLink:hover {
+  text-decoration: underline;
+}
