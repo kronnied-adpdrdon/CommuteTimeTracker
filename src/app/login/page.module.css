@@ -1,64 +1,102 @@
-.container {
+.loginContainer {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
+  padding: 40px 20px 20px;
+  min-height: 100vh;
+  background: var(--surface-color);
   text-align: center;
 }
 
-.brand {
-  margin-bottom: 40px;
+.backButton {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  padding: 8px;
+  margin-bottom: 24px;
+  cursor: pointer;
 }
 
-.brand h1 {
-  font-size: 2.5rem;
+.logoWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--primary-blue);
+}
+
+.title {
+  font-size: 1.8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   margin-bottom: 8px;
 }
 
-.brand p {
+.subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  margin-bottom: 40px;
+  line-height: 1.5;
 }
 
-.loginCard {
-  width: 100%;
-  max-width: 400px;
-}
-
-.formGroup {
-  margin-bottom: 24px;
-  text-align: left;
-}
-
-.formGroup label {
-  display: block;
+.inputLabel {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.phoneInputWrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.countryCode {
+  width: 80px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
   font-weight: 500;
 }
 
-.otpInfo {
-  margin-top: 16px;
-  font-size: 0.85rem;
+.phoneInput {
+  flex: 1;
+}
+
+.termsText {
+  margin-top: auto;
+  font-size: 0.8rem;
   color: var(--text-secondary);
+  line-height: 1.5;
+  padding-top: 40px;
 }
 
-.resendLink {
-  color: var(--accent-color);
-  background: none;
-  border: none;
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0;
-  margin-top: 12px;
+.otpInputWrapper {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 32px;
 }
 
-.resendLink:hover {
-  text-decoration: underline;
+.otpBox {
+  width: 44px;
+  height: 52px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+  outline: none;
+}
+.otpBox:focus {
+  border-color: var(--primary-blue);
+}
+
+.resendText {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
 }

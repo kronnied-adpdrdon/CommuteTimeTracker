@@ -4,95 +4,70 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
-export default function Login() {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [isLoading, setIsLoading] = useState(false);
+export default function LoginPage() {
   const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [phone, setPhone] = useState('');
 
-  const handleSendOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phoneNumber) return;
-    
-    setIsLoading(true);
-    // Mock API call to send OTP
-    setTimeout(() => {
-      setStep('otp');
-      setIsLoading(false);
-    }, 1000);
+  const handleSendOTP = () => {
+    if (phone.length >= 10) setStep(2);
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp) return;
-    
-    setIsLoading(true);
-    // Mock API call to verify OTP
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push('/');
-    }, 1000);
+  const handleVerify = () => {
+    router.push('/');
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.brand}>
-        <h1>TrackOT</h1>
-        <p>Simple & secure overtime tracking</p>
-      </div>
+    <div className={styles.loginContainer}>
+      {step === 2 && (
+        <button className={styles.backButton} onClick={() => setStep(1)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+      )}
 
-      <div className={`glass-panel ${styles.loginCard}`}>
-        {step === 'phone' ? (
-          <form onSubmit={handleSendOtp} className="animate-fade-in">
-            <div className={styles.formGroup}>
-              <label htmlFor="phone">Mobile Number</label>
-              <input
-                id="phone"
-                type="tel"
-                className="input-field"
-                placeholder="+1 (555) 000-0000"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn-primary" disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Send OTP'}
-            </button>
-            <p className={styles.otpInfo}>
-              We will send a one-time password to verify your number. No password required.
-            </p>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="animate-fade-in">
-            <div className={styles.formGroup}>
-              <label htmlFor="otp">Enter OTP</label>
-              <input
-                id="otp"
-                type="text"
-                className="input-field"
-                placeholder="000000"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-                maxLength={6}
-                style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.2rem' }}
-              />
-            </div>
-            <button type="submit" className="btn-primary" disabled={isLoading}>
-              {isLoading ? 'Verifying...' : 'Verify & Login'}
-            </button>
-            <button 
-              type="button" 
-              className={styles.resendLink}
-              onClick={() => setStep('phone')}
-            >
-              Change number or resend OTP
-            </button>
-          </form>
-        )}
+      <div className={styles.logoWrapper} style={{ marginTop: step === 1 ? '40px' : '0' }}>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
       </div>
+      
+      <h1 className={styles.title}>Track Commute</h1>
+      <p className={styles.subtitle}>Track your commute.<br/>Know your time and distance.</p>
+
+      {step === 1 ? (
+        <>
+          <p className={styles.inputLabel}>Enter your mobile number to continue</p>
+          
+          <div className={styles.phoneInputWrapper}>
+            <div className={styles.countryCode}>+91 <span style={{marginLeft: '4px', fontSize: '0.8rem'}}>▼</span></div>
+            <input 
+              type="tel" 
+              className={`input-field ${styles.phoneInput}`} 
+              placeholder="Enter mobile number" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+
+          <button className="btn-primary" onClick={handleSendOTP}>Send OTP</button>
+
+          <p className={styles.termsText}>
+            By continuing, you agree to our<br/>Terms of Use and Privacy Policy.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className={styles.inputLabel}>Enter the 6-digit OTP sent to<br/><strong style={{color: 'var(--text-primary)'}}>+91 {phone}</strong> <span style={{color: 'var(--primary-blue)', cursor: 'pointer'}}>✎</span></p>
+          
+          <div className={styles.otpInputWrapper}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <input key={i} type="text" maxLength={1} className={styles.otpBox} />
+            ))}
+          </div>
+
+          <p className={styles.resendText}>Resend OTP in 00:30</p>
+
+          <button className="btn-primary" onClick={handleVerify} style={{ opacity: 0.6 }}>Verify OTP</button>
+        </>
+      )}
     </div>
   );
 }

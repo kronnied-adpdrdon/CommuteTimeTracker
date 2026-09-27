@@ -1,23 +1,27 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from "next";
+import "./globals.css";
+import BottomNav from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: 'TrackOT - Overtime Tracker',
-  description: 'Track your daily working hours and overtime easily.',
-}
+  title: "Commute Time Tracker",
+  description: "Track your commute time and distance",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
       <body>
-        <main className="container animate-fade-in">
-          {children}
-        </main>
+        <div className="mobile-container">
+          <main className="content-area">
+            {children}
+          </main>
+          <BottomNav />
+        </div>
       </body>
     </html>
-  )
+  );
 }

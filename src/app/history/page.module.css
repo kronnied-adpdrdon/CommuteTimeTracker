@@ -1,136 +1,145 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .header {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
   gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .backBtn {
   background: none;
   border: none;
   color: var(--text-primary);
-  font-size: 1.5rem;
   cursor: pointer;
-  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
+  padding: 4px;
 }
 
-.backBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recordCard {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recordHeader {
+.summaryRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  padding-bottom: 12px;
-}
-
-.dateInfo {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.badge {
-  background: var(--surface-color-light);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
   font-weight: 500;
+}
+
+.summaryLabel {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.summaryDate {
   color: var(--text-secondary);
 }
 
-.badge.offDay {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.recordDetails {
+.tableHeader {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
 }
 
-.detailItem {
+.headerCell {
+  text-align: center;
+}
+.headerCell:first-child {
+  text-align: left;
+}
+.headerCell:last-child {
+  text-align: right;
+}
+
+.historyList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.cell {
+  text-align: center;
+  color: var(--text-primary);
+}
+.cell:first-child {
+  text-align: left;
+}
+.cell:last-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--warning-color);
+}
+
+.dateCell {
   display: flex;
   flex-direction: column;
 }
 
-.detailLabel {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.detailValue {
+.dateText {
   font-weight: 500;
 }
 
-.otValue {
-  color: var(--accent-color);
-  font-weight: 700;
+.dayText {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 
-.lockedSection {
-  margin-top: 32px;
-  text-align: center;
-  padding: 40px 24px;
-  background: linear-gradient(180deg, transparent, var(--surface-color-light));
-  border-radius: 16px;
+.proBanner {
+  background: var(--surface-color);
   border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 16px;
+  margin-bottom: 24px;
 }
 
-.lockedSection::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+.lockIcon {
+  color: var(--accent-color);
+  margin-bottom: 12px;
 }
 
-.lockedIcon {
-  font-size: 2.5rem;
-  margin-bottom: 16px;
-  display: inline-block;
-  background: rgba(255,255,255,0.1);
-  padding: 16px;
-  border-radius: 50%;
-}
-
-.lockedSection h3 {
-  font-size: 1.25rem;
+.proBanner h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
-.lockedSection p {
+.proBanner p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
   color: var(--text-secondary);
   font-size: 0.95rem;
-  margin-bottom: 24px;
-  line-height: 1.5;
 }
