@@ -50,9 +50,10 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Firebase project + Android app + `google-services.json` (see Firebase guide below)
 - [ ] Debug + release SHA-1/SHA-256 added to Firebase
 - [ ] Firebase test phone numbers configured for reviewers
-- [ ] Generate upload keystore (needs JDK from Android Studio); **back it up off-machine** — `signingConfigs.release` already added to `android/app/build.gradle`, reads `android/keystore.properties`
-- [ ] Host privacy policy at a public URL (must mention location, phone number, retention, deletion)
-- [ ] Host a public account-deletion URL
+- [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
+- [ ] Generate upload keystore (needs JDK from Android Studio); **back it up off-machine**; then create `android/keystore.properties`
+- [ ] Host privacy policy at a public URL (must mention location, phone number, retention, deletion) — **draft written** in `docs/privacy-policy.md`; you still need to fill the `[PLACEHOLDERS]` and host it (Firebase Hosting is free)
+- [ ] Host a public account-deletion URL — **draft written** in `docs/account-deletion.md`; same placeholders and hosting step
 
 **Exit:** Play account verified, phone auth works with a test number, privacy policy live.
 
