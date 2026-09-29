@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
 
 // Using inline SVGs to avoid extra dependencies and match the mockups perfectly.
 const HomeIcon = ({ active }: { active: boolean }) => (

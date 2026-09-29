@@ -30,15 +30,16 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Phase 0 — Make it buildable (Sep 28–29)
 
-- [ ] `git init` + first commit of the tree as-is
-- [ ] `npm install`
-- [ ] Read `node_modules/next/dist/docs/` (per `AGENTS.md`): `output: 'export'`, `trailingSlash`, `viewport` export
-- [ ] Delete Finder duplicates: `ExampleUnitTest 2.java`, `ExampleInstrumentedTest 2.java`, `config 2.xml`
-- [ ] Delete unused `src/app/history/page.module.css` and `src/app/pricing/page.module.css`
+- [x] `git init` + first commit of the tree as-is
+- [x] `npm install` (3 moderate audit warnings, not yet reviewed)
+- [x] Read `node_modules/next/dist/docs/` (per `AGENTS.md`): `output: 'export'`, `trailingSlash`, `viewport` export — default export writes `/login.html`; `trailingSlash: true` writes `/login/index.html`. Decide on device (see last item)
+- [x] Delete Finder duplicates: `ExampleUnitTest 2.java`, `ExampleInstrumentedTest 2.java`, `config 2.xml` (`cap sync` regenerated the real `config.xml`)
+- [x] Delete unused `src/app/history/page.module.css` and `src/app/pricing/page.module.css`
 - [x] Extend `.gitignore`: `google-services.json`, `*.keystore`, `*.jks`, `keystore.properties`, `local.properties`
-- [ ] `npm run build:android` produces `out/` and syncs
-- [ ] Install Android Studio; run the prototype on a physical phone
-- [ ] Confirm `BottomNav` active-tab check works in the static export (`/login/index.html` vs `/login`)
+- [x] `npm run build:android` produces `out/` and syncs (build + lint clean; `cap sync android` OK)
+- [x] Remove unused `ReactNode` import in `BottomNav.tsx` (only lint warning)
+- [ ] **Blocked on you:** install Android Studio (gives JDK + SDK); run the prototype on a physical phone
+- [ ] On device: check direct navigation to each route and `BottomNav` active tab; if broken, set `trailingSlash: true` in `next.config.ts` and compare against `pathname === tab.path`
 
 **Exit:** prototype runs on a real device.
 
