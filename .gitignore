@@ -42,3 +42,10 @@ next-env.d.ts
 
 # Android APKs
 *.apk
+
+# Android signing and Firebase secrets
+*.keystore
+*.jks
+keystore.properties
+local.properties
+google-services.json
