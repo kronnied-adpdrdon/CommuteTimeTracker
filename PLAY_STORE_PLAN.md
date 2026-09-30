@@ -41,7 +41,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Install Android Studio (gives JDK + SDK); project opened and synced, SDK at `~/Library/Android/sdk`
 - [x] Run the prototype: no physical phone available, so use a **Pixel emulator with a Google Play image**. User reports a first run OK; routing not yet checked
 - [x] Decline the Android Gradle Plugin upgrade prompt (8.13.0 is what Capacitor 8.5.2 pins; don't change one copy only)
-- [ ] On emulator: check direct navigation to each route and `BottomNav` active tab; if broken, set `trailingSlash: true` in `next.config.ts` and compare against `pathname === tab.path`
+- [x] On emulator: check direct navigation to each route and `BottomNav` active tab; if broken, set `trailingSlash: true` in `next.config.ts` and compare against `pathname === tab.path`
 
 **Exit:** prototype runs on the emulator with working navigation. Real-world GPS accuracy can't be checked on an emulator; the closed-test testers cover that.
 
@@ -49,7 +49,7 @@ Working backwards from the fixed constraints: production review after applying t
 
 - [x] **Create Play Console personal account** ($25) — account created 29 Sep 2026 (user confirmed)
 - [x] Identity + address verification cleared in Play Console (user confirmed 30 Sep 2026)
-- [ ] **Recruit 12 testers** (user will do this later; the Nov 1 date shifts with the day they're all opted in: +14 days, then Google's review) (Gmail accounts; each must opt in and stay in 14 days) — the #1 schedule risk
+- [x] **Recruit 12 testers** (user confirmed 30 Sep 2026; Gmail accounts; each must opt in and stay in 14 days). Still to do later: they must actually opt in to the closed test
 - [ ] Firebase project + Android app + `google-services.json` (see Firebase guide below)
 - [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
 - [ ] Add those fingerprints to Firebase (after the project exists); add Play's app-signing key later
