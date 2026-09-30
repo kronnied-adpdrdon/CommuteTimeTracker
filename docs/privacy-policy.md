@@ -8,7 +8,7 @@ Commute Time Tracker ("the app") is published by [YOUR LEGAL NAME] ("we"). Conta
 
 - **Phone number** — used to sign you in with a one-time password (OTP), and to identify your account.
 - **Precise location** — collected only while you have started a commute. Tracking begins when you tap Start and ends when you tap Stop. While tracking, the app shows a persistent notification and may keep collecting location with the screen off. We do not collect location in the background outside of a commute you started.
-- **Trip data** — start and end times, duration, distance and route points for each commute you record, and whether the trip was tagged as work or home.
+- **Trip data** — for each commute you record: start and end times, duration, distance, the start and end location, and whether the trip was tagged as work or home. The full route you travelled is used only to measure distance while the trip is running; it is not saved.
 - **Saved places** — the Home and Office locations you choose to set.
 - **Profile details** — name and email, only if you enter them.
 - **Purchase information** — which report packs or plan you bought and your remaining report credits. Payment card details are handled by Google Play; we never see them.

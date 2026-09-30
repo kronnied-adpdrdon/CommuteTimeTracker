@@ -73,7 +73,9 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Tune tracker thresholds (0.5 m/s stationary, 2x accuracy, 100 m spike leg) against real tester commutes
 - [ ] Decide on Google Fused Location Provider: the chosen plugin tracks with raw GPS (`LocationManager`), not Fused. Switching means a small custom native plugin; revisit once tracking works end to end
 - [x] `Trip` type (`src/lib/trips/types.ts`)
-- [ ] Local storage of trips; persist in-progress trip continuously for crash recovery
+- [x] Local storage of trips (`src/lib/trips/repository.ts`, Capacitor Preferences behind a `KeyValueStore` interface). Saves only start/end points, not the full route (less sensitive data; privacy docs updated)
+- [x] In-progress trip saved after every reading for crash recovery (`src/lib/trips/activeTrip.ts`): recovered trips end at the last reading; >6 h without readings = stale; same id so no duplicates; unreadable data is set aside, not overwritten
+- [ ] Crash-recovery prompt in the UI (resume / finish a recovered trip)
 - [ ] `page.tsx`: `isActive` defaults `false`; timer derived from persisted start timestamp; real distance
 - [ ] Real "This Week" totals and "Last 5 Days" bars — calculation done and tested (`stats.ts`: `weeklySummary`, `recentDays`); screen not wired to it yet
 - [ ] `history/page.tsx`: real data grouped by day + empty state
@@ -82,7 +84,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 48 tests)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 68 tests)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 
