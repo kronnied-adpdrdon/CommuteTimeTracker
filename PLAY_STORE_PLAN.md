@@ -38,20 +38,24 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Extend `.gitignore`: `google-services.json`, `*.keystore`, `*.jks`, `keystore.properties`, `local.properties`
 - [x] `npm run build:android` produces `out/` and syncs (build + lint clean; `cap sync android` OK)
 - [x] Remove unused `ReactNode` import in `BottomNav.tsx` (only lint warning)
-- [ ] **Blocked on you:** install Android Studio (gives JDK + SDK); run the prototype on a physical phone
-- [ ] On device: check direct navigation to each route and `BottomNav` active tab; if broken, set `trailingSlash: true` in `next.config.ts` and compare against `pathname === tab.path`
+- [x] Install Android Studio (gives JDK + SDK); project opened and synced, SDK at `~/Library/Android/sdk`
+- [x] Run the prototype: no physical phone available, so use a **Pixel emulator with a Google Play image**. User reports a first run OK; routing not yet checked
+- [x] Decline the Android Gradle Plugin upgrade prompt (8.13.0 is what Capacitor 8.5.2 pins; don't change one copy only)
+- [ ] On emulator: check direct navigation to each route and `BottomNav` active tab; if broken, set `trailingSlash: true` in `next.config.ts` and compare against `pathname === tab.path`
 
-**Exit:** prototype runs on a real device.
+**Exit:** prototype runs on the emulator with working navigation. Real-world GPS accuracy can't be checked on an emulator; the closed-test testers cover that.
 
 ## Phase 1 — Accounts and paperwork (start Sep 28, runs in parallel)
 
 - [ ] **Create Play Console personal account today** ($25); complete identity + address verification
 - [ ] **Recruit 12 testers now** (Gmail accounts; each must opt in and stay in 14 days) — the #1 schedule risk
 - [ ] Firebase project + Android app + `google-services.json` (see Firebase guide below)
-- [ ] Debug + release SHA-1/SHA-256 added to Firebase
+- [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
+- [ ] Add those fingerprints to Firebase (after the project exists); add Play's app-signing key later
 - [ ] Firebase test phone numbers configured for reviewers
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
-- [ ] Generate upload keystore (needs JDK from Android Studio); **back it up off-machine**; then create `android/keystore.properties`
+- [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
+- [ ] **Back up the keystore AND its password off this Mac** (e.g. password manager + cloud drive). Losing them means a support request to Google
 - [ ] Host privacy policy at a public URL (must mention location, phone number, retention, deletion) — **draft written** in `docs/privacy-policy.md`; you still need to fill the `[PLACEHOLDERS]` and host it (Firebase Hosting is free)
 - [ ] Host a public account-deletion URL — **draft written** in `docs/account-deletion.md`; same placeholders and hosting step
 

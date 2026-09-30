@@ -49,3 +49,6 @@ next-env.d.ts
 keystore.properties
 local.properties
 google-services.json
+
+# IDE
+.idea/
