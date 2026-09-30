@@ -68,22 +68,24 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Manifest: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`, `foregroundServiceType="location"`, plus `com.android.vending.BILLING`
 - [ ] **Do NOT add `ACCESS_BACKGROUND_LOCATION`**
 - [ ] Permission flow: rationale screen, handle denied / "only this time" / location off (`openSettings()`)
-- [ ] Haversine accumulation with accuracy filter and stationary-noise threshold
-- [ ] `Trip` model + local storage; persist in-progress trip continuously for crash recovery
+- [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`; 39 unit tests). **Ask Opus to review `tracker.ts`** — the highest-risk file
+- [x] `Trip` type (`src/lib/trips/types.ts`)
+- [ ] Local storage of trips; persist in-progress trip continuously for crash recovery
 - [ ] `page.tsx`: `isActive` defaults `false`; timer derived from persisted start timestamp; real distance
-- [ ] Real "This Week" totals and "Last 5 Days" bars
+- [ ] Real "This Week" totals and "Last 5 Days" bars — calculation done and tested (`stats.ts`: `weeklySummary`, `recentDays`); screen not wired to it yet
 - [ ] `history/page.tsx`: real data grouped by day + empty state
 - [ ] `profile/page.tsx`: editable fields, Home/Office location pickers
-- [ ] Work/home direction tagging from saved locations, with fallback
+- [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing when places are missing or contradictory). Not yet wired to the screens
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [ ] Vitest for Haversine, duration formatting, weekly aggregation, tagging
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 
 ## Phase 3 — Auth and sync (Oct 8–15, inside the test window)
 
+- [ ] Review `npm audit`: 4 high findings in production deps (`firebase` → Firestore → `grpc-js`). Check for a newer `firebase` release before relying on it; don't run `audit fix --force`
 - [ ] Wire `login/page.tsx` to `@capacitor-firebase/authentication` (today it only checks `phone.length >= 10`)
 - [ ] OTP boxes: controlled state, auto-advance, paste, autofill
 - [ ] Real resend cooldown and error messages

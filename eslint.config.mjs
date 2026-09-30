@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated Android copies of the web app (cap sync) and Gradle output.
+    "android/**",
   ]),
 ]);
 
