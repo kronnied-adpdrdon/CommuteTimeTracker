@@ -48,8 +48,8 @@ Working backwards from the fixed constraints: production review after applying t
 ## Phase 1 — Accounts and paperwork (start Sep 28, runs in parallel)
 
 - [x] **Create Play Console personal account** ($25) — account created 29 Sep 2026 (user confirmed)
-- [ ] Confirm identity + address verification has cleared in Play Console (nothing can be uploaded to a track until it does)
-- [ ] **Recruit 12 testers now** (Gmail accounts; each must opt in and stay in 14 days) — the #1 schedule risk
+- [x] Identity + address verification cleared in Play Console (user confirmed 30 Sep 2026)
+- [ ] **Recruit 12 testers** (user will do this later; the Nov 1 date shifts with the day they're all opted in: +14 days, then Google's review) (Gmail accounts; each must opt in and stay in 14 days) — the #1 schedule risk
 - [ ] Firebase project + Android app + `google-services.json` (see Firebase guide below)
 - [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
 - [ ] Add those fingerprints to Firebase (after the project exists); add Play's app-signing key later
