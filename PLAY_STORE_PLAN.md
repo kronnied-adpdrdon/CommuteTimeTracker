@@ -68,7 +68,10 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Manifest: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`, `foregroundServiceType="location"`, plus `com.android.vending.BILLING`
 - [ ] **Do NOT add `ACCESS_BACKGROUND_LOCATION`**
 - [ ] Permission flow: rationale screen, handle denied / "only this time" / location off (`openSettings()`)
-- [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`; 39 unit tests). **Ask Opus to review `tracker.ts`** — the highest-risk file
+- [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`)
+- [x] Opus review of `tracker.ts`: found 3 phantom-distance bugs (glitch after parking, signal-wait drift, bad first reading). Fixed with: speed check against the latest reading, confirm-before-trust warm-up, re-anchoring on agreeing readings, out-and-back spike removal, chip-speed stationary check, 2x-accuracy jitter threshold. 48 unit tests
+- [ ] Tune tracker thresholds (0.5 m/s stationary, 2x accuracy, 100 m spike leg) against real tester commutes
+- [ ] Decide on Google Fused Location Provider: the chosen plugin tracks with raw GPS (`LocationManager`), not Fused. Switching means a small custom native plugin; revisit once tracking works end to end
 - [x] `Trip` type (`src/lib/trips/types.ts`)
 - [ ] Local storage of trips; persist in-progress trip continuously for crash recovery
 - [ ] `page.tsx`: `isActive` defaults `false`; timer derived from persisted start timestamp; real distance
@@ -79,7 +82,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 48 tests)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 

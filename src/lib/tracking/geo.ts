@@ -3,9 +3,13 @@ export interface LatLng {
   lng: number;
 }
 
-/** A single GPS reading. `timestamp` is epoch milliseconds; `accuracy` is the error radius in metres. */
+/**
+ * A single GPS reading. `timestamp` is epoch milliseconds; `accuracy` is the error radius in metres;
+ * `speed` is the chip's own measured speed in m/s, when the device provides one.
+ */
 export interface LocationFix extends LatLng {
   accuracy?: number;
+  speed?: number | null;
   timestamp: number;
 }
 
