@@ -65,7 +65,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
 - [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
-- [ ] **Back up the keystore AND its password off this Mac** (e.g. password manager + cloud drive). Losing them means a support request to Google
+- [x] **Back up the keystore AND its password off this Mac**: keystore in Google Drive, password saved separately (user confirmed 1 Oct 2026)
 - [ ] Host privacy policy at a public URL — **draft rewritten for no accounts** in `docs/privacy-policy.md`; fill the `[PLACEHOLDERS]` and host it (GitHub Pages or Google Sites are free)
 - ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
 - ~~Account-deletion URL~~ — not required: the app has no accounts
