@@ -7,4 +7,5 @@
     <string name="capacitor_background_geolocation_notification_channel_name">Commute tracking</string>
     <string name="capacitor_background_geolocation_notification_icon">drawable/ic_stat_tracking</string>
     <string name="capacitor_background_geolocation_notification_color">#007AFF</string>
+    <string name="widget_description">This week\'s commute time, your last trip, and a Start button.</string>
 </resources>

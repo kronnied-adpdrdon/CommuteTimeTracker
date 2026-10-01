@@ -29,9 +29,11 @@ interface TripRowProps {
   children?: ReactNode;
   /** Inside a card that already has side padding. */
   inset?: boolean;
+  /** Buttons shown at the right end of the row, e.g. Edit and Delete. */
+  actions?: ReactNode;
 }
 
-export default function TripRow({ trip, showDay, divider, onClick, children, inset }: TripRowProps) {
+export default function TripRow({ trip, showDay, divider, onClick, children, inset, actions }: TripRowProps) {
   return (
     <div style={{ borderBottom: divider ? '1px solid var(--border-color)' : 'none' }}>
       <div
@@ -54,9 +56,10 @@ export default function TripRow({ trip, showDay, divider, onClick, children, ins
             {showDay ? `${formatDayLabel(trip.startedAt)} · ` : ''}{formatTimeRange(trip.startedAt, trip.endedAt)}
           </div>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-            {formatDuration(trip.durationSeconds)} <span style={{ color: '#D1D1D6', margin: '0 4px' }}>|</span> {formatDistanceKm(trip.distanceMeters)}
+            {formatDuration(trip.durationSeconds)} <span style={{ color: 'var(--divider-muted)', margin: '0 4px' }}>|</span> {formatDistanceKm(trip.distanceMeters)}
           </div>
         </div>
+        {actions && <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>{actions}</div>}
       </div>
       {children}
     </div>

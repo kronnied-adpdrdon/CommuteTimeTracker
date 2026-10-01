@@ -1,55 +1,223 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
+import styles from '../page.module.css';
+import ProFeatureList, { PRO_FEATURES } from '@/components/ProFeatureList';
+import TripRow from '@/components/TripRow';
+import { useCommute } from '@/lib/commute';
+import { buildReportPdf } from '@/lib/reports/reportPdf';
+import { shareFile } from '@/lib/reports/share';
+import {
+  PeriodPreset,
+  ReportPeriod,
+  customPeriod,
+  formatPeriod,
+  presetPeriod,
+  summarize,
+  toCsv,
+  toDayInput,
+  tripsInPeriod,
+} from '@/lib/reports/summary';
+import { formatDistanceKm, formatDuration } from '@/lib/trips/format';
+import { Trip } from '@/lib/trips/types';
+
+const PRESETS: { id: PeriodPreset; label: string }[] = [
+  { id: 'this-week', label: 'This Week' },
+  { id: 'last-week', label: 'Last Week' },
+  { id: 'this-month', label: 'This Month' },
+  { id: 'last-month', label: 'Last Month' },
+  { id: 'custom', label: 'Custom' },
+];
+
+const PREVIEW_TRIPS = 5;
+
+/** Builds the file and opens the share menu. Outside the component: it runs on a tap, not while rendering. */
+async function exportReport(kind: 'pdf' | 'csv', fileBase: string, periodLabel: string, trips: Trip[]) {
+  if (kind === 'pdf') {
+    const pdf = buildReportPdf({ periodLabel, generatedAt: Date.now(), summary: summarize(trips), trips });
+    await shareFile(`${fileBase}.pdf`, pdf, 'application/pdf');
+  } else {
+    await shareFile(`${fileBase}.csv`, toCsv(trips), 'text/csv');
+  }
+}
+
+function LockIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+  );
+}
+
+function Stats({ values }: { values: { label: string; value: string }[] }) {
+  return (
+    <div className={styles.statGrid}>
+      {values.map((v) => (
+        <div className={styles.stat} key={v.label}>
+          <div className={styles.statValue}>{v.value}</div>
+          <div className={styles.statLabel}>{v.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** What a Free user sees: what reports contain, a blurred sample, and the way to unlock. */
+function LockedReports() {
+  return (
+    <>
+      <div className={styles.card} style={{ borderColor: 'var(--pro-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--pro-color)' }}>
+          <LockIcon />
+          <span className={styles.proBadge}>PRO</span>
+        </div>
+        <div className={styles.cardTitle}>Commute reports</div>
+        <ProFeatureList features={PRO_FEATURES} color="var(--pro-color)" />
+        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <strong style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>₹49</strong> one-time · no subscription
+        </div>
+        <Link href="/pricing" className="btn-primary" style={{ textDecoration: 'none' }}>
+          Unlock with Pro
+        </Link>
+      </div>
+
+      <div className={styles.card} aria-hidden style={{ position: 'relative', overflow: 'hidden' }}>
+        <div style={{ filter: 'blur(5px)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className={styles.cardTitle}>28 Sep – 4 Oct 2026</div>
+          <Stats
+            values={[
+              { label: 'Trips', value: '10' },
+              { label: 'Total time', value: '7h 40m' },
+              { label: 'Distance', value: '124.6 km' },
+              { label: 'Avg per trip', value: '0h 46m' },
+            ]}
+          />
+        </div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className={styles.proBadge} style={{ fontSize: '0.85rem', padding: '6px 12px' }}>Sample report</span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ProReports() {
+  const { trips } = useCommute();
+  const [now] = useState(() => new Date());
+  const [preset, setPreset] = useState<PeriodPreset>('this-week');
+  const [customFrom, setCustomFrom] = useState(() => toDayInput(presetPeriod('this-month', now).from));
+  const [customTo, setCustomTo] = useState(() => toDayInput(now));
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const period: ReportPeriod | null = preset === 'custom' ? customPeriod(customFrom, customTo) : presetPeriod(preset, now);
+  const inPeriod = period ? tripsInPeriod(trips, period) : [];
+  const summary = summarize(inPeriod);
+  const label = period ? formatPeriod(period) : '';
+  const fileBase = period ? `commute-report-${toDayInput(period.from)}` : 'commute-report';
+
+  async function exportAs(kind: 'pdf' | 'csv') {
+    if (!period) return;
+    setExporting(kind);
+    setExportError(null);
+    try {
+      await exportReport(kind, fileBase, label, inPeriod);
+    } catch (error) {
+      setExportError(`Couldn't export the report: ${String((error as Error)?.message ?? error)}`);
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  const { work, home } = summary.byDirection;
+  const avg = (t: { count: number; totalSeconds: number }) => formatDuration(t.count ? t.totalSeconds / t.count : 0);
+
+  return (
+    <>
+      <div className={styles.chips} role="tablist">
+        {PRESETS.map((p) => (
+          <button
+            key={p.id}
+            role="tab"
+            aria-selected={preset === p.id}
+            className={`${styles.chip} ${preset === p.id ? styles.chipActive : ''}`}
+            onClick={() => setPreset(p.id)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {preset === 'custom' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <label className={styles.cardText}>
+            From
+            <input className="input-field" type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} style={{ marginTop: '4px', padding: '12px' }} />
+          </label>
+          <label className={styles.cardText}>
+            To
+            <input className="input-field" type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} style={{ marginTop: '4px', padding: '12px' }} />
+          </label>
+        </div>
+      )}
+
+      {!period ? (
+        <p className={styles.emptyState}>Pick a start and end date.</p>
+      ) : (
+        <>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>{label}</div>
+            <Stats
+              values={[
+                { label: 'Trips', value: String(summary.tripCount) },
+                { label: 'Total time', value: formatDuration(summary.totalSeconds) },
+                { label: 'Distance', value: formatDistanceKm(summary.totalMeters) },
+                { label: 'Avg per trip', value: formatDuration(summary.avgSecondsPerTrip) },
+              ]}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <span>To work: {work.count} · avg {avg(work)}</span>
+              <span>To home: {home.count} · avg {avg(home)}</span>
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Trips in this report</div>
+            {inPeriod.length === 0 && <p className={styles.cardText}>No trips in this period.</p>}
+            {inPeriod.slice(0, PREVIEW_TRIPS).map((t, i) => (
+              <TripRow key={t.id} trip={t} showDay inset divider={i < Math.min(inPeriod.length, PREVIEW_TRIPS) - 1} />
+            ))}
+            {inPeriod.length > PREVIEW_TRIPS && (
+              <p className={styles.cardText}>+ {inPeriod.length - PREVIEW_TRIPS} more in the exported report</p>
+            )}
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>Export</div>
+            <button className="btn-primary" disabled={exporting !== null} onClick={() => exportAs('pdf')}>
+              {exporting === 'pdf' ? 'Preparing PDF…' : 'Export PDF'}
+            </button>
+            <button className={styles.secondaryButton} style={{ marginTop: 0 }} disabled={exporting !== null} onClick={() => exportAs('csv')}>
+              {exporting === 'csv' ? 'Preparing CSV…' : 'Export CSV (spreadsheet)'}
+            </button>
+            <p className={styles.cardText}>Opens your phone&apos;s share menu: save to Files, email it, or send it on WhatsApp.</p>
+            {exportError && <p style={{ color: 'var(--danger-color)', fontSize: '0.85rem' }}>{exportError}</p>}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 export default function ReportsPage() {
+  const { isPro, phase } = useCommute();
   return (
     <>
       <header className="page-header">
         <h1 className="page-title">Reports</h1>
+        {isPro && <span className={styles.proBadge}>PRO</span>}
       </header>
-
-      <div style={{ padding: '0 16px' }}>
-        <div style={{ 
-          background: 'var(--surface-color)', 
-          borderRadius: '20px', 
-          border: '1px solid var(--border-color)', 
-          padding: '24px 20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-        }}>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{ color: 'var(--primary-blue)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
-            </div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Generate Commute Report</h2>
-          </div>
-          
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px', paddingLeft: '36px' }}>
-            Select a date range to create your report.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ position: 'relative' }}>
-              <svg style={{ position: 'absolute', left: '12px', top: '16px', color: 'var(--text-secondary)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <input className="input-field" type="text" placeholder="From Date" style={{ paddingLeft: '38px' }} />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <svg style={{ position: 'absolute', left: '12px', top: '16px', color: 'var(--text-secondary)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <input className="input-field" type="text" placeholder="To Date" style={{ paddingLeft: '38px' }} />
-            </div>
-          </div>
-
-          <button className="btn-primary" style={{ marginBottom: '20px' }}>
-            Generate Report
-          </button>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: 'var(--bg-color)', padding: '16px', borderRadius: '12px' }}>
-            <svg style={{ flexShrink: 0, color: 'var(--primary-blue)', marginTop: '2px' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              Each report will be deducted from your available report credits.
-            </p>
-          </div>
-
-        </div>
+      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {phase === 'loading' ? null : isPro ? <ProReports /> : <LockedReports />}
       </div>
     </>
   );

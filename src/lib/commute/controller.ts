@@ -18,6 +18,7 @@ import {
 import { SavedPlaces } from '../trips/direction';
 import { PlaceKind, endTimeFromClock, retagTrips, withEndTime, withPlace } from '../trips/edit';
 import { PlacesStore } from '../trips/places';
+import { ProStore } from './pro';
 import { TripRepository } from '../trips/repository';
 import { Trip } from '../trips/types';
 
@@ -50,6 +51,7 @@ export interface CommuteState {
   locating: PlaceKind | null;
   /** Tracking, but readings are too coarse to measure: location permission is probably "Approximate". */
   precisionWarning: boolean;
+  isPro: boolean;
 }
 
 export interface CommuteDeps {
@@ -57,6 +59,7 @@ export interface CommuteDeps {
   trips: TripRepository;
   activeTrip: ActiveTripStore;
   places: PlacesStore;
+  pro: ProStore;
   now?: () => number;
   onStorageError?: (error: unknown) => void;
 }
@@ -85,6 +88,7 @@ export interface CommuteController {
   /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
   setTripEndClock(id: string, clock: string): Promise<boolean>;
   deleteAllTrips(): Promise<void>;
+  setPro(isPro: boolean): Promise<void>;
 }
 
 export const INITIAL_COMMUTE_STATE: CommuteState = {
@@ -99,6 +103,7 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   placesPromptDismissed: false,
   locating: null,
   precisionWarning: false,
+  isPro: false,
 };
 
 export function createCommuteController(deps: CommuteDeps): CommuteController {
@@ -207,16 +212,17 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
 
     init() {
       initPromise ??= (async () => {
-        const [trips, active, places, placesPromptDismissed] = await Promise.all([
+        const [trips, active, places, placesPromptDismissed, isPro] = await Promise.all([
           deps.trips.list(),
           deps.activeTrip.load(),
           deps.places.load(),
           deps.places.isPromptDismissed(),
+          deps.pro.load(),
         ]);
         if (active) {
-          set({ phase: 'interrupted', trip: active, stale: isStale(active, now()), trips, places, placesPromptDismissed });
+          set({ phase: 'interrupted', trip: active, stale: isStale(active, now()), trips, places, placesPromptDismissed, isPro });
         } else {
-          set({ phase: 'idle', trips, places, placesPromptDismissed });
+          set({ phase: 'idle', trips, places, placesPromptDismissed, isPro });
         }
       })();
       return initPromise;
@@ -309,6 +315,11 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     async deleteAllTrips() {
       await deps.trips.clear();
       set({ trips: [] });
+    },
+
+    async setPro(isPro) {
+      await deps.pro.save(isPro);
+      set({ isPro });
     },
   };
 }

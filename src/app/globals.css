@@ -1,16 +1,65 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
+  color-scheme: light;
   --bg-color: #F8F9FA;
   --surface-color: #FFFFFF;
   --text-primary: #1A1D20;
   --text-secondary: #6B7280;
   --primary-blue: #007AFF;
   --primary-blue-light: #E5F1FF;
+  --primary-disabled: #A0C9FF;
+  --on-primary: #FFFFFF;
   --danger-color: #FF3B30;
+  --danger-light: #FFEBEA;
   --success-color: #34C759;
+  --pro-color: #F5A623;
+  --pro-light: #FFF4E0;
   --border-color: #E5E5EA;
-  --nav-height: 80px;
+  --divider-muted: #D1D1D6;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  --nav-height: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Dark palette: follows the phone unless the user picked Light or Dark in Settings. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg-color: #0F1115;
+    --surface-color: #1A1D23;
+    --text-primary: #F2F3F5;
+    --text-secondary: #9AA0A6;
+    --primary-blue: #0A84FF;
+    --primary-blue-light: #14273D;
+    --primary-disabled: #1F4E80;
+    --danger-color: #FF453A;
+    --danger-light: #3A1715;
+    --success-color: #30D158;
+    --pro-color: #FFB340;
+    --pro-light: #3A2A10;
+    --border-color: #2A2E35;
+    --divider-muted: #3A3F47;
+    --card-shadow: none;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-color: #0F1115;
+  --surface-color: #1A1D23;
+  --text-primary: #F2F3F5;
+  --text-secondary: #9AA0A6;
+  --primary-blue: #0A84FF;
+  --primary-blue-light: #14273D;
+  --primary-disabled: #1F4E80;
+  --danger-color: #FF453A;
+  --danger-light: #3A1715;
+  --success-color: #30D158;
+  --pro-color: #FFB340;
+  --pro-light: #3A2A10;
+  --border-color: #2A2E35;
+  --divider-muted: #3A3F47;
+  --card-shadow: none;
 }
 
 * {
@@ -23,7 +72,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -34,7 +83,9 @@ body {
   max-width: 480px;
   margin: 0 auto;
   background: var(--bg-color);
-  min-height: 100vh;
+  min-height: 100dvh;
+  /* The app draws edge-to-edge; keep content out from under the status bar. */
+  padding-top: env(safe-area-inset-top, 0px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -47,6 +98,18 @@ body {
   flex-direction: column;
 }
 
+/* Covers the status bar area so scrolled content doesn't show through behind it. */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg-color);
+  z-index: 60;
+}
+
 .page-header {
   padding: 16px 20px;
   display: flex;
@@ -54,7 +117,7 @@ body {
   align-items: center;
   background: var(--bg-color);
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 10;
 }
 
@@ -71,7 +134,7 @@ body {
 /* Primary Button */
 .btn-primary {
   background: var(--primary-blue);
-  color: white;
+  color: var(--on-primary);
   border: none;
   border-radius: 12px;
   padding: 16px;
@@ -90,7 +153,7 @@ body {
 }
 
 .btn-primary:disabled {
-  background: #A0C9FF;
+  background: var(--primary-disabled);
   cursor: not-allowed;
 }
 

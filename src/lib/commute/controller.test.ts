@@ -6,6 +6,7 @@ import { STALE_AFTER_MS, applyFix, createActiveTripStore, startTrip } from '../t
 import { createPlacesStore } from '../trips/places';
 import { createTripRepository } from '../trips/repository';
 import { createCommuteController } from './controller';
+import { createProStore } from './pro';
 
 const T0 = new Date(2026, 8, 30, 8, 0).getTime();
 
@@ -57,6 +58,7 @@ function setup(store = createMemoryStore()) {
     trips: createTripRepository(store),
     activeTrip: createActiveTripStore(store),
     places: createPlacesStore(store),
+    pro: createProStore(store),
     now: () => clock,
     onStorageError: (e) => {
       throw e;
@@ -360,5 +362,17 @@ describe('precision warning', () => {
     expect(controller.getState().precisionWarning).toBe(true);
     gps.emit({ ...at(0, T0 + 20_000), accuracy: 8 });
     expect(controller.getState().precisionWarning).toBe(false);
+  });
+});
+
+describe('Pro', () => {
+  it('starts as Free, and Pro survives a restart', async () => {
+    const { controller, store } = setup();
+    await controller.init();
+    expect(controller.getState().isPro).toBe(false);
+    await controller.setPro(true);
+    const restarted = setup(store).controller;
+    await restarted.init();
+    expect(restarted.getState().isPro).toBe(true);
   });
 });

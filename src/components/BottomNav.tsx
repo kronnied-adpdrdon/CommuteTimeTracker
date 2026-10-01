@@ -57,7 +57,8 @@ export default function BottomNav() {
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
-      paddingBottom: '20px', // Safe area for iOS
+      // Keep the tabs above Android's gesture bar / navigation buttons.
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       maxWidth: '480px',
       margin: '0 auto',
       zIndex: 50,

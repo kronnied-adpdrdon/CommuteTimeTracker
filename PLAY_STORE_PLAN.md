@@ -99,10 +99,14 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] **Edit and delete trips** in History (at minimum: delete, and change the end time)
 - [x] Settings: **Delete all trips**. Needed because trips older than 2 weeks are hidden from History, so users can't delete them one by one
 - [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing). Wired: uses saved places (`places.ts`) when a trip finishes; needs the setup screen above to have any places
-- [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
+- [x] Edge-to-edge: `viewport-fit=cover`, `env(safe-area-inset-*)` padding, `dvh`, status-bar backdrop, tab bar above the gesture bar (verified on Android 17 emulator)
+- [x] Dark mode: System / Light / Dark in Settings; status-bar icons follow (Capacitor 8 built-in `SystemBars`); widget has its own night colours
+- [x] History: Edit and Delete buttons visible on every entry
+- [x] Home: removed the header gear (Settings is a tab)
+- [x] **Home-screen widget** (native): this week's time and trip count, last trip, Start / Stop button with a live timer while tracking. Buttons open the app through an explicit intent only (no public deep link). Verified on the emulator
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 112 tests)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 128 tests)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 
@@ -113,7 +117,8 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Remove the `firebase` npm package — production dependencies now have 0 known vulnerabilities (3 moderate remain in the Capacitor CLI dev tool only)
 - [x] Remove the login screen (`src/app/login/`) and the `/login` check in `BottomNav.tsx`
 - [x] Profile tab becomes **Settings** (Home and Office, Your data / Delete all). Home screen gear icon now opens it
-- [ ] Settings: Pro status + Restore purchase (with Phase 5)
+- [x] Settings: Your Plan (Free / Pro), Appearance, Your Data
+- [ ] Settings: Restore purchase (with Phase 5 billing)
 - [x] **Android Auto Backup restores trips and places** after uninstall + reinstall (tested with the emulator's local backup store; backup was ~4.3 MB of the 25 MB limit). On real phones it goes through the Google account, about daily, if Google backup is on
 - [x] Update README: "Secure Local Storage" / privacy-first is accurate again
 
@@ -140,9 +145,11 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Payments profile + India tax details (GST/PAN) in Play Console
 - [ ] One in-app product: **Pro, ₹49, one-time (non-consumable)**
 - [ ] Billing: RevenueCat (validates purchases without our own server) vs. checking on the phone only (recommended at ₹49). **Open question.** RevenueCat would have to be named in the privacy policy
-- [ ] Wire the Pricing screen to one Pro card (replace the three tiers); Restore purchase; handle pending / cancelled / refunded
-- [ ] Link to Pricing from somewhere (currently unreachable)
-- [ ] Reports (Pro): real date pickers, PDF covering any range (including hidden older trips), native share sheet. Free users tapping Generate see the Pro offer
+- [x] Plans screen: Free (₹0) vs Pro (₹49 one-time) comparison, reached from Reports and Settings
+- [ ] Upgrade button → Google Play purchase; Restore purchase; handle pending / cancelled / refunded (today: demo builds unlock locally, release builds say purchases open at launch)
+- [x] Plans reachable from Reports (Unlock with Pro) and Settings (Your Plan)
+- [x] Reports (Pro): This Week / Last Week / This Month / Last Month / Custom; summary, work vs home split, trip preview; **PDF and CSV export** through Android's share menu (verified: exported PDF opened correctly). Free users see what Pro adds and a blurred sample
+- [x] PDF made by a small built-in writer (no PDF library); CSV opens in Excel / Sheets
 - [ ] Verify current India fee structure in Play Console before finalizing the price
 
 **Exit:** a licence-tester purchase unlocks Pro, survives a reinstall, and Restore works.
@@ -176,6 +183,7 @@ Working backwards from the fixed constraints: production review after applying t
 - Build: `npm run build:android`, `npm run lint`, release `bundleRelease`
 - Device: ≥2 physical phones; compare a known route against Google Maps; lock screen mid-trip; force-stop mid-trip
 - Backup: `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `bmgr backupnow com.commute.tracker`, uninstall, reinstall; trips come back. Switch the transport back afterwards
+- Demo builds: `npm run build:android:demo` adds a **Developer Preview** switch in Settings to flip Free / Pro. **Never upload a demo build**; release builds use `npm run build:android`
 - Emulator caution: it boots from a saved quick-boot snapshot. Launched with `-no-snapshot-save`, **everything done in that session is discarded on exit** (this is what "lost" the 30 Sep test trip; the app itself keeps data through force-stop and reboot)
 - Billing: licence-tester account for purchase, cancel, refund, restore on reinstall
 

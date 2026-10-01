@@ -35,6 +35,18 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
+        <!-- Home-screen widget. Not exported: only the system's widget host talks to it. -->
+        <receiver
+            android:name=".CommuteWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/commute_widget_info" />
+        </receiver>
+
         <!-- The location plugin also ships geofencing, which this app doesn't use.
              Drop its receivers so the app never wakes up on phone boot. -->
         <receiver

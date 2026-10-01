@@ -1,11 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import styles from '../page.module.css';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { PlaceKind } from '@/lib/trips/edit';
+import { DEV_TOOLS } from '@/lib/devtools';
+import { ThemePreference, useTheme } from '@/lib/theme';
 import { recentTrips } from '@/lib/trips/stats';
+
+const THEMES: { id: ThemePreference; label: string }[] = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
 
 const PLACE_LABELS: Record<PlaceKind, string> = { home: 'Home', office: 'Office' };
 
@@ -58,6 +67,7 @@ function PlaceRow({ kind }: { kind: PlaceKind }) {
 export default function SettingsPage() {
   const state = useCommute();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [theme, setTheme] = useTheme();
   const tripCount = state.trips.length;
 
   return (
@@ -79,6 +89,40 @@ export default function SettingsPage() {
           </div>
         )}
 
+        <div className={styles.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className={styles.cardTitle}>Your Plan</div>
+            {state.isPro ? <span className={styles.proBadge}>PRO</span> : <span className={styles.cardText}>Free</span>}
+          </div>
+          <p className={styles.cardText}>
+            {state.isPro
+              ? 'Reports and exports are unlocked. Thanks for supporting the app.'
+              : 'Unlock reports for any date range, with PDF and CSV export. ₹49, one-time.'}
+          </p>
+          {!state.isPro && (
+            <Link href="/pricing" className={styles.linkButton} style={{ textDecoration: 'none' }}>
+              See what Pro includes
+            </Link>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardTitle}>Appearance</div>
+          <div className={styles.segmented} role="radiogroup" aria-label="Appearance">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                role="radio"
+                aria-checked={theme === t.id}
+                className={`${styles.segment} ${theme === t.id ? styles.segmentActive : ''}`}
+                onClick={() => setTheme(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div style={card}>
           <div style={{ fontSize: '1rem', fontWeight: 700 }}>Home and Office</div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
@@ -90,7 +134,7 @@ export default function SettingsPage() {
         </div>
 
         <div style={card}>
-          <div style={{ fontSize: '1rem', fontWeight: 700 }}>Your data</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700 }}>Your Data</div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
             {tripCount === 1 ? '1 trip is' : `${tripCount} trips are`} stored on this phone, including any older than the 2 weeks shown in History.
           </p>
@@ -118,6 +162,26 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+
+        {DEV_TOOLS && (
+          <div className={styles.card} style={{ borderStyle: 'dashed' }}>
+            <div className={styles.cardTitle}>Developer Preview</div>
+            <p className={styles.cardText}>Demo builds only. Switches between the Free and Pro screens without a purchase.</p>
+            <div className={styles.segmented} role="radiogroup" aria-label="Plan preview">
+              {[false, true].map((pro) => (
+                <button
+                  key={String(pro)}
+                  role="radio"
+                  aria-checked={state.isPro === pro}
+                  className={`${styles.segment} ${state.isPro === pro ? styles.segmentActive : ''}`}
+                  onClick={() => commute.setPro(pro)}
+                >
+                  {pro ? 'Pro' : 'Free'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
