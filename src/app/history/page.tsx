@@ -1,31 +1,92 @@
 'use client';
 
+import { useState } from 'react';
 import styles from '../page.module.css';
-import { useCommute } from '@/lib/commute';
-import { formatDayLabel, formatDistanceKm, formatDuration, formatTimeRange } from '@/lib/trips/format';
-import { groupByDay } from '@/lib/trips/stats';
-import { TripDirection } from '@/lib/trips/types';
+import TripRow from '@/components/TripRow';
+import { commute, useCommute } from '@/lib/commute';
+import { formatDayLabel, formatTimeOfDay } from '@/lib/trips/format';
+import { groupByDay, tripsSince, windowStart } from '@/lib/trips/stats';
+import { Trip } from '@/lib/trips/types';
 
-/** As in the design: a trip to work shows the home icon (where it started), a trip home shows the office icon. */
-function DirectionIcon({ direction }: { direction: TripDirection }) {
-  if (direction === 'home') {
+/** History shows this many calendar days, including today. Older trips stay stored for reports. */
+const HISTORY_DAYS = 14;
+
+function TripActions({ trip, onDone }: { trip: Trip; onDone: () => void }) {
+  const [mode, setMode] = useState<'menu' | 'edit' | 'delete'>('menu');
+  const [endClock, setEndClock] = useState(() => formatTimeOfDay(trip.endedAt));
+  const [invalid, setInvalid] = useState(false);
+
+  const panel = { padding: '0 16px 16px', display: 'flex', flexDirection: 'column' as const, gap: '8px' };
+
+  if (mode === 'edit') {
     return (
-      <svg aria-label="Trip home" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      <div style={panel}>
+        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          Arrived at (distance stays as recorded)
+          <input
+            className="input-field"
+            type="time"
+            value={endClock}
+            onChange={(e) => {
+              setEndClock(e.target.value);
+              setInvalid(false);
+            }}
+            style={{ marginTop: '6px', padding: '12px' }}
+          />
+        </label>
+        {invalid && (
+          <span style={{ color: 'var(--danger-color)', fontSize: '0.85rem' }}>
+            That time doesn&apos;t work: it must be after the trip started ({formatTimeOfDay(trip.startedAt)}) and within 24 hours.
+          </span>
+        )}
+        <div className={styles.bannerActions}>
+          <button
+            className={styles.linkButton}
+            onClick={async () => {
+              if (await commute.setTripEndClock(trip.id, endClock)) onDone();
+              else setInvalid(true);
+            }}
+          >
+            Save
+          </button>
+          <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={onDone}>Cancel</button>
+        </div>
+      </div>
     );
   }
-  if (direction === 'work') {
+
+  if (mode === 'delete') {
     return (
-      <svg aria-label="Trip to work" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+      <div style={panel}>
+        <span style={{ fontSize: '0.9rem' }}>Delete this trip? This can&apos;t be undone.</span>
+        <div className={styles.bannerActions}>
+          <button className={styles.linkButton} style={{ color: 'var(--danger-color)' }} onClick={() => commute.deleteTrip(trip.id)}>
+            Delete
+          </button>
+          <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={onDone}>Cancel</button>
+        </div>
+      </div>
     );
   }
+
   return (
-    <svg aria-label="Trip" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    <div style={panel}>
+      <div className={styles.bannerActions}>
+        <button className={styles.linkButton} onClick={() => setMode('edit')}>Change end time</button>
+        <button className={styles.linkButton} style={{ color: 'var(--danger-color)' }} onClick={() => setMode('delete')}>Delete</button>
+      </div>
+    </div>
   );
 }
 
 export default function HistoryPage() {
   const { trips, phase } = useCommute();
-  const days = groupByDay(trips);
+  const [now] = useState(() => Date.now());
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const visible = tripsSince(trips, windowStart(new Date(now), HISTORY_DAYS));
+  const hiddenCount = trips.length - visible.length;
+  const days = groupByDay(visible);
 
   return (
     <>
@@ -35,7 +96,11 @@ export default function HistoryPage() {
 
       <div className={styles.homeContainer}>
         {phase !== 'loading' && days.length === 0 && (
-          <p className={styles.emptyState}>Your trips will appear here once you track your first commute.</p>
+          <p className={styles.emptyState}>
+            {trips.length > 0
+              ? 'No trips in the last 2 weeks.'
+              : 'Your trips will appear here once you track your first commute.'}
+          </p>
         )}
 
         {days.map((day) => (
@@ -46,34 +111,26 @@ export default function HistoryPage() {
 
             <div style={{ background: 'var(--surface-color)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
               {day.trips.map((trip, j) => (
-                <div key={trip.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '16px',
-                  borderBottom: j < day.trips.length - 1 ? '1px solid var(--border-color)' : 'none'
-                }}>
-                  <div style={{
-                    width: '40px', height: '40px',
-                    borderRadius: '50%',
-                    background: 'var(--primary-blue-light)',
-                    color: 'var(--primary-blue)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    marginRight: '16px'
-                  }}>
-                    <DirectionIcon direction={trip.direction} />
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '2px' }}>{formatTimeRange(trip.startedAt, trip.endedAt)}</div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      {formatDuration(trip.durationSeconds)} <span style={{ color: '#D1D1D6', margin: '0 4px' }}>|</span> {formatDistanceKm(trip.distanceMeters)}
-                    </div>
-                  </div>
-                </div>
+                <TripRow
+                  key={trip.id}
+                  trip={trip}
+                  divider={j < day.trips.length - 1}
+                  onClick={() => setOpenId(openId === trip.id ? null : trip.id)}
+                >
+                  {openId === trip.id && <TripActions trip={trip} onDone={() => setOpenId(null)} />}
+                </TripRow>
               ))}
             </div>
           </div>
         ))}
+
+        {phase !== 'loading' && trips.length > 0 && (
+          <p className={styles.hint}>
+            Showing the last 2 weeks. Tap a trip to edit or delete it.
+            {hiddenCount > 0 &&
+              ` ${hiddenCount === 1 ? '1 older trip is' : `${hiddenCount} older trips are`} kept on your phone for reports.`}
+          </p>
+        )}
       </div>
     </>
   );

@@ -62,4 +62,18 @@ describe('TripRepository', () => {
     expect(store.dump()[`${TRIPS_KEY}.corrupt.42`]).toBe('{not json');
     expect(await repo.list()).toHaveLength(1);
   });
+
+  it('clear removes every trip', async () => {
+    const repo = createTripRepository(createMemoryStore());
+    await repo.save(trip('a', 100));
+    await repo.clear();
+    expect(await repo.list()).toEqual([]);
+  });
+
+  it('replaceAll swaps in a new list', async () => {
+    const repo = createTripRepository(createMemoryStore());
+    await repo.save(trip('a', 100));
+    await repo.replaceAll([trip('b', 200), trip('c', 300)]);
+    expect((await repo.list()).map((t) => t.id)).toEqual(['c', 'b']);
+  });
 });

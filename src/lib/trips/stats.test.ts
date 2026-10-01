@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayKey, groupByDay, recentDays, startOfWeek, weeklySummary } from './stats';
+import { dayKey, groupByDay, recentDays, recentTrips, startOfWeek, tripsSince, weeklySummary, windowStart } from './stats';
 import { Trip } from './types';
 
 let nextId = 0;
@@ -82,5 +82,31 @@ describe('recentDays', () => {
   it('returns the latest N days that have trips', () => {
     const trips = [trip(2026, 8, 20, 8, 30), trip(2026, 8, 24, 8, 30), trip(...MON, 8, 30)];
     expect(recentDays(trips, 2).map((d) => d.dayKey)).toEqual(['2026-09-28', '2026-09-24']);
+  });
+});
+
+describe('two-week history window', () => {
+  const now = new Date(2026, 9, 1, 20, 0); // Thu 1 Oct, evening
+  it('starts at midnight 13 days ago, so it covers 14 calendar days including today', () => {
+    expect(dayKey(windowStart(now, 14).getTime())).toBe('2026-09-18');
+    expect(windowStart(now, 14).getHours()).toBe(0);
+  });
+  it('keeps trips inside the window and drops older ones', () => {
+    const trips = [trip(2026, 8, 17, 23, 30), trip(2026, 8, 18, 0, 30), trip(2026, 9, 1, 8, 30)];
+    expect(tripsSince(trips, windowStart(now, 14)).map((t) => dayKey(t.startedAt))).toEqual([
+      '2026-09-18',
+      '2026-10-01',
+    ]);
+  });
+});
+
+describe('recentTrips', () => {
+  it('returns the newest trips first, whatever order they are stored in', () => {
+    const trips = [trip(2026, 8, 20, 8, 30), trip(2026, 8, 28, 18, 30), trip(2026, 8, 28, 8, 30), trip(2026, 8, 24, 8, 30)];
+    expect(recentTrips(trips, 3).map((t) => t.startedAt)).toEqual([
+      new Date(2026, 8, 28, 18).getTime(),
+      new Date(2026, 8, 28, 8).getTime(),
+      new Date(2026, 8, 24, 8).getTime(),
+    ]);
   });
 });

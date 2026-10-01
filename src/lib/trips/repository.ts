@@ -14,6 +14,9 @@ export interface TripRepository {
   /** Adds a trip, or replaces the saved trip with the same id. */
   save(trip: Trip): Promise<void>;
   remove(id: string): Promise<void>;
+  /** Replaces every saved trip, e.g. after re-tagging them all. */
+  replaceAll(trips: Trip[]): Promise<void>;
+  clear(): Promise<void>;
 }
 
 export function createTripRepository(store: KeyValueStore, now: () => number = Date.now): TripRepository {
@@ -47,5 +50,7 @@ export function createTripRepository(store: KeyValueStore, now: () => number = D
         const remaining = trips.filter((t) => t.id !== id);
         if (remaining.length !== trips.length) await write(remaining);
       }),
+    replaceAll: (trips) => enqueue(() => write(trips)),
+    clear: () => enqueue(() => store.remove(TRIPS_KEY)),
   };
 }

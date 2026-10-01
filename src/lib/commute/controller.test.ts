@@ -33,12 +33,19 @@ function fakeLocation() {
       source.running = false;
     },
     async openSettings() {},
+    async currentFix() {
+      if (nextCurrentFix instanceof Error || (nextCurrentFix && 'kind' in nextCurrentFix)) throw nextCurrentFix;
+      return nextCurrentFix ?? at(0, Date.now());
+    },
   };
+  let nextCurrentFix: LocationFix | LocationError | null = null;
   return {
     source,
     /** Sends readings using the handlers from the latest start, like a real late callback would. */
     emit: (fix: LocationFix) => onFix?.(fix),
     fail: (error: LocationError) => onError?.(error),
+    /** What the next one-off reading (Set Home here) returns or throws. */
+    setCurrentFix: (value: LocationFix | LocationError) => (nextCurrentFix = value),
   };
 }
 
@@ -234,5 +241,124 @@ describe('toLocationError', () => {
   });
   it('anything else is unknown', () => {
     expect(toLocationError(new Error('boom')).kind).toBe('unknown');
+  });
+});
+
+describe('places', () => {
+  const home = { lat: 12.9, lng: 77.6 };
+  const officeNorth = 5000;
+
+  it('setting Home and Office re-tags trips already recorded', async () => {
+    const { controller, drive } = setup();
+    await controller.init();
+    await controller.start();
+    drive(0, officeNorth);
+    await controller.stop();
+    expect(controller.getState().trips[0].direction).toBe('unknown');
+
+    await controller.setPlace('home', home);
+    await controller.setPlace('office', { lat: 12.9 + officeNorth / 111_195, lng: 77.6 });
+    expect(controller.getState().trips[0].direction).toBe('work');
+  });
+
+  it('Set Home here saves the current location, survives a restart, and closes the prompt', async () => {
+    const { controller, gps, store } = setup();
+    gps.setCurrentFix({ ...at(0, T0), accuracy: 6 });
+    await controller.init();
+    await controller.setPlaceHere('home');
+    expect(controller.getState().places.home).toEqual(home);
+
+    const restarted = setup(store).controller;
+    await restarted.init();
+    expect(restarted.getState().places.home).toEqual(home);
+  });
+
+  it('a failed one-off reading shows the error and saves nothing', async () => {
+    const { controller, gps } = setup();
+    gps.setCurrentFix({ kind: 'approximate', message: 'Location is set to Approximate.' });
+    await controller.init();
+    await controller.setPlaceHere('office');
+    expect(controller.getState().error?.kind).toBe('approximate');
+    expect(controller.getState().places.office).toBeUndefined();
+    expect(controller.getState().locating).toBeNull();
+  });
+
+  it('while tracking, Set Home here uses the trip\'s latest reading', async () => {
+    const { controller, gps, drive } = setup();
+    await controller.init();
+    await controller.start();
+    drive(0, 500);
+    await controller.setPlaceHere('office');
+    expect(controller.getState().places.office!.lat).toBeCloseTo(12.9 + 500 / 111_195, 6);
+    expect(gps.source.starts).toBe(1);
+  });
+
+  it('clearing a place removes it', async () => {
+    const { controller } = setup();
+    await controller.init();
+    await controller.setPlace('home', home);
+    await controller.setPlace('home', null);
+    expect(controller.getState().places).toEqual({});
+  });
+
+  it('Later hides the first-launch prompt for good', async () => {
+    const { controller, store } = setup();
+    await controller.init();
+    await controller.dismissPlacesPrompt();
+    const restarted = setup(store).controller;
+    await restarted.init();
+    expect(restarted.getState().placesPromptDismissed).toBe(true);
+  });
+});
+
+describe('editing trips', () => {
+  async function withOneTrip() {
+    const ctx = setup();
+    await ctx.controller.init();
+    await ctx.controller.start();
+    ctx.drive(0, 3000);
+    await ctx.controller.stop();
+    return ctx;
+  }
+
+  it('changing the end time recalculates duration and keeps distance', async () => {
+    const { controller } = await withOneTrip();
+    const trip = controller.getState().trips[0];
+    expect(await controller.setTripEndClock(trip.id, '08:03')).toBe(true);
+    const edited = controller.getState().trips[0];
+    expect(edited.durationSeconds).toBe(180);
+    expect(edited.distanceMeters).toBe(trip.distanceMeters);
+  });
+
+  it('a nonsense end time is refused and nothing changes', async () => {
+    const { controller } = await withOneTrip();
+    const trip = controller.getState().trips[0];
+    expect(await controller.setTripEndClock(trip.id, '99:99')).toBe(false);
+    expect(controller.getState().trips[0]).toEqual(trip);
+  });
+
+  it('deletes one trip, or all of them', async () => {
+    const { controller } = await withOneTrip();
+    await controller.deleteTrip(controller.getState().trips[0].id);
+    expect(controller.getState().trips).toHaveLength(0);
+  });
+
+  it('delete all removes every trip', async () => {
+    const { controller, store } = await withOneTrip();
+    await controller.deleteAllTrips();
+    expect(controller.getState().trips).toHaveLength(0);
+    expect(await createTripRepository(store).list()).toHaveLength(0);
+  });
+});
+
+describe('precision warning', () => {
+  it('warns after a few Approximate-level readings and clears once readings are precise', async () => {
+    const { controller, gps } = setup();
+    await controller.init();
+    await controller.start();
+    for (let i = 0; i < 3; i++) gps.emit({ ...at(0, T0 + i * 5000), accuracy: 2000 });
+    expect(controller.getState().precisionWarning).toBe(true);
+    gps.emit({ ...at(0, T0 + 20_000), accuracy: 8 });
+    expect(controller.getState().precisionWarning).toBe(false);
   });
 });

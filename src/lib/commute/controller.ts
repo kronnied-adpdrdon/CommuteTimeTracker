@@ -1,5 +1,11 @@
-import { LocationError, LocationSource } from '../tracking/locationSource';
-import { LocationFix } from '../tracking/geo';
+import {
+  APPROXIMATE_ACCURACY_METERS,
+  LocationError,
+  LocationSource,
+  PLACE_ACCURACY_METERS,
+  toLocationError,
+} from '../tracking/locationSource';
+import { LatLng, LocationFix } from '../tracking/geo';
 import {
   ActiveTrip,
   ActiveTripStore,
@@ -9,6 +15,8 @@ import {
   recoveryEndTime,
   startTrip,
 } from '../trips/activeTrip';
+import { SavedPlaces } from '../trips/direction';
+import { PlaceKind, endTimeFromClock, retagTrips, withEndTime, withPlace } from '../trips/edit';
 import { PlacesStore } from '../trips/places';
 import { TripRepository } from '../trips/repository';
 import { Trip } from '../trips/types';
@@ -16,6 +24,9 @@ import { Trip } from '../trips/types';
 /** A trip shorter than this AND under `MIN_TRIP_METERS` is treated as an accidental tap and not saved. */
 export const MIN_TRIP_SECONDS = 60;
 export const MIN_TRIP_METERS = 100;
+
+/** This many readings in a row coarser than Approximate-level accuracy shows the "allow Precise location" warning. */
+export const COARSE_READINGS_FOR_WARNING = 3;
 
 export type CommutePhase = 'loading' | 'idle' | 'tracking' | 'interrupted';
 
@@ -32,6 +43,13 @@ export interface CommuteState {
   notice: string | null;
   /** True while a start/stop/finish is in progress, so buttons can't be pressed twice. */
   busy: boolean;
+  places: SavedPlaces;
+  /** The user tapped "Later" on the first-launch Home/Office card. */
+  placesPromptDismissed: boolean;
+  /** Which place is being set from the current location, if any. */
+  locating: PlaceKind | null;
+  /** Tracking, but readings are too coarse to measure: location permission is probably "Approximate". */
+  precisionWarning: boolean;
 }
 
 export interface CommuteDeps {
@@ -58,6 +76,15 @@ export interface CommuteController {
   discardInterrupted(): Promise<void>;
   openSettings(): Promise<void>;
   dismissMessages(): void;
+  /** Saves Home or Office from the current location (or the running trip's latest reading). */
+  setPlaceHere(kind: PlaceKind): Promise<void>;
+  /** Saves Home or Office at a given point, or clears it with `null`. Re-tags every saved trip. */
+  setPlace(kind: PlaceKind, where: LatLng | null): Promise<void>;
+  dismissPlacesPrompt(): Promise<void>;
+  deleteTrip(id: string): Promise<void>;
+  /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
+  setTripEndClock(id: string, clock: string): Promise<boolean>;
+  deleteAllTrips(): Promise<void>;
 }
 
 export const INITIAL_COMMUTE_STATE: CommuteState = {
@@ -68,6 +95,10 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   error: null,
   notice: null,
   busy: false,
+  places: {},
+  placesPromptDismissed: false,
+  locating: null,
+  precisionWarning: false,
 };
 
 export function createCommuteController(deps: CommuteDeps): CommuteController {
@@ -78,6 +109,7 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
   let initPromise: Promise<void> | null = null;
   // Bumped whenever a tracking session ends, so late readings or errors from an old session are ignored.
   let session = 0;
+  let coarseReadings = 0;
 
   const set = (patch: Partial<CommuteState>) => {
     state = { ...state, ...patch };
@@ -97,12 +129,14 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
 
   async function beginSession(trip: ActiveTrip) {
     const mine = ++session;
-    set({ phase: 'tracking', trip, stale: false, error: null, notice: null });
+    coarseReadings = 0;
+    set({ phase: 'tracking', trip, stale: false, error: null, notice: null, precisionWarning: false });
 
     const onFix = (fix: LocationFix) => {
       if (mine !== session || state.phase !== 'tracking' || !state.trip) return;
+      coarseReadings = (fix.accuracy ?? 0) > APPROXIMATE_ACCURACY_METERS ? coarseReadings + 1 : 0;
       const updated = applyFix(state.trip, fix);
-      set({ trip: updated });
+      set({ trip: updated, precisionWarning: coarseReadings >= COARSE_READINGS_FOR_WARNING });
       deps.activeTrip.save(updated).catch(reportStorageError);
     };
 
@@ -112,11 +146,11 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       const current = state.trip;
       if (current && current.lastReadingAt !== undefined) {
         // Some of the trip was recorded: keep it so it can be resumed or finished.
-        set({ phase: 'interrupted', trip: current, stale: false, error });
+        set({ phase: 'interrupted', trip: current, stale: false, error, precisionWarning: false });
       } else {
         // Nothing recorded (typically a refused permission): drop the empty trip.
         deps.activeTrip.clear().catch(reportStorageError);
-        set({ phase: 'idle', trip: null, error });
+        set({ phase: 'idle', trip: null, error, precisionWarning: false });
       }
     };
 
@@ -138,10 +172,22 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       phase: 'idle',
       trip: null,
       stale: false,
+      precisionWarning: false,
       trips: await deps.trips.list(),
       notice: accidental ? 'That trip was under a minute, so it was not saved.' : null,
     });
   }
+
+  async function savePlace(kind: PlaceKind, where: LatLng | null) {
+    const places = withPlace(state.places, kind, where);
+    await deps.places.save(places);
+    const retagged = retagTrips(await deps.trips.list(), places);
+    await deps.trips.replaceAll(retagged);
+    set({ places, trips: await deps.trips.list() });
+  }
+
+  const asLocationError = (error: unknown): LocationError =>
+    error && typeof error === 'object' && 'kind' in error ? (error as LocationError) : toLocationError(error);
 
   async function guarded(task: () => Promise<void>) {
     set({ busy: true });
@@ -161,18 +207,23 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
 
     init() {
       initPromise ??= (async () => {
-        const [trips, active] = await Promise.all([deps.trips.list(), deps.activeTrip.load()]);
+        const [trips, active, places, placesPromptDismissed] = await Promise.all([
+          deps.trips.list(),
+          deps.activeTrip.load(),
+          deps.places.load(),
+          deps.places.isPromptDismissed(),
+        ]);
         if (active) {
-          set({ phase: 'interrupted', trip: active, stale: isStale(active, now()), trips });
+          set({ phase: 'interrupted', trip: active, stale: isStale(active, now()), trips, places, placesPromptDismissed });
         } else {
-          set({ phase: 'idle', trips });
+          set({ phase: 'idle', trips, places, placesPromptDismissed });
         }
       })();
       return initPromise;
     },
 
     start: () =>
-      state.phase !== 'idle' || state.busy
+      state.phase !== 'idle' || state.busy || state.locating
         ? Promise.resolve()
         : guarded(async () => {
             const trip = startTrip(now());
@@ -210,5 +261,54 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     openSettings: () => deps.location.openSettings(),
 
     dismissMessages: () => set({ error: null, notice: null }),
+
+    async setPlaceHere(kind) {
+      if (state.locating || state.busy || state.phase === 'loading') return;
+      if (state.phase === 'tracking') {
+        // The plugin can't run twice, so use the running trip's latest reading.
+        const latest = state.trip?.tracker.last;
+        if (!latest || (latest.accuracy ?? 0) > PLACE_ACCURACY_METERS) {
+          set({ error: { kind: 'timeout', message: 'No accurate location yet.' } });
+          return;
+        }
+        await savePlace(kind, latest);
+        return;
+      }
+      set({ locating: kind, error: null });
+      try {
+        await savePlace(kind, await deps.location.currentFix());
+      } catch (error) {
+        set({ error: asLocationError(error) });
+      } finally {
+        set({ locating: null });
+      }
+    },
+
+    setPlace: (kind, where) => savePlace(kind, where),
+
+    async dismissPlacesPrompt() {
+      set({ placesPromptDismissed: true });
+      await deps.places.dismissPrompt();
+    },
+
+    async deleteTrip(id) {
+      await deps.trips.remove(id);
+      set({ trips: await deps.trips.list() });
+    },
+
+    async setTripEndClock(id, clock) {
+      const trip = state.trips.find((t) => t.id === id);
+      const endedAt = trip ? endTimeFromClock(trip.startedAt, clock) : null;
+      const updated = trip && endedAt !== null ? withEndTime(trip, endedAt) : null;
+      if (!updated) return false;
+      await deps.trips.save(updated);
+      set({ trips: await deps.trips.list() });
+      return true;
+    },
+
+    async deleteAllTrips() {
+      await deps.trips.clear();
+      set({ trips: [] });
+    },
   };
 }

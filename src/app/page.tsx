@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
-import { LocationError } from '@/lib/tracking/locationSource';
+import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { totalDistanceMeters } from '@/lib/tracking/tracker';
-import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
-import { recentDays, weeklySummary } from '@/lib/trips/stats';
+import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
+import { recentTrips, weeklySummary } from '@/lib/trips/stats';
 
 /** The current time, refreshed every second while `ticking`. */
 function useNow(ticking: boolean): number {
@@ -18,19 +19,6 @@ function useNow(ticking: boolean): number {
     return () => clearInterval(id);
   }, [ticking]);
   return now;
-}
-
-function errorMessage(error: LocationError): string {
-  switch (error.kind) {
-    case 'permission-denied':
-      return 'Location permission is needed to track your commute. Allow it in Settings, then try again.';
-    case 'location-off':
-      return 'Location is switched off on this phone. Turn it on, then try again.';
-    case 'unavailable':
-      return 'Tracking only works in the Android app, not in a web browser.';
-    default:
-      return `Tracking stopped unexpectedly: ${error.message}`;
-  }
 }
 
 export default function Home() {
@@ -44,20 +32,21 @@ export default function Home() {
   const waitingForGps = tracking && trip.tracker.anchor === null;
 
   const week = weeklySummary(trips, new Date(now));
-  const days = recentDays(trips, 5);
-  const longestDay = Math.max(1, ...days.map((d) => d.totalSeconds));
-  const canOpenSettings = state.error?.kind === 'permission-denied' || state.error?.kind === 'location-off';
+  const recent = recentTrips(trips, 3);
+  const { places } = state;
+  const showPlacesPrompt =
+    phase !== 'loading' && phase !== 'interrupted' && !state.placesPromptDismissed && !(places.home && places.office);
 
   return (
     <>
       <header className="page-header">
         <h1 className="page-title">Track Commute</h1>
-        <div className="header-icon">
+        <Link href="/settings" className="header-icon" aria-label="Settings">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-        </div>
+        </Link>
       </header>
 
       <div className={styles.homeContainer}>
@@ -65,7 +54,7 @@ export default function Home() {
           <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
             <span>{errorMessage(state.error)}</span>
             <div className={styles.bannerActions}>
-              {canOpenSettings && (
+              {canOpenSettings(state.error) && (
                 <button className={styles.linkButton} onClick={() => commute.openSettings()}>
                   Open Settings
                 </button>
@@ -83,6 +72,41 @@ export default function Home() {
             <div className={styles.bannerActions}>
               <button className={styles.linkButton} onClick={() => commute.dismissMessages()}>
                 OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tracking && state.precisionWarning && (
+          <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
+            <span>{errorMessage({ kind: 'approximate', message: '' })}</span>
+            <div className={styles.bannerActions}>
+              <button className={styles.linkButton} onClick={() => commute.openSettings()}>
+                Open Settings
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showPlacesPrompt && (
+          <div className={styles.banner}>
+            <span style={{ fontWeight: 700 }}>Set your Home and Office</span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              So trips are labelled &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap when you&apos;re at each place, or do it later in Settings.
+            </span>
+            <div className={styles.bannerActions} style={{ flexWrap: 'wrap', rowGap: '6px' }}>
+              {!places.home && (
+                <button className={styles.linkButton} disabled={state.locating !== null} onClick={() => commute.setPlaceHere('home')}>
+                  {state.locating === 'home' ? 'Finding your location…' : "I'm at Home now"}
+                </button>
+              )}
+              {!places.office && (
+                <button className={styles.linkButton} disabled={state.locating !== null} onClick={() => commute.setPlaceHere('office')}>
+                  {state.locating === 'office' ? 'Finding your location…' : "I'm at the Office now"}
+                </button>
+              )}
+              <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={() => commute.dismissPlacesPrompt()}>
+                Later
               </button>
             </div>
           </div>
@@ -138,7 +162,7 @@ export default function Home() {
               </button>
             ) : (
               <>
-                <button className={styles.startButton} disabled={busy || phase === 'loading'} onClick={() => commute.start()}>
+                <button className={styles.startButton} disabled={busy || phase === 'loading' || state.locating !== null} onClick={() => commute.start()}>
                   Start Tracking
                 </button>
                 <p className={styles.hint}>Uses your location only while a trip is running.</p>
@@ -179,26 +203,19 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Last 5 Days List */}
+        {/* Recent Commutes */}
         <div className={styles.historySection}>
           <div className={styles.historyHeader}>
-            <div className={styles.historyTitle}>Last 5 Days</div>
+            <div className={styles.historyTitle}>Recent Commutes</div>
             <Link href="/history" className={styles.seeAllBtn}>See All</Link>
           </div>
 
-          {phase !== 'loading' && days.length === 0 && (
+          {phase !== 'loading' && recent.length === 0 && (
             <p className={styles.emptyState}>No trips yet. Tap Start Tracking when you leave.</p>
           )}
 
-          {days.map((day) => (
-            <div className={styles.historyRow} key={day.dayKey}>
-              <div className={styles.historyDate}>{formatDayLabel(day.dayStart)}</div>
-              <div className={styles.historyBar}>
-                <div className={styles.historyBarFill} style={{ width: `${(day.totalSeconds / longestDay) * 100}%` }}></div>
-              </div>
-              <div className={styles.historyTime}>{formatDuration(day.totalSeconds)}</div>
-              <div className={styles.historyDist}>{formatDistanceKm(day.totalMeters)}</div>
-            </div>
+          {recent.map((t, i) => (
+            <TripRow key={t.id} trip={t} showDay inset divider={i < recent.length - 1} />
           ))}
         </div>
       </div>

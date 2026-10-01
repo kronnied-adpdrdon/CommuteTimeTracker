@@ -79,11 +79,11 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Add `com.android.vending.BILLING` (comes with the billing plugin in Phase 5)
 - [x] **No `ACCESS_BACKGROUND_LOCATION`** — verified: the emulator's permission prompt offers only "While using the app"
 - [x] Permission flow: Android prompts on first Start; refused permission / location off show a message with Open Settings
-- [ ] Handle "Approximate" location: readings are coarser than the 50 m accuracy limit, so a trip would sit on "Finding GPS signal…". Detect and tell the user to allow Precise
+- [x] "Approximate" location, tested on the emulator: Android first offers to switch to Precise; if the user keeps Approximate, the plugin refuses to start and the app explains how to turn on Precise. A coarse-readings warning also covers the case defensively
 - [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`)
 - [x] Opus review of `tracker.ts`: found 3 phantom-distance bugs (glitch after parking, signal-wait drift, bad first reading). Fixed with: speed check against the latest reading, confirm-before-trust warm-up, re-anchoring on agreeing readings, out-and-back spike removal, chip-speed stationary check, 2x-accuracy jitter threshold. 48 unit tests
 - [x] Chip-reported speed only overrides positions for shifts under 50 m (the emulator reports speed 0 while moving, which erased whole trips)
-- [ ] Investigate: emulator drive of 1.5 km recorded 1.4 km (~50 m short)
+- [x] 1.5 km recorded as 1.4 km: emulator artifact. The emulator reports speed 0, and the test steps were exactly 50 m (49.99996 m after rounding), right at the drift limit, so the last step was ignored. With a real speed attached, a 500 m drive saved as exactly 500 m
 - [ ] Tune tracker thresholds (0.5 m/s stationary, 2x accuracy, 100 m spike leg) against real tester commutes
 - [ ] Decide on Google Fused Location Provider: the chosen plugin tracks with raw GPS (`LocationManager`), not Fused. Switching means a small custom native plugin; revisit once tracking works end to end
 - [x] `Trip` type (`src/lib/trips/types.ts`)
@@ -92,17 +92,17 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Crash-recovery prompt in the UI: Resume / Save Trip / Discard — verified on the emulator by killing the app mid-trip
 - [x] `page.tsx`: real timer (from the saved start time), real distance, Start/Stop via a shared controller (`src/lib/commute/`) so tracking survives tab switches
 - [x] Real "This Week" totals, trend and "Last 5 Days" bars
-- [ ] Home: replace "Last 5 Days" with the **last 3 commutes** (individual trips)
+- [x] Home: replace "Last 5 Days" with the **last 3 commutes** (individual trips)
 - [x] `history/page.tsx`: real data grouped by day + empty state (removed the chevron: there's no trip-detail screen to open)
-- [ ] History: show only the **last 14 days**; older trips stay stored. Add a line saying older trips are available in reports (Pro)
-- [ ] **First-launch setup:** set Home and Office ("stand there, tap Set"), skippable; editable later in Settings
-- [ ] **Edit and delete trips** in History (at minimum: delete, and change the end time)
-- [ ] Settings: **Delete all trips**. Needed because trips older than 2 weeks are hidden from History, so users can't delete them one by one
+- [x] History: show only the **last 14 days**; older trips stay stored. Add a line saying older trips are available in reports (Pro)
+- [x] **First-launch setup:** card on Home ("I'm at Home now" / "I'm at the Office now" / Later). Settings also offers "Where my last trip started/ended". Setting a place re-tags all saved trips
+- [x] **Edit and delete trips** in History (at minimum: delete, and change the end time)
+- [x] Settings: **Delete all trips**. Needed because trips older than 2 weeks are hidden from History, so users can't delete them one by one
 - [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing). Wired: uses saved places (`places.ts`) when a trip finishes; needs the setup screen above to have any places
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 87 tests)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 112 tests)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 
@@ -110,11 +110,12 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Phase 3 — No-account cleanup and backup
 
-- [ ] Remove the `firebase` npm package (unused) — also clears the 4 high `npm audit` findings, which all came from it
-- [ ] Remove the login screen (`src/app/login/`) and the `/login` check in `BottomNav.tsx`
-- [ ] Profile tab becomes **Settings**: Home and Office locations, Pro status + Restore purchase. Name / Mobile / Email fields removed
-- [ ] **Verify Android Auto Backup restores trips** on the emulator (`allowBackup="true"` is already set). Known limits: runs about once a day (idle, charging, Wi-Fi) and needs the user's Google backup switched on
-- [ ] Update README: "Secure Local Storage" / privacy-first is accurate again
+- [x] Remove the `firebase` npm package — production dependencies now have 0 known vulnerabilities (3 moderate remain in the Capacitor CLI dev tool only)
+- [x] Remove the login screen (`src/app/login/`) and the `/login` check in `BottomNav.tsx`
+- [x] Profile tab becomes **Settings** (Home and Office, Your data / Delete all). Home screen gear icon now opens it
+- [ ] Settings: Pro status + Restore purchase (with Phase 5)
+- [x] **Android Auto Backup restores trips and places** after uninstall + reinstall (tested with the emulator's local backup store; backup was ~4.3 MB of the 25 MB limit). On real phones it goes through the Google account, about daily, if Google backup is on
+- [x] Update README: "Secure Local Storage" / privacy-first is accurate again
 
 **Exit:** no login anywhere; a reinstall with backup restores trips.
 
@@ -174,7 +175,8 @@ Working backwards from the fixed constraints: production review after applying t
 - Unit: `npx vitest run`
 - Build: `npm run build:android`, `npm run lint`, release `bundleRelease`
 - Device: ≥2 physical phones; compare a known route against Google Maps; lock screen mid-trip; force-stop mid-trip
-- Backup: uninstall/reinstall on an emulator with backup on; trips come back
+- Backup: `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `bmgr backupnow com.commute.tracker`, uninstall, reinstall; trips come back. Switch the transport back afterwards
+- Emulator caution: it boots from a saved quick-boot snapshot. Launched with `-no-snapshot-save`, **everything done in that session is discarded on exit** (this is what "lost" the 30 Sep test trip; the app itself keeps data through force-stop and reboot)
 - Billing: licence-tester account for purchase, cancel, refund, restore on reinstall
 
 ## Sources

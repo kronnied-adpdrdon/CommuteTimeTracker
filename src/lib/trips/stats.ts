@@ -85,3 +85,18 @@ export function weeklySummary(trips: Trip[], now: Date): WeeklySummary {
 export function recentDays(trips: Trip[], count: number): DaySummary[] {
   return groupByDay(trips).slice(0, count);
 }
+
+/** Local midnight `days - 1` days before `now`, so the window covers `days` calendar days including today. */
+export function windowStart(now: Date, days: number): Date {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
+}
+
+/** Trips that started on or after `from`. */
+export function tripsSince(trips: Trip[], from: Date): Trip[] {
+  return trips.filter((t) => t.startedAt >= from.getTime());
+}
+
+/** The newest `count` trips, newest first. */
+export function recentTrips(trips: Trip[], count: number): Trip[] {
+  return [...trips].sort((a, b) => b.startedAt - a.startedAt).slice(0, count);
+}
