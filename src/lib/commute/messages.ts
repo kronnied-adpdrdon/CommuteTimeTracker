@@ -1,4 +1,4 @@
-import { LocationError } from '../tracking/locationSource';
+import { LocationError } from '../tracking/nativeTracker';
 
 export function errorMessage(error: LocationError): string {
   switch (error.kind) {

@@ -47,20 +47,22 @@
                 android:resource="@xml/commute_widget_info" />
         </receiver>
 
-        <!-- The location plugin also ships geofencing, which this app doesn't use.
-             Drop its receivers so the app never wakes up on phone boot. -->
-        <receiver
-            android:name="com.capgo.capacitor_background_geolocation.GeofenceBootReceiver"
-            tools:node="remove" />
-        <receiver
-            android:name="com.capgo.capacitor_background_geolocation.GeofenceBroadcastReceiver"
-            tools:node="remove" />
+        <!-- Records commutes. Started from the app, the widget or its own notification. -->
+        <service
+            android:name=".tracking.TrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Location, foreground-service and notification permissions come from @capgo/background-geolocation.
-         ACCESS_BACKGROUND_LOCATION is deliberately absent: tracking only starts from a user tap. -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+    <!-- Precise location while a trip runs. ACCESS_BACKGROUND_LOCATION is deliberately absent:
+         trips only start from a user tap in the app, the widget or the notification. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

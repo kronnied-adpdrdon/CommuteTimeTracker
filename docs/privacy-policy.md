@@ -8,7 +8,7 @@ Commute Time Tracker ("the app") is published by [YOUR LEGAL NAME] ("we"). Conta
 
 ## What the app collects
 
-- **Precise location**, only while you have started a commute. Tracking begins when you tap Start and ends when you tap Stop. While tracking, the app shows a persistent notification and may keep collecting location with the screen off. It does not collect location at any other time.
+- **Precise location**, only while you have started a commute. Tracking begins when you tap Start (in the app or on its home-screen widget) and ends when you tap Stop (in the app, on the widget, or in the notification). While tracking, the app shows a persistent notification and may keep collecting location with the screen off or the app closed. It does not collect location at any other time. Location comes from your phone's own location services (Google Play services).
 - **Trip data**: for each commute you record, the start and end times, duration, distance, the start and end location, and whether it was a trip to work or home. The full route is used only to measure distance while the trip is running; it is not saved.
 - **Saved places**: the Home and Office locations you choose to set.
 - **Purchase status**: whether you have bought Pro. Payments are handled entirely by Google Play; we never see your card or payment details.

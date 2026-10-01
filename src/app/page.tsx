@@ -6,7 +6,6 @@ import styles from './page.module.css';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
-import { totalDistanceMeters } from '@/lib/tracking/tracker';
 import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
 import { recentTrips, weeklySummary } from '@/lib/trips/stats';
 
@@ -23,13 +22,13 @@ function useNow(ticking: boolean): number {
 
 export default function Home() {
   const state = useCommute();
-  const { phase, trip, trips, busy } = state;
-  const tracking = phase === 'tracking' && trip !== null;
+  const { phase, session, trips, busy } = state;
+  const tracking = phase === 'tracking' && session !== null;
   const now = useNow(tracking);
 
-  const elapsedSeconds = tracking ? (now - trip.startedAt) / 1000 : 0;
-  const distanceMeters = trip ? totalDistanceMeters(trip.tracker) : 0;
-  const waitingForGps = tracking && trip.tracker.anchor === null;
+  const elapsedSeconds = tracking ? (now - session.startedAt) / 1000 : 0;
+  const distanceMeters = session?.distanceMeters ?? 0;
+  const waitingForGps = tracking && !session.hasFix;
 
   const week = weeklySummary(trips, new Date(now));
   const recent = recentTrips(trips, 3);
@@ -71,17 +70,6 @@ export default function Home() {
           </div>
         )}
 
-        {tracking && state.precisionWarning && (
-          <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
-            <span>{errorMessage({ kind: 'approximate', message: '' })}</span>
-            <div className={styles.bannerActions}>
-              <button className={styles.linkButton} onClick={() => commute.openSettings()}>
-                Open Settings
-              </button>
-            </div>
-          </div>
-        )}
-
         {showPlacesPrompt && (
           <div className={styles.banner}>
             <span style={{ fontWeight: 700 }}>Set your Home and Office</span>
@@ -106,7 +94,7 @@ export default function Home() {
           </div>
         )}
 
-        {phase === 'interrupted' && trip ? (
+        {phase === 'interrupted' && session ? (
           <div className={styles.trackingCard}>
             <div className={styles.trackingPill} style={{ background: 'var(--border-color)', color: 'var(--text-secondary)' }}>
               Interrupted
@@ -114,8 +102,8 @@ export default function Home() {
             <div className={styles.distanceDisplay}>{formatDistanceKm(distanceMeters)}</div>
             <div className={styles.timeLabel}>
               {state.stale
-                ? `Your commute from ${formatTimeOfDay(trip.startedAt)} was never stopped.`
-                : `Your commute from ${formatTimeOfDay(trip.startedAt)} was interrupted.`}
+                ? `Your commute from ${formatTimeOfDay(session.startedAt)} was never stopped.`
+                : `Your commute from ${formatTimeOfDay(session.startedAt)} was interrupted.`}
             </div>
             {!state.stale && (
               <button className={styles.startButton} disabled={busy} onClick={() => commute.resume()}>

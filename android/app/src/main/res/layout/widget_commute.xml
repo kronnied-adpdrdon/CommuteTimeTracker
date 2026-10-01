@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One-row control strip: status, live timer and distance on the left, a round Start/Stop button on the right.
+     The root has no click action on purpose: only the button does anything. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="16dp">
+    android:orientation="horizontal"
+    android:paddingStart="18dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -14,81 +19,79 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/widget_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_pill"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.08"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:text="READY"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="10sp" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:baselineAligned="true"
             android:orientation="horizontal">
 
-            <TextView
+            <!-- Live while tracking. A stopped Chronometer still recomputes its text on every redraw,
+                 so the idle / paused time is shown by the plain TextView below instead. -->
+            <Chronometer
+                android:id="@+id/widget_timer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Commute"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/widget_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:text="00:00"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/widget_status"
+                android:id="@+id/widget_distance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Ready"
-                android:textColor="@color/widget_text_secondary"
-                android:textSize="13sp" />
+                android:layout_marginStart="12dp"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:text="0.0 km"
+                android:textColor="@color/widget_accent"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/widget_week_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="0h 00m"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <Chronometer
-            android:id="@+id/widget_timer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/widget_caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="This week"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/widget_last_trip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp"
-            android:visibility="gone" />
     </LinearLayout>
 
-    <Button
+    <FrameLayout
         android:id="@+id/widget_button"
-        android:layout_width="wrap_content"
-        android:layout_height="44dp"
-        android:layout_marginStart="12dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:background="@drawable/widget_button_start"
-        android:minWidth="84dp"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:text="Start"
-        android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:contentDescription="Start tracking">
+
+        <ImageView
+            android:id="@+id/widget_button_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_widget_play" />
+    </FrameLayout>
 </LinearLayout>

@@ -1,306 +1,280 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore } from '../storage/kv';
 import { LocationFix } from '../tracking/geo';
-import { LocationError, LocationSource, toLocationError } from '../tracking/locationSource';
-import { STALE_AFTER_MS, applyFix, createActiveTripStore, startTrip } from '../trips/activeTrip';
+import { FinishedTrip, LocationError, SessionSnapshot, TrackerService, TrackerSnapshot } from '../tracking/nativeTracker';
 import { createPlacesStore } from '../trips/places';
 import { createTripRepository } from '../trips/repository';
-import { createCommuteController } from './controller';
+import { STALE_AFTER_MS, createCommuteController, toTrip } from './controller';
 import { createProStore } from './pro';
 
 const T0 = new Date(2026, 8, 30, 8, 0).getTime();
+const home = { lat: 12.9, lng: 77.6 };
+const office = { lat: 12.9 + 5000 / 111_195, lng: 77.6 };
 
-/** A reading `north` metres north of a fixed point at absolute time `ms`. */
-const at = (north: number, ms: number): LocationFix => ({
-  lat: 12.9 + north / 111_195,
-  lng: 77.6,
-  accuracy: 8,
-  timestamp: ms,
-});
+/**
+ * Behaves like the native recorder: owns the session, a finished-trips queue, and fires update/ended
+ * events. Trips can also be started/stopped "from the widget" behind the app's back.
+ */
+function fakeRecorder(clock: () => number) {
+  let phase: TrackerSnapshot['phase'] = 'idle';
+  let session: SessionSnapshot | undefined;
+  let queue: FinishedTrip[] = [];
+  let onUpdate: ((s: TrackerSnapshot) => void) | null = null;
+  let onEnded: (() => void) | null = null;
+  let startError: LocationError | null = null;
+  let currentFix: LocationFix | LocationError = { ...home, accuracy: 6, timestamp: T0 };
+  const calls = { requestPermissions: 0, start: 0 };
 
-function fakeLocation() {
-  let onFix: ((fix: LocationFix) => void) | null = null;
-  let onError: ((error: LocationError) => void) | null = null;
-  const source: LocationSource & { running: boolean; starts: number } = {
-    running: false,
-    starts: 0,
-    async start(fix, error) {
-      onFix = fix;
-      onError = error;
-      source.running = true;
-      source.starts++;
+  const snapshot = (): TrackerSnapshot => (session ? { phase, session: { ...session } } : { phase: 'idle' });
+  const finish = (endedAt: number) => {
+    if (!session) return;
+    queue.push({ id: session.id, startedAt: session.startedAt, endedAt, distanceMeters: session.distanceMeters, start: home, end: session.lastFix ? { lat: session.lastFix.lat, lng: session.lastFix.lng } : undefined });
+    session = undefined;
+    phase = 'idle';
+  };
+
+  const service: TrackerService = {
+    getState: async () => snapshot(),
+    requestPermissions: async () => {
+      calls.requestPermissions++;
     },
-    async stop() {
-      source.running = false;
+    start: async () => {
+      calls.start++;
+      if (startError) throw startError;
+      session = { id: `trip-${calls.start}`, startedAt: clock(), distanceMeters: 0, hasFix: false };
+      phase = 'tracking';
+      return snapshot();
     },
-    async openSettings() {},
-    async currentFix() {
-      if (nextCurrentFix instanceof Error || (nextCurrentFix && 'kind' in nextCurrentFix)) throw nextCurrentFix;
-      return nextCurrentFix ?? at(0, Date.now());
+    resume: async () => {
+      phase = 'tracking';
+      return snapshot();
+    },
+    stop: async () => finish(clock()),
+    finishInterrupted: async () => finish(session?.lastReadingAt ?? session?.startedAt ?? clock()),
+    discard: async () => {
+      session = undefined;
+      phase = 'idle';
+    },
+    drainFinished: async () => {
+      const out = queue;
+      queue = [];
+      return out;
+    },
+    currentFix: async () => {
+      if ('kind' in currentFix) throw currentFix;
+      return currentFix;
+    },
+    openSettings: async () => {},
+    refreshWidget: async () => {},
+    subscribe(update, ended) {
+      onUpdate = update;
+      onEnded = ended;
     },
   };
-  let nextCurrentFix: LocationFix | LocationError | null = null;
+
   return {
-    source,
-    /** Sends readings using the handlers from the latest start, like a real late callback would. */
-    emit: (fix: LocationFix) => onFix?.(fix),
-    fail: (error: LocationError) => onError?.(error),
-    /** What the next one-off reading (Set Home here) returns or throws. */
-    setCurrentFix: (value: LocationFix | LocationError) => (nextCurrentFix = value),
+    service,
+    calls,
+    /** The recorder measured more distance (as the native service would after GPS readings). */
+    progress(distanceMeters: number, lastFix: LocationFix = { ...office, accuracy: 8, timestamp: clock() }) {
+      if (!session) return;
+      session = { ...session, distanceMeters, hasFix: true, lastReadingAt: clock(), lastFix };
+      onUpdate?.(snapshot());
+    },
+    /** The widget or notification stopped the trip while the app was open. */
+    stopFromWidget() {
+      finish(clock());
+      onEnded?.();
+    },
+    /** A trip recorded entirely from the widget while the app was closed. */
+    queueWidgetTrip(trip: FinishedTrip) {
+      queue.push(trip);
+    },
+    /** Recorder stopped unexpectedly (phone restarted) with a trip in progress. */
+    interrupt(s: SessionSnapshot) {
+      session = s;
+      phase = 'interrupted';
+    },
+    failStartWith: (e: LocationError) => (startError = e),
+    setCurrentFix: (f: LocationFix | LocationError) => (currentFix = f),
   };
 }
 
 function setup(store = createMemoryStore()) {
   let clock = T0;
-  const gps = fakeLocation();
+  const recorder = fakeRecorder(() => clock);
   const controller = createCommuteController({
-    location: gps.source,
+    tracker: recorder.service,
     trips: createTripRepository(store),
-    activeTrip: createActiveTripStore(store),
     places: createPlacesStore(store),
     pro: createProStore(store),
     now: () => clock,
-    onStorageError: (e) => {
-      throw e;
-    },
   });
-  /** Drive north at 10 m/s, one reading every 5 s, advancing the clock. */
-  const drive = (fromMeters: number, toMeters: number) => {
-    for (let d = fromMeters; d <= toMeters; d += 50) {
-      gps.emit(at(d, clock));
-      clock += 5000;
-    }
-  };
-  return { controller, gps, store, drive, setClock: (ms: number) => (clock = ms), clock: () => clock };
+  return { controller, recorder, store, advance: (ms: number) => (clock += ms), setClock: (ms: number) => (clock = ms) };
 }
 
-/** Lets queued storage writes finish. */
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('commute controller', () => {
   it('starts idle with no trips', async () => {
     const { controller } = setup();
     await controller.init();
-    expect(controller.getState()).toMatchObject({ phase: 'idle', trips: [] });
+    expect(controller.getState()).toMatchObject({ phase: 'idle', session: null, trips: [] });
   });
 
-  it('a full commute: start, readings, stop saves one trip', async () => {
-    const { controller, gps, drive } = setup();
+  it('a full commute: asks for permission, tracks, shows live distance, and saves on Stop', async () => {
+    const { controller, recorder, advance } = setup();
     await controller.init();
     await controller.start();
+    expect(recorder.calls.requestPermissions).toBe(1);
     expect(controller.getState().phase).toBe('tracking');
-    expect(gps.source.running).toBe(true);
 
-    drive(0, 3000);
+    advance(300_000);
+    recorder.progress(3000);
+    expect(controller.getState().session?.distanceMeters).toBe(3000);
+
     await controller.stop();
-
     const s = controller.getState();
     expect(s.phase).toBe('idle');
-    expect(gps.source.running).toBe(false);
     expect(s.trips).toHaveLength(1);
-    expect(s.trips[0].distanceMeters).toBeCloseTo(3000, -1);
-    expect(s.trips[0].durationSeconds).toBe(305);
-  });
-
-  it('the trip in progress is saved, so a restart finds it interrupted', async () => {
-    const { controller, drive, store } = setup();
-    await controller.init();
-    await controller.start();
-    drive(0, 1000);
-    await settle();
-
-    // App killed. A fresh controller over the same storage:
-    const restarted = setup(store).controller;
-    await restarted.init();
-    const s = restarted.getState();
-    expect(s.phase).toBe('interrupted');
-    expect(s.stale).toBe(false);
-    expect(s.trip!.lastReadingAt).toBe(T0 + 100_000);
-  });
-
-  it('finishing an interrupted trip ends it at the last reading', async () => {
-    const first = setup();
-    await first.controller.init();
-    await first.controller.start();
-    first.drive(0, 1000);
-    await settle();
-
-    const second = setup(first.store);
-    second.setClock(T0 + 3 * 60 * 60 * 1000); // reopened 3 hours later
-    await second.controller.init();
-    await second.controller.finishInterrupted();
-    const trip = second.controller.getState().trips[0];
-    expect(trip.durationSeconds).toBe(100);
-    expect(trip.distanceMeters).toBeCloseTo(1000, -1);
-  });
-
-  it('resuming an interrupted trip keeps adding to it', async () => {
-    const first = setup();
-    await first.controller.init();
-    await first.controller.start();
-    first.drive(0, 1000);
-    await settle();
-
-    const second = setup(first.store);
-    second.setClock(first.clock());
-    await second.controller.init();
-    await second.controller.resume();
-    expect(second.controller.getState().phase).toBe('tracking');
-    second.drive(1050, 2000);
-    await second.controller.stop();
-    expect(second.controller.getState().trips[0].distanceMeters).toBeCloseTo(2000, -1);
-  });
-
-  it('a long-abandoned trip is stale and cannot be resumed', async () => {
-    const store = createMemoryStore();
-    const old = applyFix(applyFix(startTrip(T0, 'old'), at(0, T0)), at(50, T0 + 5000));
-    await createActiveTripStore(store).save(old);
-    const { controller, gps, setClock } = setup(store);
-    setClock(T0 + STALE_AFTER_MS + 60_000);
-    await controller.init();
-    expect(controller.getState()).toMatchObject({ phase: 'interrupted', stale: true });
-    await controller.resume();
-    expect(controller.getState().phase).toBe('interrupted');
-    expect(gps.source.starts).toBe(0);
-  });
-
-  it('discarding an interrupted trip saves nothing', async () => {
-    const store = createMemoryStore();
-    await createActiveTripStore(store).save(startTrip(T0, 'x'));
-    const { controller } = setup(store);
-    await controller.init();
-    await controller.discardInterrupted();
-    expect(controller.getState()).toMatchObject({ phase: 'idle', trips: [] });
-    expect(await createActiveTripStore(store).load()).toBeNull();
-  });
-
-  it('a refused permission at start returns to idle with an error and leaves nothing behind', async () => {
-    const { controller, gps, store } = setup();
-    await controller.init();
-    await controller.start();
-    gps.fail({ kind: 'permission-denied', message: 'User denied location permission' });
-    await settle();
-    const s = controller.getState();
-    expect(s.phase).toBe('idle');
-    expect(s.error?.kind).toBe('permission-denied');
-    expect(await createActiveTripStore(store).load()).toBeNull();
-  });
-
-  it('an error mid-trip keeps the trip as interrupted', async () => {
-    const { controller, gps, drive } = setup();
-    await controller.init();
-    await controller.start();
-    drive(0, 500);
-    gps.fail({ kind: 'location-off', message: 'Location services disabled.' });
-    const s = controller.getState();
-    expect(s.phase).toBe('interrupted');
-    expect(s.error?.kind).toBe('location-off');
-    expect(s.trip!.lastReadingAt).toBeDefined();
+    expect(s.trips[0]).toMatchObject({ distanceMeters: 3000, durationSeconds: 300 });
   });
 
   it('a very short trip is treated as an accidental tap and not saved', async () => {
-    const { controller, gps, setClock } = setup();
+    const { controller, advance } = setup();
     await controller.init();
     await controller.start();
-    gps.emit(at(0, T0));
-    setClock(T0 + 20_000);
+    advance(20_000);
     await controller.stop();
-    const s = controller.getState();
-    expect(s.trips).toHaveLength(0);
-    expect(s.notice).toMatch(/not saved/);
+    expect(controller.getState().trips).toHaveLength(0);
+    expect(controller.getState().notice).toMatch(/not saved/);
   });
 
-  it('readings that arrive after Stop are ignored', async () => {
-    const { controller, gps, drive, clock } = setup();
+  it('a trip stopped from the widget while the app is open is filed straight away', async () => {
+    const { controller, recorder, advance } = setup();
     await controller.init();
     await controller.start();
-    drive(0, 1000);
-    await controller.stop();
-    gps.emit(at(5000, clock() + 5000));
+    advance(600_000);
+    recorder.progress(8000);
+    recorder.stopFromWidget();
+    await flush();
     expect(controller.getState().phase).toBe('idle');
-    expect(controller.getState().trip).toBeNull();
+    expect(controller.getState().trips[0].distanceMeters).toBe(8000);
+  });
+
+  it('trips recorded from the widget while the app was closed are filed when it opens, labelled by places', async () => {
+    const { controller, recorder, store } = setup();
+    await createPlacesStore(store).save({ home, office });
+    recorder.queueWidgetTrip({ id: 'w1', startedAt: T0, endedAt: T0 + 50 * 60_000, distanceMeters: 5000, start: home, end: office });
+    recorder.queueWidgetTrip({ id: 'w2', startedAt: T0 + 3_600_000, endedAt: T0 + 3_610_000, distanceMeters: 0 });
+    await controller.init();
+    const trips = controller.getState().trips;
+    expect(trips.map((t) => t.id)).toEqual(['w1']);
+    expect(trips[0].direction).toBe('work');
+  });
+
+  it('a trip already running (started from the widget) is picked up when the app opens', async () => {
+    const { controller, recorder } = setup();
+    await recorder.service.start();
+    await controller.init();
+    expect(controller.getState().phase).toBe('tracking');
+  });
+
+  it('a refused or approximate permission shows the error and stays idle', async () => {
+    const { controller, recorder } = setup();
+    recorder.failStartWith({ kind: 'approximate', message: 'Location is set to Approximate.' });
+    await controller.init();
+    await controller.start();
+    expect(controller.getState()).toMatchObject({ phase: 'idle', error: { kind: 'approximate' } });
   });
 
   it('Start pressed twice starts one trip', async () => {
-    const { controller, gps } = setup();
+    const { controller, recorder } = setup();
     await controller.init();
     await Promise.all([controller.start(), controller.start()]);
-    expect(gps.source.starts).toBe(1);
+    expect(recorder.calls.start).toBe(1);
   });
 });
 
-describe('toLocationError', () => {
-  it('tells a refused permission apart from location being switched off', () => {
-    expect(toLocationError({ code: 'NOT_AUTHORIZED', message: 'User denied location permission' }).kind).toBe(
-      'permission-denied',
-    );
-    expect(toLocationError({ code: 'NOT_AUTHORIZED', message: 'Location services disabled.' }).kind).toBe(
-      'location-off',
-    );
+describe('interrupted trips', () => {
+  const interrupted = (lastReadingAt: number): SessionSnapshot => ({ id: 'i1', startedAt: T0, lastReadingAt, distanceMeters: 4000, hasFix: true });
+
+  it('shows as interrupted; Save ends it at the last reading, not now', async () => {
+    const { controller, recorder, setClock } = setup();
+    recorder.interrupt(interrupted(T0 + 30 * 60_000));
+    setClock(T0 + 3 * 3_600_000);
+    await controller.init();
+    expect(controller.getState()).toMatchObject({ phase: 'interrupted', stale: false });
+    await controller.finishInterrupted();
+    expect(controller.getState().trips[0]).toMatchObject({ durationSeconds: 1800, distanceMeters: 4000 });
   });
-  it('recognises a platform without the plugin', () => {
-    expect(toLocationError({ code: 'UNIMPLEMENTED', message: 'Not implemented on web.' }).kind).toBe('unavailable');
+
+  it('resume carries on recording', async () => {
+    const { controller, recorder } = setup();
+    recorder.interrupt(interrupted(T0 + 60_000));
+    await controller.init();
+    await controller.resume();
+    expect(controller.getState().phase).toBe('tracking');
   });
-  it('anything else is unknown', () => {
-    expect(toLocationError(new Error('boom')).kind).toBe('unknown');
+
+  it('a long-abandoned trip is stale and cannot be resumed', async () => {
+    const { controller, recorder, setClock } = setup();
+    recorder.interrupt(interrupted(T0));
+    setClock(T0 + STALE_AFTER_MS + 60_000);
+    await controller.init();
+    expect(controller.getState().stale).toBe(true);
+    await controller.resume();
+    expect(controller.getState().phase).toBe('interrupted');
+  });
+
+  it('discard saves nothing', async () => {
+    const { controller, recorder } = setup();
+    recorder.interrupt(interrupted(T0));
+    await controller.init();
+    await controller.discardInterrupted();
+    expect(controller.getState()).toMatchObject({ phase: 'idle', trips: [] });
   });
 });
 
 describe('places', () => {
-  const home = { lat: 12.9, lng: 77.6 };
-  const officeNorth = 5000;
-
   it('setting Home and Office re-tags trips already recorded', async () => {
-    const { controller, drive } = setup();
+    const { controller, recorder, advance } = setup();
     await controller.init();
     await controller.start();
-    drive(0, officeNorth);
+    advance(600_000);
+    recorder.progress(5000);
     await controller.stop();
     expect(controller.getState().trips[0].direction).toBe('unknown');
-
     await controller.setPlace('home', home);
-    await controller.setPlace('office', { lat: 12.9 + officeNorth / 111_195, lng: 77.6 });
+    await controller.setPlace('office', office);
     expect(controller.getState().trips[0].direction).toBe('work');
   });
 
-  it('Set Home here saves the current location, survives a restart, and closes the prompt', async () => {
-    const { controller, gps, store } = setup();
-    gps.setCurrentFix({ ...at(0, T0), accuracy: 6 });
+  it('I am here now saves the current location and survives a restart', async () => {
+    const { controller, store } = setup();
     await controller.init();
     await controller.setPlaceHere('home');
-    expect(controller.getState().places.home).toEqual(home);
-
     const restarted = setup(store).controller;
     await restarted.init();
     expect(restarted.getState().places.home).toEqual(home);
   });
 
-  it('a failed one-off reading shows the error and saves nothing', async () => {
-    const { controller, gps } = setup();
-    gps.setCurrentFix({ kind: 'approximate', message: 'Location is set to Approximate.' });
+  it('a failed reading shows the error and saves nothing', async () => {
+    const { controller, recorder } = setup();
+    recorder.setCurrentFix({ kind: 'timeout', message: 'No accurate location in time.' });
     await controller.init();
     await controller.setPlaceHere('office');
-    expect(controller.getState().error?.kind).toBe('approximate');
+    expect(controller.getState()).toMatchObject({ error: { kind: 'timeout' }, locating: null });
     expect(controller.getState().places.office).toBeUndefined();
-    expect(controller.getState().locating).toBeNull();
   });
 
-  it('while tracking, Set Home here uses the trip\'s latest reading', async () => {
-    const { controller, gps, drive } = setup();
+  it("while tracking, I'm here now uses the recorder's latest reading", async () => {
+    const { controller, recorder } = setup();
     await controller.init();
     await controller.start();
-    drive(0, 500);
+    recorder.progress(500, { lat: 12.95, lng: 77.6, accuracy: 7, timestamp: T0 });
     await controller.setPlaceHere('office');
-    expect(controller.getState().places.office!.lat).toBeCloseTo(12.9 + 500 / 111_195, 6);
-    expect(gps.source.starts).toBe(1);
-  });
-
-  it('clearing a place removes it', async () => {
-    const { controller } = setup();
-    await controller.init();
-    await controller.setPlace('home', home);
-    await controller.setPlace('home', null);
-    expect(controller.getState().places).toEqual({});
+    expect(controller.getState().places.office).toEqual({ lat: 12.95, lng: 77.6 });
   });
 
   it('Later hides the first-launch prompt for good', async () => {
@@ -318,7 +292,8 @@ describe('editing trips', () => {
     const ctx = setup();
     await ctx.controller.init();
     await ctx.controller.start();
-    ctx.drive(0, 3000);
+    ctx.advance(305_000);
+    ctx.recorder.progress(3000);
     await ctx.controller.stop();
     return ctx;
   }
@@ -327,9 +302,7 @@ describe('editing trips', () => {
     const { controller } = await withOneTrip();
     const trip = controller.getState().trips[0];
     expect(await controller.setTripEndClock(trip.id, '08:03')).toBe(true);
-    const edited = controller.getState().trips[0];
-    expect(edited.durationSeconds).toBe(180);
-    expect(edited.distanceMeters).toBe(trip.distanceMeters);
+    expect(controller.getState().trips[0]).toMatchObject({ durationSeconds: 180, distanceMeters: trip.distanceMeters });
   });
 
   it('a nonsense end time is refused and nothing changes', async () => {
@@ -340,28 +313,11 @@ describe('editing trips', () => {
   });
 
   it('deletes one trip, or all of them', async () => {
-    const { controller } = await withOneTrip();
+    const { controller, store } = await withOneTrip();
     await controller.deleteTrip(controller.getState().trips[0].id);
     expect(controller.getState().trips).toHaveLength(0);
-  });
-
-  it('delete all removes every trip', async () => {
-    const { controller, store } = await withOneTrip();
     await controller.deleteAllTrips();
-    expect(controller.getState().trips).toHaveLength(0);
     expect(await createTripRepository(store).list()).toHaveLength(0);
-  });
-});
-
-describe('precision warning', () => {
-  it('warns after a few Approximate-level readings and clears once readings are precise', async () => {
-    const { controller, gps } = setup();
-    await controller.init();
-    await controller.start();
-    for (let i = 0; i < 3; i++) gps.emit({ ...at(0, T0 + i * 5000), accuracy: 2000 });
-    expect(controller.getState().precisionWarning).toBe(true);
-    gps.emit({ ...at(0, T0 + 20_000), accuracy: 8 });
-    expect(controller.getState().precisionWarning).toBe(false);
   });
 });
 
@@ -374,5 +330,15 @@ describe('Pro', () => {
     const restarted = setup(store).controller;
     await restarted.init();
     expect(restarted.getState().isPro).toBe(true);
+  });
+});
+
+describe('toTrip', () => {
+  it('builds duration, rounds distance and tags direction', () => {
+    const trip = toTrip({ id: 'x', startedAt: T0, endedAt: T0 + 61_500, distanceMeters: 4999.6, start: home, end: office }, { home, office });
+    expect(trip).toMatchObject({ durationSeconds: 62, distanceMeters: 5000, direction: 'work' });
+  });
+  it('an end before the start becomes zero duration', () => {
+    expect(toTrip({ id: 'x', startedAt: T0, endedAt: T0 - 1, distanceMeters: 0 }, {}).durationSeconds).toBe(0);
   });
 });

@@ -18,7 +18,7 @@ Older trips are **kept on the phone, never deleted**; they're just not shown in 
 
 **No accounts:** the user's Google account does the work. Google Play remembers the Pro purchase, and Android Auto Backup restores trips on a reinstall or new phone. No login screen, no account deletion flow, no SMS costs.
 
-Plugins (all verified Capacitor 8 compatible): `@capgo/background-geolocation` 8.4.7 (needs `android.useLegacyBridge: true`), `@capacitor/preferences` 8.0.1, `@revenuecat/purchases-capacitor` 13.6.1 (billing; see Phase 5).
+**Tracking is native** (decided 1 Oct 2026): `TrackingService` (location foreground service, Google Fused Location via `play-services-location` 21.4.0) records trips and computes distance with `TrackerEngine` (Java port of the original TypeScript tracker, 18 JUnit tests). The app talks to it through `CommuteTrackerPlugin`; the widget and the notification start/stop it directly. Plugins: `@capacitor/preferences`, `@capacitor/app`, `@capacitor/filesystem`, `@capacitor/share`; `@revenuecat/purchases-capacitor` 13.6.1 still a candidate for billing (Phase 5).
 
 ## The Nov 1 schedule (today = Mon Sep 28)
 
@@ -85,7 +85,8 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Chip-reported speed only overrides positions for shifts under 50 m (the emulator reports speed 0 while moving, which erased whole trips)
 - [x] 1.5 km recorded as 1.4 km: emulator artifact. The emulator reports speed 0, and the test steps were exactly 50 m (49.99996 m after rounding), right at the drift limit, so the last step was ignored. With a real speed attached, a 500 m drive saved as exactly 500 m
 - [ ] Tune tracker thresholds (0.5 m/s stationary, 2x accuracy, 100 m spike leg) against real tester commutes
-- [ ] Decide on Google Fused Location Provider: the chosen plugin tracks with raw GPS (`LocationManager`), not Fused. Switching means a small custom native plugin; revisit once tracking works end to end
+- [x] Switched to Google Fused Location: own native recorder replaces `@capgo/background-geolocation` (needed anyway so the widget can start/stop without opening the app)
+- [ ] Field-test Fused Location on real commutes (closed test) — the emulator can't show real-world accuracy
 - [x] `Trip` type (`src/lib/trips/types.ts`)
 - [x] Local storage of trips (`src/lib/trips/repository.ts`, Capacitor Preferences behind a `KeyValueStore` interface). Saves only start/end points, not the full route (less sensitive data; privacy docs updated)
 - [x] In-progress trip saved after every reading for crash recovery (`src/lib/trips/activeTrip.ts`): recovered trips end at the last reading; >6 h without readings = stale; same id so no duplicates; unreadable data is set aside, not overwritten
@@ -103,10 +104,12 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Dark mode: System / Light / Dark in Settings; status-bar icons follow (Capacitor 8 built-in `SystemBars`); widget has its own night colours
 - [x] History: Edit and Delete buttons visible on every entry
 - [x] Home: removed the header gear (Settings is a tab)
-- [x] **Home-screen widget** (native): this week's time and trip count, last trip, Start / Stop button with a live timer while tracking. Buttons open the app through an explicit intent only (no public deep link). Verified on the emulator
+- [x] **Home-screen widget** (native, 4x1): status pill, live timer, live km, round Start/Stop button. **Start/Stop work without opening the app** (Android allows a location service to start from a widget tap); tapping elsewhere does nothing. Only if precise location isn't granted does Start open the app to ask. Light and dark. Verified on the emulator with the app process killed
+- [x] Tracking notification has its own Stop button and live timer
+- [x] Trips stopped from the widget or notification are queued natively and filed into History (with work/home labels) when the app next opens; instantly if it's open
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 128 tests)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 94 tests; plus 18 Java tracker tests: `./gradlew testDebugUnitTest`)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 

@@ -6,4 +6,6 @@
     <color name="widget_accent">#0A84FF</color>
     <color name="widget_danger">#FF453A</color>
     <color name="widget_success">#30D158</color>
+    <color name="widget_pill">#2A2E35</color>
+    <color name="widget_on_accent">#FFFFFF</color>
 </resources>
