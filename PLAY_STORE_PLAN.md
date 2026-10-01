@@ -64,29 +64,35 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Phase 2 — Real tracking (Sep 30–Oct 7 minimum; polish continues)
 
-- [ ] Install `@capgo/background-geolocation`; set `android.useLegacyBridge: true` in `capacitor.config.ts`
-- [ ] Manifest: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`, `foregroundServiceType="location"`, plus `com.android.vending.BILLING`
-- [ ] **Do NOT add `ACCESS_BACKGROUND_LOCATION`**
-- [ ] Permission flow: rationale screen, handle denied / "only this time" / location off (`openSettings()`)
+- [x] Install `@capgo/background-geolocation` 8.4.7; set `android.useLegacyBridge: true` in `capacitor.config.ts`
+- [x] Manifest: location, foreground-service and notification permissions + `foregroundServiceType="location"` come from the plugin (verified in the merged manifest); plugin's geofence receivers and `RECEIVE_BOOT_COMPLETED` removed
+- [ ] Add `com.android.vending.BILLING` (comes with the billing plugin in Phase 5)
+- [x] **No `ACCESS_BACKGROUND_LOCATION`** — verified: the emulator's permission prompt offers only "While using the app"
+- [x] Permission flow: Android prompts on first Start; refused permission / location off show a message with Open Settings
+- [ ] Handle "Approximate" location: readings are coarser than the 50 m accuracy limit, so a trip would sit on "Finding GPS signal…". Detect and tell the user to allow Precise
 - [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`)
 - [x] Opus review of `tracker.ts`: found 3 phantom-distance bugs (glitch after parking, signal-wait drift, bad first reading). Fixed with: speed check against the latest reading, confirm-before-trust warm-up, re-anchoring on agreeing readings, out-and-back spike removal, chip-speed stationary check, 2x-accuracy jitter threshold. 48 unit tests
+- [x] Chip-reported speed only overrides positions for shifts under 50 m (the emulator reports speed 0 while moving, which erased whole trips)
+- [ ] Investigate: emulator drive of 1.5 km recorded 1.4 km (~50 m short)
 - [ ] Tune tracker thresholds (0.5 m/s stationary, 2x accuracy, 100 m spike leg) against real tester commutes
 - [ ] Decide on Google Fused Location Provider: the chosen plugin tracks with raw GPS (`LocationManager`), not Fused. Switching means a small custom native plugin; revisit once tracking works end to end
 - [x] `Trip` type (`src/lib/trips/types.ts`)
 - [x] Local storage of trips (`src/lib/trips/repository.ts`, Capacitor Preferences behind a `KeyValueStore` interface). Saves only start/end points, not the full route (less sensitive data; privacy docs updated)
 - [x] In-progress trip saved after every reading for crash recovery (`src/lib/trips/activeTrip.ts`): recovered trips end at the last reading; >6 h without readings = stale; same id so no duplicates; unreadable data is set aside, not overwritten
-- [ ] Crash-recovery prompt in the UI (resume / finish a recovered trip)
-- [ ] `page.tsx`: `isActive` defaults `false`; timer derived from persisted start timestamp; real distance
-- [ ] Real "This Week" totals and "Last 5 Days" bars — calculation done and tested (`stats.ts`: `weeklySummary`, `recentDays`); screen not wired to it yet
-- [ ] `history/page.tsx`: real data grouped by day + empty state
+- [x] Crash-recovery prompt in the UI: Resume / Save Trip / Discard — verified on the emulator by killing the app mid-trip
+- [x] `page.tsx`: real timer (from the saved start time), real distance, Start/Stop via a shared controller (`src/lib/commute/`) so tracking survives tab switches
+- [x] Real "This Week" totals, trend and "Last 5 Days" bars
+- [x] `history/page.tsx`: real data grouped by day + empty state (removed the chevron: there's no trip-detail screen to open)
 - [ ] `profile/page.tsx`: editable fields, Home/Office location pickers
 - [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing when places are missing or contradictory). Not yet wired to the screens
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 68 tests)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 87 tests)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
+
+> Command-line builds need Android Studio's **JDK 21** (`~/Library/Java/JavaVirtualMachines/jbr-21.0.11`). The bundled JDK 25 is too new for Gradle 8.14.
 
 ## Phase 3 — Auth and sync (Oct 8–15, inside the test window)
 

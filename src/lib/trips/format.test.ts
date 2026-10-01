@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatClock, formatDistanceKm, formatDuration, formatTimeRange } from './format';
+import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay, formatTimeRange } from './format';
 
 describe('formatClock', () => {
   it('formats hh:mm:ss', () => {
@@ -34,5 +34,20 @@ describe('formatTimeRange', () => {
     const start = new Date(2026, 8, 28, 8, 5).getTime();
     const end = new Date(2026, 8, 28, 19, 10).getTime();
     expect(formatTimeRange(start, end)).toBe('08:05 - 19:10');
+  });
+});
+
+describe('formatTimeOfDay', () => {
+  it('pads hours and minutes', () => {
+    expect(formatTimeOfDay(new Date(2026, 8, 28, 7, 3).getTime())).toBe('07:03');
+  });
+});
+
+describe('formatDayLabel', () => {
+  it('matches the design: "16 Sep (Tue)"', () => {
+    expect(formatDayLabel(new Date(2025, 8, 16, 9).getTime())).toBe('16 Sep (Tue)');
+  });
+  it('can include the year', () => {
+    expect(formatDayLabel(new Date(2025, 8, 16, 9).getTime(), true)).toBe('16 Sep 2025 (Tue)');
   });
 });

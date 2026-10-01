@@ -9,8 +9,13 @@ export interface TrackerOptions {
   accuracyMultiplier: number;
   /** A move implying a higher speed than this means one of the two readings is wrong. 70 m/s is about 250 km/h. */
   maxSpeedMps: number;
-  /** Below this chip-measured speed the phone is treated as standing still, whatever the positions say. */
+  /** Below this chip-measured speed the phone is treated as standing still... */
   stationarySpeedMps: number;
+  /**
+   * ...unless the positions have clearly moved further than this. Guards against a wrong speed reading
+   * (the Android emulator always reports 0; some phones do too) erasing real movement.
+   */
+  stationaryMaxDriftMeters: number;
   /** During warm-up, two readings further apart in time than this don't confirm each other. */
   warmupMaxGapSeconds: number;
   /** Out-and-back legs shorter than this are never treated as a spike (protects real U-turns). */
@@ -25,6 +30,7 @@ export const DEFAULT_TRACKER_OPTIONS: TrackerOptions = {
   accuracyMultiplier: 2,
   maxSpeedMps: 70,
   stationarySpeedMps: 0.5,
+  stationaryMaxDriftMeters: 50,
   warmupMaxGapSeconds: 30,
   spikeMinLegMeters: 100,
   spikeReturnRatio: 0.3,
@@ -142,14 +148,16 @@ export function addFix(
 
   s = { ...s, last: fix, suspect: null };
 
-  // The chip's measured speed is far more reliable than comparing positions, so trust it when present.
-  if (fix.speed != null && fix.speed < options.stationarySpeedMps) {
+  const anchor = s.anchor!;
+  const meters = haversineMeters(anchor, fix);
+
+  // The chip's measured speed is more reliable than comparing positions for telling drift from movement,
+  // so trust "not moving" for small shifts. A large shift means the speed reading itself is wrong.
+  if (fix.speed != null && fix.speed < options.stationarySpeedMps && meters < options.stationaryMaxDriftMeters) {
     return ignore(s);
   }
 
-  const anchor = s.anchor!;
   const jitterThreshold = Math.max(options.minMoveMeters, options.accuracyMultiplier * (fix.accuracy ?? 0));
-  const meters = haversineMeters(anchor, fix);
   if (meters < jitterThreshold) {
     return ignore(s);
   }

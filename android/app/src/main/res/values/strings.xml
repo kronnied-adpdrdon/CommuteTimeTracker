@@ -4,4 +4,7 @@
     <string name="title_activity_main">Commute Time Tracker</string>
     <string name="package_name">com.commute.tracker</string>
     <string name="custom_url_scheme">com.commute.tracker</string>
+    <string name="capacitor_background_geolocation_notification_channel_name">Commute tracking</string>
+    <string name="capacitor_background_geolocation_notification_icon">drawable/ic_stat_tracking</string>
+    <string name="capacitor_background_geolocation_notification_color">#007AFF</string>
 </resources>

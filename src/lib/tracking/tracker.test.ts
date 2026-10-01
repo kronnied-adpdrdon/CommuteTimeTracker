@@ -83,6 +83,11 @@ describe('addFix: standing still', () => {
     expect(totalDistanceMeters(run(fixes))).toBe(0);
   });
 
+  it('a wrong speed of 0 while clearly moving (as the emulator reports) does not erase the trip', () => {
+    const fixes = Array.from({ length: 21 }, (_, i) => at(i * 50, i * 5, 5, 0));
+    expect(km(fixes)).toBeCloseTo(1, 1);
+  });
+
   it('still counts movement when the chip reports a walking speed', () => {
     const fixes = Array.from({ length: 20 }, (_, i) => at(i * 7, i * 5, 5, 1.4));
     expect(totalDistanceMeters(run(fixes))).toBeGreaterThan(100);

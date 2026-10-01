@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -33,9 +34,21 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- The location plugin also ships geofencing, which this app doesn't use.
+             Drop its receivers so the app never wakes up on phone boot. -->
+        <receiver
+            android:name="com.capgo.capacitor_background_geolocation.GeofenceBootReceiver"
+            tools:node="remove" />
+        <receiver
+            android:name="com.capgo.capacitor_background_geolocation.GeofenceBroadcastReceiver"
+            tools:node="remove" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Location, foreground-service and notification permissions come from @capgo/background-geolocation.
+         ACCESS_BACKGROUND_LOCATION is deliberately absent: tracking only starts from a user tap. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
 </manifest>
