@@ -137,6 +137,11 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Upload the AAB and enable Play App Signing
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
+- [ ] Privacy policy link inside the app (Settings) — Google requires it in the app as well as the listing; needs the hosted URL
+- [ ] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play"
+- [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
+- [ ] Check the new icon and splash screen on a phone
+- [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
 - [ ] Icon 512×512, feature graphic 1024×500, ≥2 phone screenshots, short + full description
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) + **demo video** of tapping Start and the notification appearing
