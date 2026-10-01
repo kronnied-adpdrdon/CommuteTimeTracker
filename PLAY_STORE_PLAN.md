@@ -105,6 +105,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] History: Edit and Delete buttons visible on every entry
 - [x] Home: removed the header gear (Settings is a tab)
 - [x] **Home-screen widget** (native, 4x1): status pill, live timer, live km, round Start/Stop button. **Start/Stop work without opening the app** (Android allows a location service to start from a widget tap); tapping elsewhere does nothing. Only if precise location isn't granted does Start open the app to ask. Light and dark. Verified on the emulator with the app process killed
+- [x] Widget texts: "Commute" title, caption ("Tap ▶ to start your trip" / "Started at 08:05" / "Paused · tap ▶ to resume"), and a Start / Stop / Resume label under the button
 - [x] Tracking notification has its own Stop button and live timer
 - [x] Trips stopped from the widget or notification are queued natively and filed into History (with work/home labels) when the app next opens; instantly if it's open
 - [ ] Self-host Inter (drop the Google Fonts `@import`)

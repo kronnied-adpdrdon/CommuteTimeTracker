@@ -54,6 +54,8 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_stop);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_stop);
             views.setContentDescription(R.id.widget_button, "Stop tracking");
+            views.setTextViewText(R.id.widget_button_label, "Stop");
+            views.setTextViewText(R.id.widget_caption, "Started at " + timeOfDay(session.startedAt));
             views.setOnClickPendingIntent(R.id.widget_button, service(context, TrackingService.ACTION_STOP, 2));
         } else if (session != null) {
             // Recorder stopped unexpectedly (phone restarted, app force-closed): show where it got to, offer Resume.
@@ -66,6 +68,8 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_play);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start);
             views.setContentDescription(R.id.widget_button, "Resume tracking");
+            views.setTextViewText(R.id.widget_button_label, "Resume");
+            views.setTextViewText(R.id.widget_caption, "Paused · tap ▶ to resume");
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_RESUME, 3));
         } else {
             showStaticTime(views, clock(0));
@@ -76,6 +80,8 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_play);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start);
             views.setContentDescription(R.id.widget_button, "Start tracking");
+            views.setTextViewText(R.id.widget_button_label, "Start");
+            views.setTextViewText(R.id.widget_caption, "Tap ▶ to start your trip");
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_START, 1));
         }
         return views;
@@ -116,6 +122,12 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
         return s >= 3600
             ? String.format(Locale.US, "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
             : String.format(Locale.US, "%02d:%02d", s / 60, s % 60);
+    }
+
+    private static String timeOfDay(long timestamp) {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.setTimeInMillis(timestamp);
+        return String.format(Locale.US, "%02d:%02d", c.get(java.util.Calendar.HOUR_OF_DAY), c.get(java.util.Calendar.MINUTE));
     }
 
     private static String km(double meters) {
