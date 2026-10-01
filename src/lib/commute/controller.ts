@@ -12,6 +12,7 @@ import { PlaceKind, endTimeFromClock, retagTrips, withEndTime, withPlace } from 
 import { PlacesStore } from '../trips/places';
 import { TripRepository } from '../trips/repository';
 import { Trip } from '../trips/types';
+import { ProBilling } from './billing';
 import { ProStore } from './pro';
 
 /** A trip shorter than this AND under `MIN_TRIP_METERS` is treated as an accidental tap and not saved. */
@@ -45,6 +46,10 @@ export interface CommuteState {
   /** Which place is being set from the current location, if any. */
   locating: PlaceKind | null;
   isPro: boolean;
+  /** Google Play's localised Pro price, once known. */
+  proPrice: string | null;
+  /** True while Google Play's purchase sheet is open or a restore is running. */
+  purchasing: boolean;
 }
 
 export interface CommuteDeps {
@@ -52,6 +57,8 @@ export interface CommuteDeps {
   trips: TripRepository;
   places: PlacesStore;
   pro: ProStore;
+  /** Google Play Billing. Null in demo builds, where the Pro switch in Settings is used instead. */
+  billing: ProBilling | null;
   now?: () => number;
 }
 
@@ -81,7 +88,12 @@ export interface CommuteController {
   /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
   setTripEndClock(id: string, clock: string): Promise<boolean>;
   deleteAllTrips(): Promise<void>;
+  /** Demo builds only: flip Pro without buying. */
   setPro(isPro: boolean): Promise<void>;
+  /** Opens Google Play's purchase sheet for Pro. */
+  upgrade(): Promise<void>;
+  /** Re-checks what this Google account owns, e.g. on a new phone. */
+  restorePurchases(): Promise<void>;
 }
 
 export const INITIAL_COMMUTE_STATE: CommuteState = {
@@ -96,6 +108,8 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   placesPromptDismissed: false,
   locating: null,
   isPro: false,
+  proPrice: null,
+  purchasing: false,
 };
 
 /** Turns a recorder's finished trip into a saved `Trip`, labelled to work / to home from the saved places. */
@@ -169,6 +183,22 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     }
   }
 
+  /**
+   * Asks Google Play what this account owns and caches the answer. If Play can't be reached (offline),
+   * the cached value stands, so Pro keeps working on a plane.
+   */
+  async function syncPro(): Promise<boolean | null> {
+    if (!deps.billing) return null;
+    try {
+      const status = await deps.billing.status();
+      await deps.pro.save(status.owned);
+      set({ isPro: status.owned, proPrice: status.price ?? state.proPrice });
+      return status.owned;
+    } catch {
+      return null;
+    }
+  }
+
   async function savePlace(kind: PlaceKind, where: LatLng | null) {
     const places = withPlace(state.places, kind, where);
     await deps.places.save(places);
@@ -195,6 +225,8 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
         set({ trips, places, placesPromptDismissed, isPro });
         await fileFinished();
         applySnapshot(await deps.tracker.getState());
+        void syncPro();
+        deps.billing?.onUpdated(() => void syncPro());
         deps.tracker.subscribe(
           (snapshot) => {
             if (snapshot.phase === 'tracking') applySnapshot(snapshot);
@@ -320,6 +352,44 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     async setPro(isPro) {
       await deps.pro.save(isPro);
       set({ isPro });
+    },
+
+    async upgrade() {
+      if (state.purchasing || state.isPro) return;
+      if (!deps.billing) {
+        // Demo build: unlock locally.
+        await controller.setPro(true);
+        return;
+      }
+      set({ purchasing: true, notice: null });
+      try {
+        const outcome = await deps.billing.purchase();
+        if (outcome === 'purchased') {
+          await deps.pro.save(true);
+          set({ isPro: true, notice: 'Pro unlocked. Thank you!' });
+        } else if (outcome === 'pending') {
+          set({ notice: "Payment pending. Pro unlocks automatically once Google Play confirms it." });
+        }
+      } catch {
+        set({ notice: "Couldn't reach Google Play. Check your connection and try again." });
+      } finally {
+        set({ purchasing: false });
+      }
+    },
+
+    async restorePurchases() {
+      if (state.purchasing || !deps.billing) return;
+      set({ purchasing: true, notice: null });
+      const owned = await syncPro();
+      set({
+        purchasing: false,
+        notice:
+          owned === null
+            ? "Couldn't reach Google Play. Check your connection and try again."
+            : owned
+              ? 'Pro restored.'
+              : 'No Pro purchase found on this Google account.',
+      });
     },
   };
   return controller;

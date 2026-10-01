@@ -5,6 +5,7 @@ import { FinishedTrip, LocationError, SessionSnapshot, TrackerService, TrackerSn
 import { createPlacesStore } from '../trips/places';
 import { createTripRepository } from '../trips/repository';
 import { STALE_AFTER_MS, createCommuteController, toTrip } from './controller';
+import { ProBilling, ProStatus, PurchaseOutcome } from './billing';
 import { createProStore } from './pro';
 
 const T0 = new Date(2026, 8, 30, 8, 0).getTime();
@@ -100,7 +101,25 @@ function fakeRecorder(clock: () => number) {
   };
 }
 
-function setup(store = createMemoryStore()) {
+function fakeBilling() {
+  let status: ProStatus | Error = { owned: false, pending: false, price: '₹49.00' };
+  let outcome: PurchaseOutcome | Error = 'purchased';
+  const billing: ProBilling = {
+    status: async () => {
+      if (status instanceof Error) throw status;
+      return status;
+    },
+    purchase: async () => {
+      if (outcome instanceof Error) throw outcome;
+      if (outcome === 'purchased' && !(status instanceof Error)) status = { ...status, owned: true };
+      return outcome;
+    },
+    onUpdated: () => {},
+  };
+  return { billing, setStatus: (s: ProStatus | Error) => (status = s), setOutcome: (o: PurchaseOutcome | Error) => (outcome = o) };
+}
+
+function setup(store = createMemoryStore(), play: ReturnType<typeof fakeBilling> | null = null) {
   let clock = T0;
   const recorder = fakeRecorder(() => clock);
   const controller = createCommuteController({
@@ -108,6 +127,7 @@ function setup(store = createMemoryStore()) {
     trips: createTripRepository(store),
     places: createPlacesStore(store),
     pro: createProStore(store),
+    billing: play?.billing ?? null,
     now: () => clock,
   });
   return { controller, recorder, store, advance: (ms: number) => (clock += ms), setClock: (ms: number) => (clock = ms) };
@@ -340,5 +360,72 @@ describe('toTrip', () => {
   });
   it('an end before the start becomes zero duration', () => {
     expect(toTrip({ id: 'x', startedAt: T0, endedAt: T0 - 1, distanceMeters: 0 }, {}).durationSeconds).toBe(0);
+  });
+});
+
+describe('Google Play billing', () => {
+  it('shows Play\'s price and stays Free when nothing is owned', async () => {
+    const play = fakeBilling();
+    const { controller } = setup(createMemoryStore(), play);
+    await controller.init();
+    await flush();
+    expect(controller.getState()).toMatchObject({ isPro: false, proPrice: '₹49.00' });
+  });
+
+  it('a completed purchase unlocks Pro and survives a restart', async () => {
+    const play = fakeBilling();
+    const { controller, store } = setup(createMemoryStore(), play);
+    await controller.init();
+    await controller.upgrade();
+    expect(controller.getState()).toMatchObject({ isPro: true, notice: 'Pro unlocked. Thank you!' });
+    const restarted = setup(store, play).controller;
+    await restarted.init();
+    await flush();
+    expect(restarted.getState().isPro).toBe(true);
+  });
+
+  it('a cancelled purchase changes nothing; a pending one says so', async () => {
+    const play = fakeBilling();
+    const { controller } = setup(createMemoryStore(), play);
+    await controller.init();
+    play.setOutcome('cancelled');
+    await controller.upgrade();
+    expect(controller.getState()).toMatchObject({ isPro: false, notice: null });
+    play.setOutcome('pending');
+    await controller.upgrade();
+    expect(controller.getState().notice).toMatch(/pending/i);
+  });
+
+  it('restore finds an earlier purchase on a new phone', async () => {
+    const play = fakeBilling();
+    play.setStatus({ owned: true, pending: false });
+    const { controller } = setup(createMemoryStore(), play);
+    await controller.init();
+    await controller.restorePurchases();
+    expect(controller.getState()).toMatchObject({ isPro: true, notice: 'Pro restored.' });
+  });
+
+  it('a refund removes Pro at the next check', async () => {
+    const play = fakeBilling();
+    const store = createMemoryStore();
+    await createProStore(store).save(true);
+    play.setStatus({ owned: false, pending: false });
+    const { controller } = setup(store, play);
+    await controller.init();
+    await flush();
+    expect(controller.getState().isPro).toBe(false);
+  });
+
+  it('offline: keeps the cached Pro and explains on restore', async () => {
+    const play = fakeBilling();
+    const store = createMemoryStore();
+    await createProStore(store).save(true);
+    play.setStatus(new Error('offline'));
+    const { controller } = setup(store, play);
+    await controller.init();
+    await flush();
+    expect(controller.getState().isPro).toBe(true);
+    await controller.restorePurchases();
+    expect(controller.getState().notice).toMatch(/Couldn't reach Google Play/);
   });
 });

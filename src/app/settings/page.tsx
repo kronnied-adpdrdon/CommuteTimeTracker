@@ -116,11 +116,17 @@ export default function SettingsPage() {
               ? 'Reports and exports are unlocked. Thanks for supporting the app.'
               : 'Unlock reports for any date range, with PDF and CSV export. ₹49, one-time.'}
           </p>
-          {!state.isPro && (
-            <Link href="/pricing" className={styles.linkButton} style={{ textDecoration: 'none' }}>
-              See what Pro includes
-            </Link>
-          )}
+          <div className={styles.bannerActions} style={{ flexWrap: 'wrap', rowGap: '6px' }}>
+            {!state.isPro && (
+              <Link href="/pricing" className={styles.linkButton} style={{ textDecoration: 'none' }}>
+                See what Pro includes
+              </Link>
+            )}
+            <button className={styles.linkButton} disabled={state.purchasing} onClick={() => commute.restorePurchases()}>
+              {state.purchasing ? 'Checking Google Play…' : 'Restore purchase'}
+            </button>
+          </div>
+          {state.notice && <p className={styles.cardText}>{state.notice}</p>}
         </div>
 
         <div className={styles.card}>

@@ -76,7 +76,7 @@ Working backwards from the fixed constraints: production review after applying t
 
 - [x] Install `@capgo/background-geolocation` 8.4.7; set `android.useLegacyBridge: true` in `capacitor.config.ts`
 - [x] Manifest: location, foreground-service and notification permissions + `foregroundServiceType="location"` come from the plugin (verified in the merged manifest); plugin's geofence receivers and `RECEIVE_BOOT_COMPLETED` removed
-- [ ] Add `com.android.vending.BILLING` (comes with the billing plugin in Phase 5)
+- [x] `com.android.vending.BILLING` (from Play Billing Library 9.1.0, in the release manifest)
 - [x] **No `ACCESS_BACKGROUND_LOCATION`** — verified: the emulator's permission prompt offers only "While using the app"
 - [x] Permission flow: Android prompts on first Start; refused permission / location off show a message with Open Settings
 - [x] "Approximate" location, tested on the emulator: Android first offers to switch to Precise; if the user keeps Approximate, the plugin refuses to start and the app explains how to turn on Precise. A coarse-readings warning also covers the case defensively
@@ -110,9 +110,9 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Widget texts: "Commute" title, caption ("Tap ▶ to start your trip" / "Started at 08:05" / "Paused · tap ▶ to resume"), and a Start / Stop / Resume label under the button
 - [x] Tracking notification has its own Stop button and live timer
 - [x] Trips stopped from the widget or notification are queued natively and filed into History (with work/home labels) when the app next opens; instantly if it's open
-- [ ] Self-host Inter (drop the Google Fonts `@import`)
+- [x] Self-host Inter via `next/font` (no Google Fonts request at runtime; verified none in the build)
 - [ ] Loading / empty / error states
-- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 94 tests; plus 18 Java tracker tests: `./gradlew testDebugUnitTest`)
+- [x] Vitest for Haversine, tracker, duration formatting, weekly aggregation, tagging (`npm test`, 103 tests; plus 18 Java tracker tests: `./gradlew testDebugUnitTest`)
 
 **Exit:** a real walk/drive gives plausible time + distance surviving screen lock and app restart.
 
@@ -124,7 +124,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Remove the login screen (`src/app/login/`) and the `/login` check in `BottomNav.tsx`
 - [x] Profile tab becomes **Settings** (Home and Office, Your data / Delete all). Home screen gear icon now opens it
 - [x] Settings: Your Plan (Free / Pro), Appearance, Your Data
-- [ ] Settings: Restore purchase (with Phase 5 billing)
+- [x] Settings: Restore purchase
 - [x] **Android Auto Backup restores trips and places** after uninstall + reinstall (tested with the emulator's local backup store; backup was ~4.3 MB of the 25 MB limit). On real phones it goes through the Google account, about daily, if Google backup is on
 - [x] Update README: "Secure Local Storage" / privacy-first is accurate again
 
@@ -132,7 +132,9 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Phase 4 — Closed test + listing (**AAB uploaded by Oct 8**)
 
-- [ ] Release AAB (not APK); enable Play App Signing
+- [x] App icon (pin + clock, adaptive + Android 13 themed + legacy PNGs) and splash screen; `store/play-icon-512.png` for the listing
+- [x] Release AAB builds and is signed with the upload key: `cd android && JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home ./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab` (run `npm run build:android` first)
+- [ ] Upload the AAB and enable Play App Signing
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
 - [ ] Icon 512×512, feature graphic 1024×500, ≥2 phone screenshots, short + full description
@@ -140,7 +142,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Foreground service declaration (`location`) + **demo video** of tapping Start and the notification appearing
 - [ ] Data safety form: precise location (app functionality, stored on device), purchase history (Google Play / billing provider); no accounts, no data sold — must match code and privacy policy
 - [ ] Content rating (IARC), ads declaration, target audience
-- [ ] Check native libs against the 16 KB page size requirement
+- [x] 16 KB page size: the bundle has no native libraries, so nothing to align
 - [ ] Read the Pre-launch report after the first upload
 
 **Exit:** 12 testers opted in; day 1 of 14 logged.
@@ -150,9 +152,12 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Decide what Pro unlocks: **reports only** (any date range). No free preview; no ₹/km reimbursement line in v1
 - [ ] Payments profile + India tax details (GST/PAN) in Play Console
 - [ ] One in-app product: **Pro, ₹49, one-time (non-consumable)**
-- [ ] Billing: RevenueCat (validates purchases without our own server) vs. checking on the phone only (recommended at ₹49). **Open question.** RevenueCat would have to be named in the privacy policy
+- [x] Billing decided (1 Oct 2026): **checked on the phone**, no RevenueCat. `ProBillingPlugin` (Play Billing 9.1.0): status at launch, purchase, acknowledge, restore; cached for offline
+- [ ] Create the one-time product in Play Console with product ID **`pro`** at ₹49 (needs the payments profile and an uploaded AAB first)
+- [ ] Add licence testers in Play Console so testers can buy without being charged
 - [x] Plans screen: Free (₹0) vs Pro (₹49 one-time) comparison, reached from Reports and Settings
-- [ ] Upgrade button → Google Play purchase; Restore purchase; handle pending / cancelled / refunded (today: demo builds unlock locally, release builds say purchases open at launch)
+- [x] Upgrade → Google Play purchase sheet; Restore purchase (Plans and Settings); pending, cancelled, refunded and offline handled (unit-tested); localised price from Play when available
+- [ ] Test a real purchase end to end once the product exists (licence tester)
 - [x] Plans reachable from Reports (Unlock with Pro) and Settings (Your Plan)
 - [x] Reports (Pro): This Week / Last Week / This Month / Last Month / Custom; summary, work vs home split, trip preview; **PDF and CSV export** through Android's share menu (verified: exported PDF opened correctly). Free users see what Pro adds and a blurred sample
 - [x] PDF made by a small built-in writer (no PDF library); CSV opens in Excel / Sheets

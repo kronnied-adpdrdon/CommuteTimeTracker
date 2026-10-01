@@ -6,6 +6,8 @@ import { nativeTracker } from '../tracking/nativeTracker';
 import { createPlacesStore } from '../trips/places';
 import { createTripRepository } from '../trips/repository';
 import { CommuteState, INITIAL_COMMUTE_STATE, createCommuteController } from './controller';
+import { DEV_TOOLS } from '../devtools';
+import { nativeBilling } from './billing';
 import { createProStore } from './pro';
 
 /** Capacitor Preferences, imported lazily so the static build never loads native code. */
@@ -21,6 +23,8 @@ export const commute = createCommuteController({
   trips: createTripRepository(preferences),
   places: createPlacesStore(preferences),
   pro: createProStore(preferences),
+  // Demo builds use the Developer Preview switch instead of real purchases.
+  billing: DEV_TOOLS ? null : nativeBilling,
 });
 
 if (typeof document !== 'undefined') {

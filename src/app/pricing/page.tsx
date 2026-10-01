@@ -1,26 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
 import ProFeatureList, { FREE_FEATURES, PRO_FEATURES } from '@/components/ProFeatureList';
 import { commute, useCommute } from '@/lib/commute';
-import { DEV_TOOLS } from '@/lib/devtools';
 
 export default function PricingPage() {
   const router = useRouter();
-  const { isPro } = useCommute();
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function upgrade() {
-    if (DEV_TOOLS) {
-      // Demo builds: unlock locally so the Pro screens can be previewed.
-      await commute.setPro(true);
-      router.push('/reports');
-      return;
-    }
-    setMessage('Purchases open once the app is live on Google Play.');
-  }
+  const { isPro, proPrice, purchasing, notice } = useCommute();
+  const price = proPrice ?? '₹49';
 
   return (
     <>
@@ -52,18 +41,35 @@ export default function PricingPage() {
               <span className={styles.proBadge}>BEST VALUE</span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 800, fontSize: '1.4rem' }}>₹49</div>
+              <div style={{ fontWeight: 800, fontSize: '1.4rem' }}>{price}</div>
               <div className={styles.cardText}>one-time</div>
             </div>
           </div>
           <div className={styles.cardText}>Everything in Free, plus:</div>
           <ProFeatureList features={PRO_FEATURES} color="var(--pro-color)" />
           {isPro ? (
-            <div style={{ color: 'var(--success-color)', fontWeight: 700 }}>You have Pro ✓</div>
+            <>
+              <div style={{ color: 'var(--success-color)', fontWeight: 700 }}>You have Pro ✓</div>
+              <Link href="/reports" className="btn-primary" style={{ textDecoration: 'none' }}>Go to Reports</Link>
+            </>
           ) : (
-            <button className="btn-primary" onClick={upgrade}>Upgrade to Pro · ₹49</button>
+            <button className="btn-primary" disabled={purchasing} onClick={() => commute.upgrade()}>
+              {purchasing ? 'Opening Google Play…' : `Upgrade to Pro · ${price}`}
+            </button>
           )}
-          {message && <p className={styles.cardText}>{message}</p>}
+          {notice && (
+            <div className={styles.banner} role="status">
+              <span>{notice}</span>
+              <div className={styles.bannerActions}>
+                <button className={styles.linkButton} onClick={() => commute.dismissMessages()}>OK</button>
+              </div>
+            </div>
+          )}
+          {!isPro && (
+            <button className={styles.linkButton} style={{ alignSelf: 'center' }} disabled={purchasing} onClick={() => commute.restorePurchases()}>
+              Already bought it? Restore purchase
+            </button>
+          )}
           <p className={styles.cardText}>Paid once through Google Play. Restores automatically on any phone with the same Google account.</p>
         </div>
       </div>
