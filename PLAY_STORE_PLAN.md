@@ -6,6 +6,16 @@ The repo is a **UI prototype only**: every screen is built, but the timer, dista
 
 Decisions: **Personal Play account** · **manual start/stop tracking** (no `ACCESS_BACKGROUND_LOCATION`) · **no app accounts, no Firebase in v1** (decided 30 Sep 2026) · **Free vs Pro (₹49 one-time) through Google Play**.
 
+**Free vs Pro (decided 1 Oct 2026):**
+
+| Everyone (Free) | Pro (₹49, one-time) |
+|---|---|
+| Unlimited tracking, edit/delete trips, Home/Office tagging | **Reports**, for any date range, including trips older than 2 weeks |
+| Home: This Week stats + the **last 3 commutes** | |
+| History: the **last 2 weeks** | |
+
+Older trips are **kept on the phone, never deleted**; they're just not shown in History. Weekly stats still count them. No free report preview, no reimbursement (₹/km) line in v1.
+
 **No accounts:** the user's Google account does the work. Google Play remembers the Pro purchase, and Android Auto Backup restores trips on a reinstall or new phone. No login screen, no account deletion flow, no SMS costs.
 
 Plugins (all verified Capacitor 8 compatible): `@capgo/background-geolocation` 8.4.7 (needs `android.useLegacyBridge: true`), `@capacitor/preferences` 8.0.1, `@revenuecat/purchases-capacitor` 13.6.1 (billing; see Phase 5).
@@ -82,9 +92,12 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Crash-recovery prompt in the UI: Resume / Save Trip / Discard — verified on the emulator by killing the app mid-trip
 - [x] `page.tsx`: real timer (from the saved start time), real distance, Start/Stop via a shared controller (`src/lib/commute/`) so tracking survives tab switches
 - [x] Real "This Week" totals, trend and "Last 5 Days" bars
+- [ ] Home: replace "Last 5 Days" with the **last 3 commutes** (individual trips)
 - [x] `history/page.tsx`: real data grouped by day + empty state (removed the chevron: there's no trip-detail screen to open)
+- [ ] History: show only the **last 14 days**; older trips stay stored. Add a line saying older trips are available in reports (Pro)
 - [ ] **First-launch setup:** set Home and Office ("stand there, tap Set"), skippable; editable later in Settings
 - [ ] **Edit and delete trips** in History (at minimum: delete, and change the end time)
+- [ ] Settings: **Delete all trips**. Needed because trips older than 2 weeks are hidden from History, so users can't delete them one by one
 - [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing). Wired: uses saved places (`places.ts`) when a trip finishes; needs the setup screen above to have any places
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
@@ -122,13 +135,13 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Phase 5 — Pro (₹49) and reports (Oct 8–20; **first thing cut if behind**)
 
-- [ ] **Decide what Pro unlocks** (open question)
+- [x] Decide what Pro unlocks: **reports only** (any date range). No free preview; no ₹/km reimbursement line in v1
 - [ ] Payments profile + India tax details (GST/PAN) in Play Console
 - [ ] One in-app product: **Pro, ₹49, one-time (non-consumable)**
-- [ ] Billing: RevenueCat (validates purchases without our own server) vs. checking on the phone only. Decide before building; RevenueCat must then be named in the privacy policy
+- [ ] Billing: RevenueCat (validates purchases without our own server) vs. checking on the phone only (recommended at ₹49). **Open question.** RevenueCat would have to be named in the privacy policy
 - [ ] Wire the Pricing screen to one Pro card (replace the three tiers); Restore purchase; handle pending / cancelled / refunded
 - [ ] Link to Pricing from somewhere (currently unreachable)
-- [ ] Reports: real date pickers, PDF, native share sheet
+- [ ] Reports (Pro): real date pickers, PDF covering any range (including hidden older trips), native share sheet. Free users tapping Generate see the Pro offer
 - [ ] Verify current India fee structure in Play Console before finalizing the price
 
 **Exit:** a licence-tester purchase unlocks Pro, survives a reinstall, and Restore works.
@@ -149,6 +162,7 @@ Working backwards from the fixed constraints: production review after applying t
 - Mode of transport (car / bike / metro / bus / walk), tapped after Stop
 - Insights: best departure time, worst weekday, hours per year commuting
 - Commute cost (fuel price or fare)
+- Reimbursement line on reports (₹/km × distance)
 - Sunday weekly summary notification
 - CSV export of trips
 - Optional "Sign in with Google" + cloud sync through Firebase (setup guide is in git history of this file)

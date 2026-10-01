@@ -25,9 +25,13 @@ Purchases are processed by Google Play. [IF REVENUECAT IS USED: Purchase validat
 
 To time your commutes and measure distance, show your history and weekly summaries, generate the reports you ask for, and unlock Pro. We do not sell your data, use it for advertising, or share it with advertisers.
 
+## How long it is kept
+
+Trips stay on your phone until you delete them or uninstall the app. History shows the last two weeks; older trips are kept so they can be included in reports.
+
 ## Deleting your data
 
-- Delete individual trips in the app (History).
+- Delete individual trips in the app (History), or all trips at once (Settings → Delete all trips).
 - Delete everything by clearing the app's storage (Settings → Apps → Commute Time Tracker → Storage → Clear storage) or by uninstalling the app.
 - Device backups stored by Google are managed in your Google account and phone backup settings.
 
