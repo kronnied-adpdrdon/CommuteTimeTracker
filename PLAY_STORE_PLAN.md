@@ -4,9 +4,11 @@
 
 The repo is a **UI prototype only**: every screen is built, but the timer, distance, history and weekly stats are hardcoded. There is no GPS code, persistence, auth, payments or report generation. It has never been built (`node_modules/` missing, not a git repo).
 
-Decisions: **Personal Play account** · **Google Play Billing in v1** · **manual start/stop tracking** (no `ACCESS_BACKGROUND_LOCATION`) · **Firebase phone OTP + Firestore**.
+Decisions: **Personal Play account** · **manual start/stop tracking** (no `ACCESS_BACKGROUND_LOCATION`) · **no app accounts, no Firebase in v1** (decided 30 Sep 2026) · **Free vs Pro (₹49 one-time) through Google Play**.
 
-Plugins (all verified Capacitor 8 compatible): `@capgo/background-geolocation` 8.4.7 (needs `android.useLegacyBridge: true`), `@capacitor-firebase/authentication` 8.5.2, `@capacitor-firebase/firestore` 8.5.2, `@revenuecat/purchases-capacitor` 13.6.1.
+**No accounts:** the user's Google account does the work. Google Play remembers the Pro purchase, and Android Auto Backup restores trips on a reinstall or new phone. No login screen, no account deletion flow, no SMS costs.
+
+Plugins (all verified Capacitor 8 compatible): `@capgo/background-geolocation` 8.4.7 (needs `android.useLegacyBridge: true`), `@capacitor/preferences` 8.0.1, `@revenuecat/purchases-capacitor` 13.6.1 (billing; see Phase 5).
 
 ## The Nov 1 schedule (today = Mon Sep 28)
 
@@ -17,7 +19,7 @@ Working backwards from the fixed constraints: production review after applying t
 | Sep 28–30 | Phase 0 + Phase 1 kick-off. **Play account created, testers recruited.** |
 | Oct 1–7 | Phase 2 minimum build: real tracking + local persistence + Billing permission |
 | **Oct 8 (hard deadline)** | First AAB in closed test, 12 testers opted in → 14-day clock starts |
-| Oct 8–22 | Auth, sync, billing, reports shipped as closed-track updates; store listing + forms |
+| Oct 8–22 | Settings, edit/delete trips, Pro + reports shipped as closed-track updates; store listing + forms |
 | **Oct 22** | 14 days elapsed → apply for production access |
 | Oct 23 | Submit production release |
 | Oct 23–Nov 1 | Review buffer (~9 days) |
@@ -50,17 +52,15 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] **Create Play Console personal account** ($25) — account created 29 Sep 2026 (user confirmed)
 - [x] Identity + address verification cleared in Play Console (user confirmed 30 Sep 2026)
 - [x] **Recruit 12 testers** (user confirmed 30 Sep 2026; Gmail accounts; each must opt in and stay in 14 days). Still to do later: they must actually opt in to the closed test
-- [ ] Firebase project + Android app + `google-services.json` (see Firebase guide below)
 - [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
-- [ ] Add those fingerprints to Firebase (after the project exists); add Play's app-signing key later
-- [ ] Firebase test phone numbers configured for reviewers
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
 - [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
 - [ ] **Back up the keystore AND its password off this Mac** (e.g. password manager + cloud drive). Losing them means a support request to Google
-- [ ] Host privacy policy at a public URL (must mention location, phone number, retention, deletion) — **draft written** in `docs/privacy-policy.md`; you still need to fill the `[PLACEHOLDERS]` and host it (Firebase Hosting is free)
-- [ ] Host a public account-deletion URL — **draft written** in `docs/account-deletion.md`; same placeholders and hosting step
+- [ ] Host privacy policy at a public URL — **draft rewritten for no accounts** in `docs/privacy-policy.md`; fill the `[PLACEHOLDERS]` and host it (GitHub Pages or Google Sites are free)
+- ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
+- ~~Account-deletion URL~~ — not required: the app has no accounts
 
-**Exit:** Play account verified, phone auth works with a test number, privacy policy live.
+**Exit:** Play account verified, privacy policy live.
 
 ## Phase 2 — Real tracking (Sep 30–Oct 7 minimum; polish continues)
 
@@ -83,8 +83,9 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] `page.tsx`: real timer (from the saved start time), real distance, Start/Stop via a shared controller (`src/lib/commute/`) so tracking survives tab switches
 - [x] Real "This Week" totals, trend and "Last 5 Days" bars
 - [x] `history/page.tsx`: real data grouped by day + empty state (removed the chevron: there's no trip-detail screen to open)
-- [ ] `profile/page.tsx`: editable fields, Home/Office location pickers
-- [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing when places are missing or contradictory). Not yet wired to the screens
+- [ ] **First-launch setup:** set Home and Office ("stand there, tap Set"), skippable; editable later in Settings
+- [ ] **Edit and delete trips** in History (at minimum: delete, and change the end time)
+- [x] Work/home direction tagging (`direction.ts`; returns `unknown` rather than guessing). Wired: uses saved places (`places.ts`) when a trip finishes; needs the setup screen above to have any places
 - [ ] Edge-to-edge: `env(safe-area-inset-*)`, `dvh`, fix `BottomNav` padding
 - [ ] Self-host Inter (drop the Google Fonts `@import`)
 - [ ] Loading / empty / error states
@@ -94,78 +95,73 @@ Working backwards from the fixed constraints: production review after applying t
 
 > Command-line builds need Android Studio's **JDK 21** (`~/Library/Java/JavaVirtualMachines/jbr-21.0.11`). The bundled JDK 25 is too new for Gradle 8.14.
 
-## Phase 3 — Auth and sync (Oct 8–15, inside the test window)
+## Phase 3 — No-account cleanup and backup
 
-- [ ] Review `npm audit`: 4 high findings in production deps (`firebase` → Firestore → `grpc-js`). Check for a newer `firebase` release before relying on it; don't run `audit fix --force`
-- [ ] Wire `login/page.tsx` to `@capacitor-firebase/authentication` (today it only checks `phone.length >= 10`)
-- [ ] OTP boxes: controlled state, auto-advance, paste, autofill
-- [ ] Real resend cooldown and error messages
-- [ ] Auth gating: redirect to `/login` when signed out
-- [ ] Firestore schema `users/{uid}/trips/{tripId}` + **owner-only security rules**, tested
-- [ ] App Check (Play Integrity)
-- [ ] Sync: local is source of truth; push to Firestore; offline queue
-- [ ] **In-app account deletion** (Firestore subtree + Auth user)
+- [ ] Remove the `firebase` npm package (unused) — also clears the 4 high `npm audit` findings, which all came from it
+- [ ] Remove the login screen (`src/app/login/`) and the `/login` check in `BottomNav.tsx`
+- [ ] Profile tab becomes **Settings**: Home and Office locations, Pro status + Restore purchase. Name / Mobile / Email fields removed
+- [ ] **Verify Android Auto Backup restores trips** on the emulator (`allowBackup="true"` is already set). Known limits: runs about once a day (idle, charging, Wi-Fi) and needs the user's Google backup switched on
+- [ ] Update README: "Secure Local Storage" / privacy-first is accurate again
 
-**Exit:** sign in on a fresh install and trips restore.
+**Exit:** no login anywhere; a reinstall with backup restores trips.
 
 ## Phase 4 — Closed test + listing (**AAB uploaded by Oct 8**)
 
-- [ ] Release AAB (not APK); enable Play App Signing; add Play SHA-1/SHA-256 to Firebase
+- [ ] Release AAB (not APK); enable Play App Signing
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
 - [ ] Icon 512×512, feature graphic 1024×500, ≥2 phone screenshots, short + full description
-- [ ] App access instructions with a Firebase test number and OTP
+- [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) + **demo video** of tapping Start and the notification appearing
-- [ ] Data safety form (precise location, phone number, encryption in transit, deletion route) — must match code and privacy policy
+- [ ] Data safety form: precise location (app functionality, stored on device), purchase history (Google Play / billing provider); no accounts, no data sold — must match code and privacy policy
 - [ ] Content rating (IARC), ads declaration, target audience
 - [ ] Check native libs against the 16 KB page size requirement
 - [ ] Read the Pre-launch report after the first upload
 
 **Exit:** 12 testers opted in; day 1 of 14 logged.
 
-## Phase 5 — Billing and reports (Oct 8–20; **first thing cut if behind**)
+## Phase 5 — Pro (₹49) and reports (Oct 8–20; **first thing cut if behind**)
 
-- [ ] Payments profile + India tax details (GST/PAN)
-- [ ] Create in-app products: ₹9 (1 report), ₹29 (5 reports), ₹99 (Lifetime Pro)
-- [ ] Integrate RevenueCat; wire `/pricing` "Buy Now"; restore purchases; handle pending / cancelled / refunded
-- [ ] Credit ledger in Firestore, written server-side from validated receipts
-- [ ] Link to `/pricing` from somewhere (currently unreachable)
-- [ ] Reports: real date pickers, client-side PDF, native share sheet; deduct a credit only on success
-- [ ] Verify current India fee structure in Play Console before finalizing prices
+- [ ] **Decide what Pro unlocks** (open question)
+- [ ] Payments profile + India tax details (GST/PAN) in Play Console
+- [ ] One in-app product: **Pro, ₹49, one-time (non-consumable)**
+- [ ] Billing: RevenueCat (validates purchases without our own server) vs. checking on the phone only. Decide before building; RevenueCat must then be named in the privacy policy
+- [ ] Wire the Pricing screen to one Pro card (replace the three tiers); Restore purchase; handle pending / cancelled / refunded
+- [ ] Link to Pricing from somewhere (currently unreachable)
+- [ ] Reports: real date pickers, PDF, native share sheet
+- [ ] Verify current India fee structure in Play Console before finalizing the price
 
-**Exit:** a licence-tester purchase grants a credit that produces a PDF.
+**Exit:** a licence-tester purchase unlocks Pro, survives a reinstall, and Restore works.
 
 ## Phase 6 — Production (Oct 22 → Nov 1)
 
 - [ ] **Oct 22:** apply for production access
 - [ ] Fix closed-test feedback (expect GPS accuracy and battery)
-- [ ] Update README ("Secure Local Storage" is no longer true with Firestore)
-- [ ] Add Crashlytics
+- [ ] Crash reporting: Play Console's Android vitals covers crashes with no SDK; add a crash tool only if needed (Crashlytics would bring Firebase back)
 - [ ] Staged rollout at ~10%; watch Android vitals
 - [ ] 100% rollout
 
 ---
 
-## Firebase project setup guide
+## Version 2 backlog (agreed to defer, 30 Sep 2026)
 
-1. **Create project** at console.firebase.google.com → Add project → name it, Analytics optional.
-2. **Add Android app**: package name exactly `com.commute.tracker` → download `google-services.json` → place at `android/app/google-services.json`. `build.gradle` applies the plugin automatically when the file exists.
-3. **SHA fingerprints** (after Phase 0): `cd android && ./gradlew signingReport` → copy SHA-1 and SHA-256 for `debug`, later for your release keystore → Project settings → Your apps → Add fingerprint. Add a third once Play App Signing issues its key.
-4. **Authentication** → Sign-in method → enable **Phone**. Add **test phone numbers** with fixed codes.
-5. **Billing plan**: Phone auth to real numbers may require upgrading to Blaze (pay-as-you-go); I believe this changed for newer projects but have not verified — check the console. Set a budget alert either way.
-6. **Google Cloud**: enable the **Play Integrity API** (phone auth uses it on Android).
-7. **Firestore** → Create database → production mode → region **asia-south1 (Mumbai)** for Indian users (region cannot be changed later).
-8. **Security rules**: `match /users/{uid}/{document=**} { allow read, write: if request.auth != null && request.auth.uid == uid; }`
-9. **App Check** → register the app with **Play Integrity**; enforce on Firestore and Auth after testing.
-10. **Real SMS to Indian numbers**: test on real numbers early; India SMS delivery can be slow or blocked without DLT registration on the sender side.
+- Forgot to start / stop: "Arrived? Tap to stop" prompt when still for a while or near Office/Home
+- Mode of transport (car / bike / metro / bus / walk), tapped after Stop
+- Insights: best departure time, worst weekday, hours per year commuting
+- Commute cost (fuel price or fare)
+- Sunday weekly summary notification
+- CSV export of trips
+- Optional "Sign in with Google" + cloud sync through Firebase (setup guide is in git history of this file)
+- Google Fused Location Provider (custom native plugin)
+- Automatic trip detection (needs background location: Play's strictest review)
 
 ## Verification
 
 - Unit: `npx vitest run`
 - Build: `npm run build:android`, `npm run lint`, release `bundleRelease`
 - Device: ≥2 physical phones; compare a known route against Google Maps; lock screen mid-trip; force-stop mid-trip
-- Auth: test number sign-in; reinstall restores trips; account deletion empties Firestore and Auth
-- Billing: licence-tester account for purchase, cancel, restore
+- Backup: uninstall/reinstall on an emulator with backup on; trips come back
+- Billing: licence-tester account for purchase, cancel, refund, restore on reinstall
 
 ## Sources
 

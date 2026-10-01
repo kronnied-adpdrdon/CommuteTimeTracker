@@ -4,34 +4,40 @@ Last updated: [DATE]
 
 Commute Time Tracker ("the app") is published by [YOUR LEGAL NAME] ("we"). Contact: [SUPPORT EMAIL].
 
-## What we collect
+**In short:** the app has no accounts and no servers of ours. Your trips stay on your phone.
 
-- **Phone number** — used to sign you in with a one-time password (OTP), and to identify your account.
-- **Precise location** — collected only while you have started a commute. Tracking begins when you tap Start and ends when you tap Stop. While tracking, the app shows a persistent notification and may keep collecting location with the screen off. We do not collect location in the background outside of a commute you started.
-- **Trip data** — for each commute you record: start and end times, duration, distance, the start and end location, and whether the trip was tagged as work or home. The full route you travelled is used only to measure distance while the trip is running; it is not saved.
-- **Saved places** — the Home and Office locations you choose to set.
-- **Profile details** — name and email, only if you enter them.
-- **Purchase information** — which report packs or plan you bought and your remaining report credits. Payment card details are handled by Google Play; we never see them.
+## What the app collects
 
-## How we use it
+- **Precise location**, only while you have started a commute. Tracking begins when you tap Start and ends when you tap Stop. While tracking, the app shows a persistent notification and may keep collecting location with the screen off. It does not collect location at any other time.
+- **Trip data**: for each commute you record, the start and end times, duration, distance, the start and end location, and whether it was a trip to work or home. The full route is used only to measure distance while the trip is running; it is not saved.
+- **Saved places**: the Home and Office locations you choose to set.
+- **Purchase status**: whether you have bought Pro. Payments are handled entirely by Google Play; we never see your card or payment details.
 
-To time your commutes and measure distance, show your history and weekly summaries, generate the reports you request, keep your account secure, and restore your data if you reinstall or change phone. We do not sell your data, use it for advertising, or share it with advertisers.
+## Where it is stored
 
-## Where it is stored and who processes it
+All of the above is stored on your phone. We do not run servers and do not receive your trips or location.
 
-Your data is stored on your device and synced to Google Firebase (Authentication and Cloud Firestore, hosted in [FIREBASE REGION, e.g. Mumbai, India]). Purchases are processed by Google Play and validated through RevenueCat. These providers process data on our behalf under their own terms. Data is encrypted in transit.
+If Android backup is switched on for your Google account, Android may include the app's data in your device backup, stored by Google, so it can be restored on a reinstall or a new phone. This is controlled in your phone's settings, not by the app.
 
-## Retention and deletion
+Purchases are processed by Google Play. [IF REVENUECAT IS USED: Purchase validation is handled by RevenueCat, which receives an anonymous app identifier and your purchase receipt, not your trips or location.]
 
-We keep your data until you delete your account. You can delete your account and all associated data inside the app (Profile → Delete account), or by following [ACCOUNT DELETION URL]. Deletion removes your Firebase account and all trips, saved places and profile data. Purchase records held by Google Play are governed by Google's policies.
+## How it is used
+
+To time your commutes and measure distance, show your history and weekly summaries, generate the reports you ask for, and unlock Pro. We do not sell your data, use it for advertising, or share it with advertisers.
+
+## Deleting your data
+
+- Delete individual trips in the app (History).
+- Delete everything by clearing the app's storage (Settings → Apps → Commute Time Tracker → Storage → Clear storage) or by uninstalling the app.
+- Device backups stored by Google are managed in your Google account and phone backup settings.
 
 ## Your choices
 
-You can deny or revoke location permission at any time in your device settings; tracking will not work without it. You can edit or delete your profile details and saved places in the app.
+You can deny or revoke location permission at any time in your phone's settings; tracking will not work without it.
 
 ## Children
 
-The app is not directed at children under 13, and we do not knowingly collect their data.
+The app is not directed at children under 13.
 
 ## Changes
 
