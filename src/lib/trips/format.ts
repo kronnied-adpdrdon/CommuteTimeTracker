@@ -37,3 +37,15 @@ export function formatDayLabel(timestamp: number, withYear = false): string {
   const year = withYear ? ` ${d.getFullYear()}` : '';
   return `${d.getDate()} ${MONTHS[d.getMonth()]}${year} (${WEEKDAYS[d.getDay()]})`;
 }
+
+/** "Today", "Yesterday", or "Mon, 28 Sep" (with the year if it isn't this year). */
+export function formatRelativeDay(timestamp: number, now: number): string {
+  const day = new Date(timestamp);
+  const today = new Date(now);
+  const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const daysAgo = Math.round((midnight(today) - midnight(day)) / 86_400_000);
+  if (daysAgo === 0) return 'Today';
+  if (daysAgo === 1) return 'Yesterday';
+  const year = day.getFullYear() === today.getFullYear() ? '' : ` ${day.getFullYear()}`;
+  return `${WEEKDAYS[day.getDay()]}, ${day.getDate()} ${MONTHS[day.getMonth()]}${year}`;
+}

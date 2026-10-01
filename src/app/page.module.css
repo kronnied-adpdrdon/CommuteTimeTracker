@@ -423,3 +423,214 @@
   gap: 8px;
   align-items: flex-start;
 }
+
+/* Trip rows (Home, History, Reports) */
+.tripRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.tripRowInset {
+  padding: 12px 0;
+}
+
+.tripIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--primary-blue-light);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tripMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.tripTitle {
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.tripSub {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tripStats {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tripDuration {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.tripKm {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.tripActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-color);
+}
+
+.iconButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: var(--bg-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButtonDanger {
+  color: var(--danger-color);
+}
+
+/* History */
+.historySummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 14px 4px;
+  box-shadow: var(--card-shadow);
+}
+
+.historySummaryItem {
+  text-align: center;
+}
+
+.historySummaryItem + .historySummaryItem {
+  border-left: 1px solid var(--border-color);
+}
+
+.historySummaryValue {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.historySummaryLabel {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 4px 8px;
+}
+
+.dayTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.dayMeta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.dayCard {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin-left: 68px;
+}
+
+/* Home / Office setup */
+.placeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-color);
+}
+
+.placeHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.placeStatus {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.placeStatusSet {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.pillButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pillButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pillButtonPrimary {
+  background: var(--primary-blue);
+  border-color: var(--primary-blue);
+  color: var(--on-primary);
+}
+
+.buttonRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Inside a place card (which uses the page background) give icon buttons the card colour so they stay visible. */
+.placeCard .iconButton {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+}

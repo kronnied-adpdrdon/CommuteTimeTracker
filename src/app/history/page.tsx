@@ -4,7 +4,8 @@ import { useState } from 'react';
 import styles from '../page.module.css';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
-import { formatDayLabel, formatTimeOfDay } from '@/lib/trips/format';
+import { formatDistanceKm, formatDuration, formatRelativeDay, formatTimeOfDay } from '@/lib/trips/format';
+import { summarize } from '@/lib/reports/summary';
 import { groupByDay, tripsSince, windowStart } from '@/lib/trips/stats';
 import { Trip } from '@/lib/trips/types';
 
@@ -13,26 +14,13 @@ const HISTORY_DAYS = 14;
 
 type EditMode = 'edit' | 'delete';
 
-const iconButton = (color: string, background: string) => ({
-  width: '36px',
-  height: '36px',
-  borderRadius: '50%',
-  border: 'none',
-  background,
-  color,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-});
-
 function RowButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
     <>
-      <button aria-label="Edit trip" style={iconButton('var(--primary-blue)', 'var(--primary-blue-light)')} onClick={onEdit}>
+      <button aria-label="Edit trip" className={styles.iconButton} onClick={onEdit}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
       </button>
-      <button aria-label="Delete trip" style={iconButton('var(--danger-color)', 'var(--danger-light)')} onClick={onDelete}>
+      <button aria-label="Delete trip" className={`${styles.iconButton} ${styles.iconButtonDanger}`} onClick={onDelete}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
       </button>
     </>
@@ -102,6 +90,7 @@ export default function HistoryPage() {
   const visible = tripsSince(trips, windowStart(new Date(now), HISTORY_DAYS));
   const hiddenCount = trips.length - visible.length;
   const days = groupByDay(visible);
+  const totals = summarize(visible);
 
   return (
     <>
@@ -110,6 +99,23 @@ export default function HistoryPage() {
       </header>
 
       <div className={styles.homeContainer}>
+        {phase !== 'loading' && visible.length > 0 && (
+          <div className={styles.historySummary} aria-label="Last 2 weeks">
+            <div className={styles.historySummaryItem}>
+              <div className={styles.historySummaryValue}>{totals.tripCount}</div>
+              <div className={styles.historySummaryLabel}>Trips</div>
+            </div>
+            <div className={styles.historySummaryItem}>
+              <div className={styles.historySummaryValue}>{formatDuration(totals.totalSeconds)}</div>
+              <div className={styles.historySummaryLabel}>Time</div>
+            </div>
+            <div className={styles.historySummaryItem}>
+              <div className={styles.historySummaryValue}>{formatDistanceKm(totals.totalMeters)}</div>
+              <div className={styles.historySummaryLabel}>Distance</div>
+            </div>
+          </div>
+        )}
+
         {phase !== 'loading' && days.length === 0 && (
           <p className={styles.emptyState}>
             {trips.length > 0
@@ -119,31 +125,35 @@ export default function HistoryPage() {
         )}
 
         {days.map((day) => (
-          <div key={day.dayKey} style={{ marginBottom: '8px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '12px', color: 'var(--text-primary)' }}>
-              {formatDayLabel(day.dayStart, true)}
-            </h3>
+          <section key={day.dayKey}>
+            <div className={styles.dayHeader}>
+              <span className={styles.dayTitle}>{formatRelativeDay(day.dayStart, now)}</span>
+              <span className={styles.dayMeta}>
+                {day.trips.length} {day.trips.length === 1 ? 'trip' : 'trips'} · {formatDuration(day.totalSeconds)} · {formatDistanceKm(day.totalMeters)}
+              </span>
+            </div>
 
-            <div style={{ background: 'var(--surface-color)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div className={styles.dayCard}>
               {day.trips.map((trip, j) => (
-                <TripRow
-                  key={trip.id}
-                  trip={trip}
-                  divider={j < day.trips.length - 1}
-                  actions={
-                    <RowButtons
-                      onEdit={() => setEditing({ id: trip.id, mode: 'edit' })}
-                      onDelete={() => setEditing({ id: trip.id, mode: 'delete' })}
-                    />
-                  }
-                >
-                  {editing?.id === trip.id && (
-                    <TripEditor key={editing.mode} trip={trip} mode={editing.mode} onDone={() => setEditing(null)} />
-                  )}
-                </TripRow>
+                <div key={trip.id}>
+                  {j > 0 && <div className={styles.divider} />}
+                  <TripRow
+                    trip={trip}
+                    actions={
+                      <RowButtons
+                        onEdit={() => setEditing({ id: trip.id, mode: 'edit' })}
+                        onDelete={() => setEditing({ id: trip.id, mode: 'delete' })}
+                      />
+                    }
+                  >
+                    {editing?.id === trip.id && (
+                      <TripEditor key={editing.mode} trip={trip} mode={editing.mode} onDone={() => setEditing(null)} />
+                    )}
+                  </TripRow>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
         ))}
 
         {phase !== 'loading' && trips.length > 0 && (

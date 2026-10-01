@@ -103,6 +103,8 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Edge-to-edge: `viewport-fit=cover`, `env(safe-area-inset-*)` padding, `dvh`, status-bar backdrop, tab bar above the gesture bar (verified on Android 17 emulator)
 - [x] Dark mode: System / Light / Dark in Settings; status-bar icons follow (Capacitor 8 built-in `SystemBars`); widget has its own night colours
 - [x] History: Edit and Delete buttons visible on every entry
+- [x] History redesign: 2-week summary (trips / time / distance), "Today" / "Yesterday" / "Tue, 29 Sep" headings with day totals, rows titled To work / To home with time, duration and km; same row design on Home and Reports (briefcase = to work, house = to home)
+- [x] Home/Office setup redesign: place cards in Settings (status, Use current location, Last trip start / end, clear icon) and two side-by-side buttons on the Home first-launch card
 - [x] Home: removed the header gear (Settings is a tab)
 - [x] **Home-screen widget** (native, 4x1): status pill, live timer, live km, round Start/Stop button. **Start/Stop work without opening the app** (Android allows a location service to start from a widget tap); tapping elsewhere does nothing. Only if precise location isn't granted does Start open the app to ask. Light and dark. Verified on the emulator with the app process killed
 - [x] Widget texts: "Commute" title, caption ("Tap ▶ to start your trip" / "Started at 08:05" / "Paused · tap ▶ to resume"), and a Start / Stop / Resume label under the button

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import TripRow from '@/components/TripRow';
+import TripRow, { DirectionIcon } from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
@@ -72,25 +72,33 @@ export default function Home() {
 
         {showPlacesPrompt && (
           <div className={styles.banner}>
-            <span style={{ fontWeight: 700 }}>Set your Home and Office</span>
+            <span style={{ fontWeight: 700, fontSize: '1rem' }}>Set your Home and Office</span>
             <span style={{ color: 'var(--text-secondary)' }}>
-              So trips are labelled &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap when you&apos;re at each place, or do it later in Settings.
+              So trips are labelled &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap the one you&apos;re at now; do the other when you get there.
             </span>
-            <div className={styles.bannerActions} style={{ flexWrap: 'wrap', rowGap: '6px' }}>
-              {!places.home && (
-                <button className={styles.linkButton} disabled={state.locating !== null} onClick={() => commute.setPlaceHere('home')}>
-                  {state.locating === 'home' ? 'Finding your location…' : "I'm at Home now"}
-                </button>
-              )}
-              {!places.office && (
-                <button className={styles.linkButton} disabled={state.locating !== null} onClick={() => commute.setPlaceHere('office')}>
-                  {state.locating === 'office' ? 'Finding your location…' : "I'm at the Office now"}
-                </button>
-              )}
-              <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={() => commute.dismissPlacesPrompt()}>
-                Later
-              </button>
+            <div className={styles.buttonRow}>
+              {(['home', 'office'] as const).map((kind) => {
+                const saved = places[kind] !== undefined;
+                return (
+                  <button
+                    key={kind}
+                    className={`${styles.pillButton} ${saved ? '' : styles.pillButtonPrimary}`}
+                    disabled={saved || state.locating !== null}
+                    onClick={() => commute.setPlaceHere(kind)}
+                  >
+                    <DirectionIcon direction={kind === 'home' ? 'home' : 'work'} size={18} />
+                    {state.locating === kind
+                      ? 'Locating…'
+                      : saved
+                        ? `${kind === 'home' ? 'Home' : 'Office'} saved ✓`
+                        : `I'm at ${kind === 'home' ? 'Home' : 'the Office'}`}
+                  </button>
+                );
+              })}
             </div>
+            <button className={styles.linkButton} style={{ color: 'var(--text-secondary)', alignSelf: 'center' }} onClick={() => commute.dismissPlacesPrompt()}>
+              Maybe later
+            </button>
           </div>
         )}
 
@@ -197,7 +205,10 @@ export default function Home() {
           )}
 
           {recent.map((t, i) => (
-            <TripRow key={t.id} trip={t} showDay inset divider={i < recent.length - 1} />
+            <div key={t.id}>
+              {i > 0 && <div className={styles.divider} style={{ marginLeft: '52px' }} />}
+              <TripRow trip={t} showDay inset />
+            </div>
           ))}
         </div>
       </div>

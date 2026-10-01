@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay, formatTimeRange } from './format';
+import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatRelativeDay, formatTimeOfDay, formatTimeRange } from './format';
 
 describe('formatClock', () => {
   it('formats hh:mm:ss', () => {
@@ -49,5 +49,19 @@ describe('formatDayLabel', () => {
   });
   it('can include the year', () => {
     expect(formatDayLabel(new Date(2025, 8, 16, 9).getTime(), true)).toBe('16 Sep 2025 (Tue)');
+  });
+});
+
+describe('formatRelativeDay', () => {
+  const now = new Date(2026, 9, 1, 12).getTime(); // Thu 1 Oct 2026
+  it('says Today and Yesterday', () => {
+    expect(formatRelativeDay(new Date(2026, 9, 1, 0, 5).getTime(), now)).toBe('Today');
+    expect(formatRelativeDay(new Date(2026, 8, 30, 23, 59).getTime(), now)).toBe('Yesterday');
+  });
+  it('otherwise weekday, day and month', () => {
+    expect(formatRelativeDay(new Date(2026, 8, 28, 8).getTime(), now)).toBe('Mon, 28 Sep');
+  });
+  it('adds the year for other years', () => {
+    expect(formatRelativeDay(new Date(2025, 11, 31, 8).getTime(), now)).toBe('Wed, 31 Dec 2025');
   });
 });

@@ -184,7 +184,10 @@ function ProReports() {
             <div className={styles.cardTitle}>Trips in this report</div>
             {inPeriod.length === 0 && <p className={styles.cardText}>No trips in this period.</p>}
             {inPeriod.slice(0, PREVIEW_TRIPS).map((t, i) => (
-              <TripRow key={t.id} trip={t} showDay inset divider={i < Math.min(inPeriod.length, PREVIEW_TRIPS) - 1} />
+              <div key={t.id}>
+                {i > 0 && <div className={styles.divider} style={{ marginLeft: '52px' }} />}
+                <TripRow trip={t} showDay inset />
+              </div>
             ))}
             {inPeriod.length > PREVIEW_TRIPS && (
               <p className={styles.cardText}>+ {inPeriod.length - PREVIEW_TRIPS} more in the exported report</p>
