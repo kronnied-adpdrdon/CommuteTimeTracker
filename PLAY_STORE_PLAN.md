@@ -142,10 +142,10 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
 - [ ] Check the new icon and splash screen on a phone
 - [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
-- [ ] Icon 512×512, feature graphic 1024×500, ≥2 phone screenshots, short + full description
+- [ ] Icon 512×512 (done: `store/play-icon-512.png`), feature graphic 1024×500, ≥2 phone screenshots, short + full description (**drafted**: `store/listing.md`)
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
-- [ ] Foreground service declaration (`location`) + **demo video** of tapping Start and the notification appearing
-- [ ] Data safety form: precise location (app functionality, stored on device), purchase history (Google Play / billing provider); no accounts, no data sold — must match code and privacy policy
+- [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video** of tapping Start and the notification appearing
+- [ ] Data safety form (**drafted**: `store/play-console-answers.md`; recommended answer "no data collected" since everything stays on the phone; two points to confirm in Play Console's help text: Android backup, Google's location engine)
 - [ ] Content rating (IARC), ads declaration, target audience
 - [x] 16 KB page size: the bundle has no native libraries, so nothing to align
 - [ ] Read the Pre-launch report after the first upload
