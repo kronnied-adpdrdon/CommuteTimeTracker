@@ -99,23 +99,30 @@
   margin-bottom: 8px;
 }
 
+/* Ivory on the emerald hero: clearly the "end" action, and distinct from the gold Start, without a harsh red block. */
 .stopButton {
   margin-top: 26px;
-  background: transparent;
-  color: var(--hero-text);
-  border: 1.5px solid rgba(246, 242, 233, 0.5);
+  background: var(--hero-text);
+  color: #9e2f26;
+  border: none;
   border-radius: var(--radius-control);
-  padding: 16px;
+  padding: 17px;
   width: 100%;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(246, 242, 233, 0.16), 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  transition: transform 0.15s ease;
+}
+
+.stopButton:active {
+  transform: scale(0.985);
 }
 
 /* Champagne gold on the emerald hero. */
@@ -127,10 +134,10 @@
   border-radius: var(--radius-control);
   padding: 17px;
   width: 100%;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   display: flex;
   justify-content: center;
   align-items: center;
