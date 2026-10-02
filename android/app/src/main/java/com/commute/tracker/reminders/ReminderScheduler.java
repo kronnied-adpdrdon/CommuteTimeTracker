@@ -103,6 +103,40 @@ public final class ReminderScheduler {
         schedule(context, type);
     }
 
+    /** Why a reminder said nothing, for the developer preview. */
+    private static String quietReason(int type) {
+        switch (type) {
+            case ReminderLogic.LEAVE_NOW:
+                return "Time to leave only fires on weekdays, before any trip is logged today, once you have 3 or more trips to work.";
+            case ReminderLogic.EVENING:
+                return "Forgot to track only fires on weekdays when nothing is logged today and you commuted on 2 of the last 5 weekdays.";
+            case ReminderLogic.WEEKLY:
+                return "Weekly summary needs at least one trip this week.";
+            case ReminderLogic.MONTHLY:
+                return "Monthly recap needs at least one trip last month.";
+            case ReminderLogic.SLOW_DAY:
+                return "Slow-day heads-up needs 10 or more trips, 3 or more on the slow weekday, and that day at least 15% slower.";
+            default:
+                return "Nothing to say right now.";
+        }
+    }
+
+    /**
+     * Developer preview: shows what this reminder would say right now from the saved trips, ignoring its schedule.
+     * If conditions aren't met, shows why instead. Returns true if the real message was shown.
+     */
+    public static boolean preview(Context context, int type) {
+        List<ReminderLogic.Trip> trips = trips(context);
+        long now = System.currentTimeMillis();
+        ReminderLogic.Message message = type == ReminderLogic.SLOW_DAY ? ReminderLogic.slowDayPreview(trips, now) : ReminderLogic.messageFor(type, trips, now);
+        if (message == null) {
+            show(context, type, "Preview: nothing to send right now", quietReason(type));
+            return false;
+        }
+        show(context, type, message.title, message.body);
+        return true;
+    }
+
     public static boolean canNotify(Context context) {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return false;
         return NotificationManagerCompat.from(context).areNotificationsEnabled();

@@ -6,6 +6,7 @@ import styles from '../page.module.css';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import AddressPicker from '@/components/AddressPicker';
+import DeveloperTools from '@/components/DeveloperTools';
 import { PRIVACY_POLICY_URL } from '@/lib/support';
 import { useDevTools } from '@/lib/devtools';
 import { ThemePreference, useTheme } from '@/lib/theme';
@@ -156,25 +157,7 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {devTools && (
-          <div className={styles.card} style={{ borderStyle: 'dashed' }}>
-            <div className={styles.cardTitle}>Developer Preview</div>
-            <p className={styles.cardText}>Debug and demo builds only, never in the Play Store version. Switches between the Free and Pro screens without a purchase.</p>
-            <div className={styles.segmented} role="radiogroup" aria-label="Plan preview">
-              {[false, true].map((pro) => (
-                <button
-                  key={String(pro)}
-                  role="radio"
-                  aria-checked={state.isPro === pro}
-                  className={`${styles.segment} ${state.isPro === pro ? styles.segmentActive : ''}`}
-                  onClick={() => commute.setPro(pro)}
-                >
-                  {pro ? 'Pro' : 'Free'}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {devTools && <DeveloperTools />}
       </div>
     </>
   );

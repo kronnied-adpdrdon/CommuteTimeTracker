@@ -10,10 +10,16 @@ interface RemindersPlugin {
   configure(config: Record<string, unknown>): Promise<void>;
   canNotify(): Promise<{ allowed: boolean }>;
   sendTest(): Promise<void>;
+  previewNow(options: { type: number }): Promise<{ allowed: boolean; sent: boolean }>;
   requestPermissions(options: { permissions: 'notifications'[] }): Promise<unknown>;
 }
 
 const plugin = lazyPlugin<RemindersPlugin>('Reminders');
+
+export type ReminderKind = 'leaveNow' | 'evening' | 'weekly' | 'monthly' | 'slowDay' | 'setup';
+
+/** Must match the type numbers in the Android `ReminderLogic`. */
+const REMINDER_TYPE_IDS: Record<ReminderKind, number> = { leaveNow: 1, evening: 2, weekly: 3, monthly: 4, slowDay: 5, setup: 6 };
 
 const preferences: KeyValueStore = {
   get: async (key) => (await import('../storage/preferences')).preferencesStore.get(key),
@@ -106,6 +112,10 @@ export const notifications = {
       // Denied or unsupported: refreshAllowed reports the truth.
     }
     await refreshAllowed();
+  },
+  /** Developer tools: fires one reminder now from the saved trips, or a notice saying why it has nothing to send. */
+  async preview(kind: ReminderKind): Promise<{ allowed: boolean; sent: boolean }> {
+    return (await plugin()).native.previewNow({ type: REMINDER_TYPE_IDS[kind] });
   },
   async sendTest() {
     await (await plugin()).native.sendTest();

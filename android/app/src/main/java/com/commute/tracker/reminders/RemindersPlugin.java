@@ -31,6 +31,15 @@ public class RemindersPlugin extends Plugin {
         call.resolve(result);
     }
 
+    /** Developer preview: fires one reminder now from the saved trips, or says why it has nothing to send. */
+    @PluginMethod
+    public void previewNow(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("allowed", ReminderScheduler.canNotify(getContext()));
+        result.put("sent", ReminderScheduler.preview(getContext(), call.getInt("type", 0)));
+        call.resolve(result);
+    }
+
     /** Shows a sample notification so the user can see that they work. */
     @PluginMethod
     public void sendTest(PluginCall call) {

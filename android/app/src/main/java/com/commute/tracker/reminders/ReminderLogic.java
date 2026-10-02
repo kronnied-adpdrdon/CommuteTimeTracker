@@ -289,7 +289,26 @@ public final class ReminderLogic {
     public static Message slowDay(List<Trip> trips, long now) {
         Calendar today = at(now);
         if (!isWeekday(today)) return null;
-        int weekday = today.get(Calendar.DAY_OF_WEEK);
+        return slowDayFor(trips, now, today.get(Calendar.DAY_OF_WEEK));
+    }
+
+    /** For testing: the slow-day message for whichever weekday is slowest, whatever day it is today. */
+    public static Message slowDayPreview(List<Trip> trips, long now) {
+        Message best = null;
+        double bestExtra = 0;
+        for (int weekday = Calendar.MONDAY; weekday <= Calendar.FRIDAY; weekday++) {
+            Message message = slowDayFor(trips, now, weekday);
+            double[] stats = slowDayStats(trips, now, weekday);
+            if (message != null && stats[1] - stats[0] > bestExtra) {
+                bestExtra = stats[1] - stats[0];
+                best = message;
+            }
+        }
+        return best;
+    }
+
+    /** {average of all trips, average for this weekday, trips counted, trips on this weekday}, over the last 90 days. */
+    private static double[] slowDayStats(List<Trip> trips, long now, int weekday) {
         long sumAll = 0;
         int countAll = 0;
         long sumDay = 0;
@@ -303,9 +322,14 @@ public final class ReminderLogic {
                 countDay++;
             }
         }
-        if (countAll < 10 || countDay < 3) return null;
-        double avgAll = (double) sumAll / countAll;
-        double avgDay = (double) sumDay / countDay;
+        return new double[] { countAll == 0 ? 0 : (double) sumAll / countAll, countDay == 0 ? 0 : (double) sumDay / countDay, countAll, countDay };
+    }
+
+    private static Message slowDayFor(List<Trip> trips, long now, int weekday) {
+        double[] stats = slowDayStats(trips, now, weekday);
+        double avgAll = stats[0];
+        double avgDay = stats[1];
+        if (stats[2] < 10 || stats[3] < 3) return null;
         if (avgDay < avgAll * 1.15 || avgDay - avgAll < 180) return null;
         String name = WEEKDAYS[weekday - 1];
         long extraMinutes = Math.round((avgDay - avgAll) / 60);

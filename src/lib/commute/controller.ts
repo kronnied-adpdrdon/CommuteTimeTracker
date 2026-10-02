@@ -11,6 +11,7 @@ import { SavedPlaces, tagDirection } from '../trips/direction';
 import { PlaceKind, endTimeFromClock, retagTrips, withEndTime, withPlace } from '../trips/edit';
 import { PlacesStore } from '../trips/places';
 import { TripRepository } from '../trips/repository';
+import { isSampleTrip } from '../trips/sample';
 import { Trip } from '../trips/types';
 import { ProBilling } from './billing';
 import { ProStore } from './pro';
@@ -96,6 +97,12 @@ export interface CommuteController {
   /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
   setTripEndClock(id: string, clock: string): Promise<boolean>;
   deleteAllTrips(): Promise<void>;
+  /** Developer tools: replaces any earlier sample trips with these, and saves these Home and Office places. */
+  loadSampleData(data: { trips: Trip[]; places: SavedPlaces }): Promise<void>;
+  /** Developer tools: removes sample trips, leaving real ones alone. */
+  removeSampleData(): Promise<void>;
+  /** Developer tools: clears Home and Office and brings the first-launch pop-up back. */
+  resetPlacesPrompt(): Promise<void>;
   /** Demo builds only: flip Pro without buying. */
   setPro(isPro: boolean): Promise<void>;
   /** Opens Google Play's purchase sheet for Pro. */
@@ -358,6 +365,25 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     async deleteAllTrips() {
       await deps.trips.clear();
       set({ trips: [] });
+    },
+
+    async loadSampleData({ trips, places }) {
+      const real = (await deps.trips.list()).filter((t) => !isSampleTrip(t));
+      await deps.places.save(places);
+      await deps.trips.replaceAll(retagTrips([...real, ...trips], places));
+      set({ places, trips: await deps.trips.list() });
+    },
+
+    async removeSampleData() {
+      await deps.trips.replaceAll((await deps.trips.list()).filter((t) => !isSampleTrip(t)));
+      set({ trips: await deps.trips.list() });
+    },
+
+    async resetPlacesPrompt() {
+      await savePlace('home', null);
+      await savePlace('office', null);
+      await deps.places.setNeverAsk(false);
+      set({ placesPromptNeverAsk: false, placesPromptSnoozed: false });
     },
 
     async setPro(isPro) {

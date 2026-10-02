@@ -128,6 +128,18 @@ public class ReminderLogicTest {
     }
 
     @Test
+    public void slowDayPreviewFindsTheSlowestWeekdayOnAnyDay() {
+        List<ReminderLogic.Trip> trips = new ArrayList<>();
+        for (int day : new int[] { 7, 14, 21, 28 }) trips.add(trip(time(2026, 9, day, 8, 0), 60, "work"));
+        for (int day : new int[] { 8, 9, 10, 11, 15, 16, 17, 18 }) trips.add(trip(time(2026, 9, day, 8, 0), 40, "work"));
+        long saturday = time(2026, 10, 3, 12, 0);
+        assertNull(ReminderLogic.slowDay(trips, saturday));
+        ReminderLogic.Message preview = ReminderLogic.slowDayPreview(trips, saturday);
+        assertNotNull(preview);
+        assertTrue(preview.title, preview.title.startsWith("Monday"));
+    }
+
+    @Test
     public void slowDayStaysQuietWithTooLittleData() {
         assertNull(ReminderLogic.slowDay(habitTrips(), MONDAY_MORNING));
     }

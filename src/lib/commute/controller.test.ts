@@ -3,6 +3,7 @@ import { createMemoryStore } from '../storage/kv';
 import { LocationFix } from '../tracking/geo';
 import { FinishedTrip, LocationError, SessionSnapshot, TrackerService, TrackerSnapshot } from '../tracking/nativeTracker';
 import { createPlacesStore } from '../trips/places';
+import { SAMPLE_PLACES, generateSampleTrips, isSampleTrip } from '../trips/sample';
 import { createTripRepository } from '../trips/repository';
 import { STALE_AFTER_MS, createCommuteController, toTrip } from './controller';
 import { ProBilling, ProStatus, PurchaseOutcome } from './billing';
@@ -328,6 +329,45 @@ describe('places', () => {
     expect(controller.getState().places.home).toEqual({ ...home, label: '12 Park Street, Bengaluru' });
     await controller.setPlace('home', null);
     expect(controller.getState().places.home).toBeUndefined();
+  });
+});
+
+describe('sample data (developer tools)', () => {
+  it('loads sample trips and addresses, keeping real trips, and can remove just the samples', async () => {
+    const { controller, recorder, advance } = setup();
+    await controller.init();
+    await controller.start();
+    advance(305_000);
+    recorder.progress(2000, { lat: 12.95, lng: 77.6, accuracy: 7, timestamp: T0 });
+    await controller.stop();
+    const real = controller.getState().trips.length;
+    expect(real).toBe(1);
+
+    const data = generateSampleTrips(T0);
+    await controller.loadSampleData(data);
+    expect(controller.getState().places.home?.label).toBe(SAMPLE_PLACES.home?.label);
+    expect(controller.getState().trips.length).toBe(real + data.trips.length);
+
+    // Loading again replaces the samples instead of doubling them.
+    await controller.loadSampleData(data);
+    expect(controller.getState().trips.length).toBe(real + data.trips.length);
+
+    await controller.removeSampleData();
+    expect(controller.getState().trips.length).toBe(real);
+    expect(controller.getState().trips.some(isSampleTrip)).toBe(false);
+  });
+
+  it('can bring the first-launch pop-up back', async () => {
+    const { controller } = setup();
+    await controller.init();
+    await controller.loadSampleData(generateSampleTrips(T0));
+    await controller.setPlacesPromptNeverAsk(true);
+    controller.snoozePlacesPrompt();
+    await controller.resetPlacesPrompt();
+    const state = controller.getState();
+    expect(state.places).toEqual({});
+    expect(state.placesPromptNeverAsk).toBe(false);
+    expect(state.placesPromptSnoozed).toBe(false);
   });
 });
 
