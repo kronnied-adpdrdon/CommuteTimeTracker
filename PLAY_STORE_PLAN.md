@@ -154,7 +154,7 @@ Working backwards from the fixed constraints: production review after applying t
 
 ### Tester feedback round (2 Oct 2026)
 
-- [x] Premium redesign: "Emerald & Champagne" palette, Fraunces + DM Sans, hero tracking card, frosted tab bar, gold Pro accents, CSS fallbacks for old WebViews
+- [x] Premium redesign, then re-themed to **"Metro Line"** (3 Oct 2026): asphalt + signal amber, Barlow Condensed/Barlow, green Start / red Stop, route line on the hero card, lane-marking dividers, road-sign distance plates, "Express" Pro styling. CSS fallbacks for old WebViews. Avoid large blurred shadows on clipped cards (dark-stripe glitch in some WebViews)
 - [x] Older-phone location: falls back to Android's own GPS when Google Play services is missing or fails; start/resume no longer briefly show "Interrupted"; failure paths no longer crash the foreground service. **Not yet confirmed on a real older phone**: ask the tester to send a bug report from Settings
 - [x] Report a bug (diagnostics log attached) and Send feedback (up to 3 screenshots), via the user's email app. Set `NEXT_PUBLIC_SUPPORT_EMAIL` in `.env.local` before building
 - [x] Set Home/Office by address (Android Geocoder, OpenStreetMap fallback); "use current location" kept as a secondary link

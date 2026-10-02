@@ -29,7 +29,7 @@ export default function PricingPage() {
             </>
           ) : (
             <>
-              <button className="btn-primary btn-gold" disabled={purchasing} onClick={() => commute.upgrade()}>
+              <button className="btn-primary btn-pro" disabled={purchasing} onClick={() => commute.upgrade()}>
                 {purchasing ? 'Opening Google Play…' : `Upgrade to Pro · ${price}`}
               </button>
               <button className={styles.linkButton} style={{ alignSelf: 'center' }} disabled={purchasing} onClick={() => commute.restorePurchases()}>

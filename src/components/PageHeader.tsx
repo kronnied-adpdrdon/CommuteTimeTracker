@@ -10,7 +10,7 @@ export default function PageHeader({ title }: { title: string }) {
       <button
         aria-label="Back"
         onClick={() => router.back()}
-        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '4px', display: 'flex' }}
+        style={{ background: 'none', border: 'none', color: 'var(--link)', cursor: 'pointer', padding: '4px', display: 'flex' }}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>

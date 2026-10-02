@@ -58,14 +58,14 @@ export default function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               textDecoration: 'none',
-              color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+              color: isActive ? 'var(--link)' : 'var(--text-secondary)',
               gap: '4px',
               width: '25%',
               paddingTop: '8px',
               position: 'relative',
             }}
           >
-            {/* A short gold bar marks the current tab. */}
+            {/* A short amber bar marks the current tab. */}
             <span
               aria-hidden
               style={{
@@ -74,7 +74,7 @@ export default function BottomNav() {
                 width: isActive ? '22px' : '0px',
                 height: '3px',
                 borderRadius: '0 0 3px 3px',
-                background: 'var(--gold-gradient)',
+                background: 'var(--accent)',
                 transition: 'width 0.2s ease',
               }}
             />

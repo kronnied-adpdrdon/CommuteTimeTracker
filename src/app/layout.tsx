@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import AppLinks from "@/components/AppLinks";
 import BottomNav from "@/components/BottomNav";
@@ -9,9 +9,9 @@ import { RemindersSync } from "@/lib/notifications";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
 
 // Downloaded once at build time and bundled with the app, so text renders offline.
-// Fraunces (serif) is for headings and big numbers; DM Sans is for everything else.
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap", axes: ["opsz"] });
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
+// Barlow Condensed (highway-sign look) is for headings and big numbers; Barlow is for everything else.
+const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-barlow-condensed", display: "swap" });
+const barlow = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-barlow", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Commute Time Tracker",
@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     // The boot script may set data-theme before React hydrates.
-    <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${barlowCondensed.variable} ${barlow.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>

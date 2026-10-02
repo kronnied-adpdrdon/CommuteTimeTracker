@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#FFFDF8</color>
-    <color name="widget_text_primary">#14201B</color>
-    <color name="widget_text_secondary">#67706A</color>
-    <color name="widget_accent">#0F5A46</color>
-    <color name="widget_danger">#B3392F</color>
-    <color name="widget_success">#2E7D5B</color>
-    <color name="widget_pill">#EFE9DA</color>
+    <color name="widget_background">#FBFAF8</color>
+    <color name="widget_text_primary">#16181D</color>
+    <color name="widget_text_secondary">#656A73</color>
+    <!-- Green: the "go" colour for Start, and the notification tint. -->
+    <color name="widget_accent">#1E9D5D</color>
+    <color name="widget_danger">#C62F35</color>
+    <color name="widget_success">#1B8A55</color>
+    <color name="widget_pill">#ECEAE4</color>
     <color name="widget_on_accent">#FFFFFF</color>
 </resources>

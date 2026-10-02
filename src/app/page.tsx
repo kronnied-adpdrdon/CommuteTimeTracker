@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import RouteLine from '@/components/RouteLine';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
@@ -119,6 +120,8 @@ export default function Home() {
 
             <div className={styles.distanceDisplay}>{formatDistanceKm(tracking ? distanceMeters : 0)}</div>
             <div className={styles.timeLabel}>{waitingForGps ? 'Finding GPS signal…' : 'Distance travelled'}</div>
+
+            <RouteLine active={tracking} />
 
             {tracking ? (
               <button className={styles.stopButton} disabled={busy} onClick={() => commute.stop()}>

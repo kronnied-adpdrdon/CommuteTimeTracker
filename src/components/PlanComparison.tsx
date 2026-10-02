@@ -3,7 +3,7 @@ import { FREE_FEATURES, PRO_FEATURES } from '@/components/ProFeatureList';
 
 const Tick = ({ tone }: { tone: 'free' | 'pro' }) => (
   <svg aria-label="Included" role="img" width="22" height="22" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="12" fill={tone === 'pro' ? 'var(--gold)' : 'var(--success-color)'} />
+    <circle cx="12" cy="12" r="12" fill={tone === 'pro' ? 'var(--pro)' : 'var(--success-color)'} />
     <path d="M10 16l-4-4 1.4-1.4 2.6 2.6 6.6-6.6L18 8z" fill="var(--surface-color)" />
   </svg>
 );
@@ -23,7 +23,7 @@ export default function PlanComparison({ price }: { price: string }) {
           <div className={styles.comparePrice}>&#8377;0</div>
         </div>
         <div className={`${styles.comparePlan} ${styles.comparePlanPro}`}>
-          <div className="eyebrow" style={{ color: 'var(--on-gold)' }}>Pro</div>
+          <div className="eyebrow" style={{ color: 'var(--on-pro)', opacity: 0.8 }}>Pro</div>
           <div className={styles.comparePrice}>{price}</div>
           <div className={styles.compareOnce}>one-time</div>
         </div>

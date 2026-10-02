@@ -21,7 +21,7 @@
   box-shadow: var(--shadow-hero);
 }
 
-/* A soft gold glow in the corner. */
+/* A soft amber glow in the corner, like a streetlight. */
 .trackingCard::before {
   content: '';
   position: absolute;
@@ -30,7 +30,7 @@
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(230, 207, 148, 0.22) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 180, 0, 0.2) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -58,20 +58,20 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #e6cf94;
-  box-shadow: 0 0 0 0 rgba(230, 207, 148, 0.6);
+  background: #ffb400;
+  box-shadow: 0 0 0 0 rgba(255, 180, 0, 0.6);
   animation: pulse 1.8s ease-out infinite;
 }
 
 @keyframes pulse {
   to {
-    box-shadow: 0 0 0 10px rgba(230, 207, 148, 0);
+    box-shadow: 0 0 0 10px rgba(255, 180, 0, 0);
   }
 }
 
 .timeDisplay {
   font-family: var(--font-display);
-  font-size: 3.6rem;
+  font-size: 4.32rem;
   font-weight: 500;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
@@ -91,7 +91,7 @@
 
 .distanceDisplay {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 2.40rem;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--hero-text);
@@ -99,25 +99,26 @@
   margin-bottom: 8px;
 }
 
-/* Ivory on the emerald hero: clearly the "end" action, and distinct from the gold Start, without a harsh red block. */
+/* Red "stop" on the asphalt hero: the traffic-light counterpart to the green Start. */
 .stopButton {
-  margin-top: 26px;
-  background: var(--hero-text);
-  color: #9e2f26;
+  margin-top: 22px;
+  background: var(--stop-gradient);
+  color: var(--on-stop);
   border: none;
   border-radius: var(--radius-control);
-  padding: 17px;
+  padding: 16px;
   width: 100%;
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 0 0 4px rgba(246, 242, 233, 0.16), 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.22), 0 12px 24px -12px rgba(0, 0, 0, 0.6);
   transition: transform 0.15s ease;
 }
 
@@ -125,24 +126,25 @@
   transform: scale(0.985);
 }
 
-/* Champagne gold on the emerald hero. */
+/* Green "go" on the asphalt hero. */
 .startButton {
-  margin-top: 26px;
-  background: var(--gold-gradient);
-  color: var(--on-gold);
+  margin-top: 22px;
+  background: var(--go-gradient);
+  color: var(--on-go);
   border: none;
   border-radius: var(--radius-control);
-  padding: 17px;
+  padding: 16px;
   width: 100%;
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 0 0 4px rgba(67, 218, 139, 0.18), 0 12px 24px -12px rgba(0, 0, 0, 0.6);
   transition: transform 0.15s ease;
 }
 
@@ -216,7 +218,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: var(--accent);
+  color: var(--link);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -247,7 +249,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--link);
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -267,7 +269,7 @@
 
 .summaryValue {
   font-family: var(--font-display);
-  font-size: 1.9rem;
+  font-size: 2.28rem;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -281,7 +283,7 @@
 .trendRow {
   text-align: center;
   padding-top: 12px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1.5px dashed var(--divider-muted);
   font-size: 0.85rem;
 }
 
@@ -314,13 +316,13 @@
 
 .historyTitle {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.50rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .seeAllBtn {
-  color: var(--accent);
+  color: var(--link);
   letter-spacing: 0.02em;
   font-size: 0.9rem;
   font-weight: 600;
@@ -450,7 +452,7 @@
 
 .cardTitle {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.44rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -467,8 +469,8 @@
   gap: 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--gold-gradient);
-  color: var(--on-gold);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -488,7 +490,7 @@
 
 .statValue {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.80rem;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -529,9 +531,10 @@
   width: 42px;
   height: 42px;
   flex-shrink: 0;
-  border-radius: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--link);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -564,13 +567,20 @@
 .tripDuration {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1.26rem;
 }
 
+/* Distance on a small road-sign plate. */
 .tripKm {
-  margin-top: 2px;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--text-primary);
+  color: var(--bg-color);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .tripActions {
@@ -619,7 +629,7 @@
 
 .historySummaryValue {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.56rem;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -639,7 +649,7 @@
 
 .dayTitle {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.26rem;
   font-weight: 600;
 }
 
@@ -653,12 +663,11 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
 }
 
 .divider {
-  height: 1px;
-  background: var(--border-color);
+  height: 0;
+  border-top: 1.5px dashed var(--divider-muted);
   margin-left: 68px;
 }
 
@@ -801,7 +810,7 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  background: rgba(8, 20, 15, 0.55);
+  background: rgba(10, 12, 16, 0.6);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -836,7 +845,7 @@
 
 .dialogTitle {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.80rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -926,7 +935,7 @@
   gap: 2px;
   background: var(--bg-color);
   border-style: dashed;
-  color: var(--accent);
+  color: var(--link);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
@@ -948,8 +957,8 @@
 }
 
 .rowDivider {
-  height: 1px;
-  background: var(--border-color);
+  height: 0;
+  border-top: 1.5px dashed var(--divider-muted);
 }
 
 .switch {
@@ -1036,6 +1045,8 @@
   padding: 0;
   gap: 0;
   overflow: hidden;
+  /* No soft shadow here: a blurred shadow on a clipped card renders as dark stripes in some WebViews. */
+  box-shadow: none;
 }
 
 .compareHead,
@@ -1056,14 +1067,14 @@
 }
 
 .comparePlanPro {
-  background: var(--gold-gradient);
-  color: var(--on-gold);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
   border-radius: 16px 16px 0 0;
 }
 
 .comparePrice {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.50rem;
   font-weight: 600;
   margin-top: 2px;
 }
@@ -1084,7 +1095,7 @@
 }
 
 .compareGroupPro {
-  color: var(--gold);
+  color: var(--pro);
 }
 
 .compareRow {
@@ -1093,7 +1104,7 @@
 }
 
 .compareRowPro {
-  background: var(--gold-soft);
+  background: var(--pro-soft);
 }
 
 .compareLabel {
@@ -1110,8 +1121,7 @@
 }
 
 .compareCellPro {
-  background: var(--gold-soft);
-  background: color-mix(in srgb, var(--gold) 9%, transparent);
+  background: var(--pro-soft);
 }
 
 .compareDash {
@@ -1122,4 +1132,47 @@
 .chipsWrap {
   flex-wrap: wrap;
   overflow-x: visible;
+}
+
+/* Route line on the hero card */
+.routeLine {
+  width: 100%;
+  height: 28px;
+  margin-top: -4px;
+}
+
+.routeDashes {
+  stroke: var(--hero-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 9;
+}
+
+.routeVehicle {
+  opacity: 0;
+}
+
+.routeLineActive .routeDashes {
+  stroke: rgba(255, 180, 0, 0.7);
+  animation: routeFlow 1s linear infinite;
+}
+
+.routeLineActive .routeVehicle {
+  opacity: 1;
+  animation: routeTravel 7s ease-in-out infinite;
+}
+
+@keyframes routeFlow {
+  to {
+    stroke-dashoffset: -11;
+  }
+}
+
+@keyframes routeTravel {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(256px);
+  }
 }

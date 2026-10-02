@@ -1,116 +1,131 @@
 /*
-  Design system: "Emerald & Champagne".
-  - Light: warm ivory paper, ink-green text, deep emerald accent, champagne gold for Pro.
-  - Dark: green-black with a luminous mint accent and soft gold.
-  - Type: Fraunces (serif) for headings and big numbers, DM Sans for everything else.
-  - Cards are hairline-bordered with a soft layered shadow; the tracking card is a deep emerald "hero".
+  Design system: "Metro Line".
+  Borrowed from road and transit signage: asphalt and concrete neutrals, one signal amber, and
+  traffic-light meaning for the main actions (green = start, red = stop).
+  - Light: concrete-grey paper, asphalt-black text, amber fills, a darker amber ("link") for text.
+  - Dark: asphalt with luminous amber.
+  - Type: Barlow Condensed (destination-board look) for headings and big numbers, Barlow for body text.
+  - Dividers are dashed like lane markings. The tracking card is an asphalt "hero" with a route line.
+  - Pro is "Express": ink in light mode, bright concrete in dark mode.
 */
 
 :root {
   color-scheme: light;
 
   /* Surfaces */
-  --bg-color: #f6f2e9;
-  --surface-color: #fffdf8;
+  --bg-color: #f2f1ee;
+  --surface-color: #fbfaf8;
   --surface-raised: #ffffff;
-  --text-primary: #14201b;
-  --text-secondary: #67706a;
-  --border-color: #e7e0d0;
-  --divider-muted: #d8d0bd;
+  --text-primary: #16181d;
+  --text-secondary: #656a73;
+  --border-color: #e2e0da;
+  --divider-muted: #cfccc4;
 
-  /* Accent (emerald) */
-  --accent: #0f5a46;
-  --accent-strong: #0a4536;
-  --accent-soft: #e2eee8;
-  --accent-disabled: #8fb3a6;
-  --on-primary: #ffffff;
+  /* Accent (signal amber). Fills use --accent; amber text on light needs the darker --link. */
+  --accent: #ffb400;
+  --accent-strong: #e09e00;
+  --accent-soft: #fff0c7;
+  --accent-disabled: #f0dc9f;
+  --link: #8a5f00;
+  --on-primary: #16181d;
 
-  /* Pro (champagne gold) */
-  --gold: #a9812f;
-  --gold-soft: #f4ecd6;
-  --gold-gradient: linear-gradient(135deg, #e6cf94 0%, #c9a24f 55%, #a9812f 100%);
-  --on-gold: #2a1f08;
+  /* Pro ("Express") */
+  --pro: #16181d;
+  --pro-soft: #e9e7e1;
+  --pro-gradient: linear-gradient(135deg, #2b303b 0%, #16181d 100%);
+  --on-pro: #ffffff;
+
+  /* Traffic-light actions */
+  --go-gradient: linear-gradient(135deg, #43da8b 0%, #25b26a 100%);
+  --on-go: #07220f;
+  --stop-gradient: linear-gradient(135deg, #e5484d 0%, #c93339 100%);
+  --on-stop: #ffffff;
 
   /* Status */
-  --danger-color: #b3392f;
-  --danger-light: #f8e6e3;
-  --success-color: #2e7d5b;
+  --danger-color: #c62f35;
+  --danger-light: #fbe5e5;
+  --success-color: #1b8a55;
 
   /* Hero (tracking card) */
-  --hero-bg: linear-gradient(155deg, #12624c 0%, #0b4736 55%, #082f25 100%);
-  --hero-text: #f6f2e9;
-  --hero-muted: rgba(246, 242, 233, 0.68);
-  --hero-pill: rgba(246, 242, 233, 0.14);
-  --hero-border: rgba(230, 207, 148, 0.28);
+  --hero-bg: linear-gradient(160deg, #232832 0%, #171a21 58%, #0e1014 100%);
+  --hero-text: #f4f2ec;
+  --hero-muted: rgba(244, 242, 236, 0.62);
+  --hero-pill: rgba(255, 255, 255, 0.1);
+  --hero-border: rgba(255, 180, 0, 0.3);
+  --hero-line: rgba(244, 242, 236, 0.38);
 
   /* Elevation and shape */
-  --shadow-card: 0 1px 2px rgba(20, 32, 27, 0.04), 0 8px 24px -12px rgba(20, 32, 27, 0.14);
-  --shadow-hero: 0 2px 4px rgba(8, 47, 37, 0.18), 0 24px 40px -18px rgba(8, 47, 37, 0.55);
-  --shadow-nav: 0 -1px 0 rgba(20, 32, 27, 0.05), 0 -12px 32px -16px rgba(20, 32, 27, 0.18);
-  --radius-card: 22px;
+  --shadow-card: 0 1px 2px rgba(22, 24, 29, 0.05), 0 8px 24px -12px rgba(22, 24, 29, 0.16);
+  --shadow-hero: 0 2px 4px rgba(14, 16, 20, 0.2), 0 24px 40px -18px rgba(14, 16, 20, 0.6);
+  --shadow-nav: 0 -1px 0 rgba(22, 24, 29, 0.06), 0 -12px 32px -16px rgba(22, 24, 29, 0.2);
+  --radius-card: 20px;
   --radius-control: 14px;
   --nav-height: calc(68px + env(safe-area-inset-bottom, 0px));
 
   /* Type */
-  --font-display: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
-  --font-body: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: var(--font-barlow-condensed), 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-body: var(--font-barlow), -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Dark palette: follows the phone unless the user picked Light or Dark in Settings. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg-color: #0a0f0d;
-    --surface-color: #121916;
-    --surface-raised: #18211d;
-    --text-primary: #f1eee6;
-    --text-secondary: #98a29b;
-    --border-color: #232e29;
-    --divider-muted: #30403a;
-    --accent: #5fd6a8;
-    --accent-strong: #84e3be;
-    --accent-soft: #14281f;
-    --accent-disabled: #2d5a49;
-    --on-primary: #06150f;
-    --gold: #dcbb72;
-    --gold-soft: #2a2312;
-    --on-gold: #2a1f08;
-    --danger-color: #ff7468;
-    --danger-light: #3a1a17;
-    --success-color: #5fd6a8;
-    --hero-bg: linear-gradient(155deg, #12392e 0%, #0c2a22 55%, #081c16 100%);
-    --hero-border: rgba(220, 187, 114, 0.22);
+    --bg-color: #0d0f12;
+    --surface-color: #16191f;
+    --surface-raised: #1d2128;
+    --text-primary: #f2f1ee;
+    --text-secondary: #9aa0aa;
+    --border-color: #262b33;
+    --divider-muted: #343a44;
+    --accent: #ffb400;
+    --accent-strong: #ffc933;
+    --accent-soft: #2a2310;
+    --accent-disabled: #5a4614;
+    --link: #ffc933;
+    --on-primary: #16181d;
+    --pro: #f2f1ee;
+    --pro-soft: #1f242b;
+    --pro-gradient: linear-gradient(135deg, #f7f6f3 0%, #c9ccd2 100%);
+    --on-pro: #16181d;
+    --danger-color: #ff6b70;
+    --danger-light: #3a1a1c;
+    --success-color: #3dd68c;
+    --hero-bg: linear-gradient(160deg, #1f232c 0%, #14171c 58%, #0a0c0f 100%);
+    --hero-border: rgba(255, 180, 0, 0.26);
     --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-    --shadow-hero: 0 24px 40px -20px rgba(0, 0, 0, 0.8);
-    --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-hero: 0 24px 40px -20px rgba(0, 0, 0, 0.85);
+    --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.05);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg-color: #0a0f0d;
-  --surface-color: #121916;
-  --surface-raised: #18211d;
-  --text-primary: #f1eee6;
-  --text-secondary: #98a29b;
-  --border-color: #232e29;
-  --divider-muted: #30403a;
-  --accent: #5fd6a8;
-  --accent-strong: #84e3be;
-  --accent-soft: #14281f;
-  --accent-disabled: #2d5a49;
-  --on-primary: #06150f;
-  --gold: #dcbb72;
-  --gold-soft: #2a2312;
-  --on-gold: #2a1f08;
-  --danger-color: #ff7468;
-  --danger-light: #3a1a17;
-  --success-color: #5fd6a8;
-  --hero-bg: linear-gradient(155deg, #12392e 0%, #0c2a22 55%, #081c16 100%);
-  --hero-border: rgba(220, 187, 114, 0.22);
+  --bg-color: #0d0f12;
+  --surface-color: #16191f;
+  --surface-raised: #1d2128;
+  --text-primary: #f2f1ee;
+  --text-secondary: #9aa0aa;
+  --border-color: #262b33;
+  --divider-muted: #343a44;
+  --accent: #ffb400;
+  --accent-strong: #ffc933;
+  --accent-soft: #2a2310;
+  --accent-disabled: #5a4614;
+  --link: #ffc933;
+  --on-primary: #16181d;
+  --pro: #f2f1ee;
+  --pro-soft: #1f242b;
+  --pro-gradient: linear-gradient(135deg, #f7f6f3 0%, #c9ccd2 100%);
+  --on-pro: #16181d;
+  --danger-color: #ff6b70;
+  --danger-light: #3a1a1c;
+  --success-color: #3dd68c;
+  --hero-bg: linear-gradient(160deg, #1f232c 0%, #14171c 58%, #0a0c0f 100%);
+  --hero-border: rgba(255, 180, 0, 0.26);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-  --shadow-hero: 0 24px 40px -20px rgba(0, 0, 0, 0.8);
-  --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-hero: 0 24px 40px -20px rgba(0, 0, 0, 0.85);
+  --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -126,7 +141,7 @@ html {
 body {
   /* Fonts are bundled at build time by next/font (see layout.tsx); no request to Google Fonts at runtime. */
   font-family: var(--font-body);
-  font-feature-settings: 'ss01', 'kern';
+  font-size: 1.02rem;
   background-color: var(--bg-color);
   color: var(--text-primary);
   min-height: 100vh;
@@ -142,10 +157,6 @@ body {
   max-width: 480px;
   margin: 0 auto;
   background: var(--bg-color);
-  /* A faint emerald glow at the top gives the paper some depth. Older WebViews skip this line and keep the plain colour. */
-  background:
-    radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent) 0%, transparent 70%),
-    var(--bg-color);
   min-height: 100vh;
   min-height: 100dvh;
   /* The app draws edge-to-edge; keep content out from under the status bar. */
@@ -153,6 +164,19 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* A faint amber glow at the top, like a streetlight. A small strip, because a page-tall gradient can
+   render as dark stripes in some WebViews. Older WebViews without color-mix() just skip the glow. */
+.mobile-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 260px;
+  background: radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .content-area {
@@ -180,9 +204,6 @@ body::before {
   justify-content: space-between;
   align-items: center;
   background: var(--bg-color);
-  background: color-mix(in srgb, var(--bg-color) 96%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   position: sticky;
   top: env(safe-area-inset-top, 0px);
   z-index: 10;
@@ -190,10 +211,10 @@ body::before {
 
 .page-title {
   font-family: var(--font-display);
-  font-size: 1.85rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  font-size: 2.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
   color: var(--text-primary);
 }
 
@@ -203,31 +224,32 @@ body::before {
 
 /* Small uppercase label used above sections and stats. */
 .eyebrow {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
-/* Primary Button */
+/* Primary Button: amber, like a road sign. */
 .btn-primary {
   background: var(--accent);
   color: var(--on-primary);
   border: none;
   border-radius: var(--radius-control);
   padding: 16px;
-  font-family: inherit;
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.2s ease;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 8px 18px -10px var(--accent);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 8px 18px -10px var(--accent-strong);
 }
 
 .btn-primary:active {
@@ -241,11 +263,11 @@ body::before {
   cursor: not-allowed;
 }
 
-/* Gold button for Pro upgrade moments. */
-.btn-gold {
-  background: var(--gold-gradient);
-  color: var(--on-gold);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 10px 22px -12px var(--gold);
+/* The Pro ("Express") upgrade button. */
+.btn-pro {
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+  box-shadow: 0 10px 22px -12px rgba(22, 24, 29, 0.6);
 }
 
 /* Forms */
@@ -265,7 +287,6 @@ body::before {
 .input-field:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 /* Bottom tab bar. */
