@@ -104,7 +104,7 @@ export default function Home() {
 
         {phase === 'interrupted' && session ? (
           <div className={styles.trackingCard}>
-            <div className={styles.trackingPill} style={{ background: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+            <div className={styles.trackingPill}>
               Interrupted
             </div>
             <div className={styles.distanceDisplay}>{formatDistanceKm(distanceMeters)}</div>
@@ -132,18 +132,18 @@ export default function Home() {
         ) : (
           <div className={styles.trackingCard}>
             {tracking ? (
-              <div className={styles.trackingPill}>Tracking...</div>
+              <div className={`${styles.trackingPill} ${styles.trackingPillLive}`}>Tracking</div>
             ) : (
-              <div className={styles.trackingPill} style={{ background: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+              <div className={styles.trackingPill}>
                 Ready
               </div>
             )}
 
             <div className={styles.timeDisplay}>{formatClock(elapsedSeconds)}</div>
-            <div className={styles.timeLabel}>Commute Time</div>
+            <div className={styles.timeLabel}>Commute time</div>
 
             <div className={styles.distanceDisplay}>{formatDistanceKm(tracking ? distanceMeters : 0)}</div>
-            <div className={styles.timeLabel}>{waitingForGps ? 'Finding GPS signal…' : 'Distance Travelled'}</div>
+            <div className={styles.timeLabel}>{waitingForGps ? 'Finding GPS signal…' : 'Distance travelled'}</div>
 
             {tracking ? (
               <button className={styles.stopButton} disabled={busy} onClick={() => commute.stop()}>

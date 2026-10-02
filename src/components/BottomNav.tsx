@@ -52,8 +52,10 @@ export default function BottomNav() {
       left: 0,
       right: 0,
       height: 'var(--nav-height)',
-      backgroundColor: 'var(--surface-color)',
-      borderTop: '1px solid var(--border-color)',
+      backgroundColor: 'color-mix(in srgb, var(--surface-color) 90%, transparent)',
+      backdropFilter: 'blur(18px)',
+      WebkitBackdropFilter: 'blur(18px)',
+      boxShadow: 'var(--shadow-nav)',
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
@@ -74,14 +76,28 @@ export default function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               textDecoration: 'none',
-              color: isActive ? 'var(--primary-blue)' : 'var(--text-secondary)',
+              color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
               gap: '4px',
               width: '25%',
-              paddingTop: '8px'
+              paddingTop: '8px',
+              position: 'relative',
             }}
           >
+            {/* A short gold bar marks the current tab. */}
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                top: 0,
+                width: isActive ? '22px' : '0px',
+                height: '3px',
+                borderRadius: '0 0 3px 3px',
+                background: 'var(--gold-gradient)',
+                transition: 'width 0.2s ease',
+              }}
+            />
             <tab.icon active={isActive} />
-            <span style={{ fontSize: '0.7rem', fontWeight: isActive ? 600 : 500 }}>
+            <span style={{ fontSize: '0.68rem', letterSpacing: '0.04em', fontWeight: isActive ? 700 : 500 }}>
               {tab.name}
             </span>
           </Link>

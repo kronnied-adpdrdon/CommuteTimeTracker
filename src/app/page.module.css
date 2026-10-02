@@ -1,85 +1,146 @@
 .homeContainer {
-  padding: 0 16px 20px;
+  padding: 4px 16px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 /* Tracking Card */
+/* The hero: a deep emerald card with a champagne hairline. */
 .trackingCard {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  border: 1px solid var(--hero-border);
+  border-radius: 28px;
+  padding: 28px 22px 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--shadow-hero);
+}
+
+/* A soft gold glow in the corner. */
+.trackingCard::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230, 207, 148, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.trackingCard > * {
+  position: relative;
 }
 
 .trackingPill {
-  background: var(--primary-blue-light);
-  color: var(--primary-blue);
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--hero-pill);
+  color: var(--hero-text);
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+
+.trackingPillLive::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e6cf94;
+  box-shadow: 0 0 0 0 rgba(230, 207, 148, 0.6);
+  animation: pulse 1.8s ease-out infinite;
+}
+
+@keyframes pulse {
+  to {
+    box-shadow: 0 0 0 10px rgba(230, 207, 148, 0);
+  }
 }
 
 .timeDisplay {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 3.6rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--hero-text);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .timeLabel {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hero-muted);
+  margin-bottom: 22px;
 }
 
 .distanceDisplay {
+  font-family: var(--font-display);
   font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--hero-text);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .stopButton {
-  margin-top: 24px;
-  background: var(--danger-color);
-  color: var(--on-primary);
-  border: none;
-  border-radius: 14px;
+  margin-top: 26px;
+  background: transparent;
+  color: var(--hero-text);
+  border: 1.5px solid rgba(246, 242, 233, 0.5);
+  border-radius: var(--radius-control);
   padding: 16px;
   width: 100%;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
 }
 
+/* Champagne gold on the emerald hero. */
 .startButton {
-  margin-top: 24px;
-  background: var(--primary-blue);
-  color: var(--on-primary);
+  margin-top: 26px;
+  background: var(--gold-gradient);
+  color: var(--on-gold);
   border: none;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: var(--radius-control);
+  padding: 17px;
   width: 100%;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 12px 24px -12px rgba(0, 0, 0, 0.55);
+  transition: transform 0.15s ease;
+}
+
+.startButton:active {
+  transform: scale(0.985);
 }
 
 .startButton:disabled,
@@ -93,13 +154,20 @@
   background: var(--surface-color);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   padding: 14px;
   width: 100%;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   font-family: inherit;
   cursor: pointer;
+}
+
+/* On the hero card the secondary button turns into a quiet outline. */
+.trackingCard .secondaryButton {
+  background: transparent;
+  color: var(--hero-text);
+  border-color: rgba(246, 242, 233, 0.35);
 }
 
 .secondaryButton:disabled {
@@ -108,9 +176,9 @@
 }
 
 .hint {
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--hero-muted);
   text-align: center;
 }
 
@@ -118,13 +186,14 @@
 .banner {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.45;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: var(--shadow-card);
 }
 
 .bannerError {
@@ -140,7 +209,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: var(--primary-blue);
+  color: var(--accent);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -158,20 +227,23 @@
 .summaryCard {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: var(--radius-card);
+  padding: 22px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  box-shadow: var(--shadow-card);
 }
 
 .summaryHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 600;
-  color: var(--primary-blue);
-  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .summaryGrid {
@@ -187,8 +259,10 @@
 }
 
 .summaryValue {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
@@ -217,10 +291,11 @@
 .historySection {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   padding: 20px;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-card);
 }
 
 .historyHeader {
@@ -231,12 +306,15 @@
 }
 
 .historyTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .seeAllBtn {
-  color: var(--primary-blue);
+  color: var(--accent);
+  letter-spacing: 0.02em;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
@@ -275,7 +353,7 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: var(--primary-blue);
+  background: var(--accent);
   border-radius: 3px;
 }
 
@@ -306,7 +384,7 @@
 
 .chip {
   flex-shrink: 0;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 999px;
   border: 1px solid var(--border-color);
   background: var(--surface-color);
@@ -318,8 +396,8 @@
 }
 
 .chipActive {
-  background: var(--primary-blue);
-  border-color: var(--primary-blue);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--on-primary);
 }
 
@@ -346,26 +424,28 @@
 }
 
 .segmentActive {
-  background: var(--surface-color);
+  background: var(--surface-raised);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
 /* Cards and badges */
 .card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: var(--radius-card);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: var(--card-shadow);
+  gap: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .cardTitle {
-  font-size: 1rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .cardText {
@@ -378,13 +458,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: var(--pro-light);
-  color: var(--pro-color);
-  font-size: 0.75rem;
+  background: var(--gold-gradient);
+  color: var(--on-gold);
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
 }
 
 .statGrid {
@@ -395,13 +475,15 @@
 
 .stat {
   background: var(--bg-color);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 14px;
 }
 
 .statValue {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .statLabel {
@@ -437,12 +519,12 @@
 }
 
 .tripIcon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--primary-blue-light);
-  color: var(--primary-blue);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -473,8 +555,9 @@
 }
 
 .tripDuration {
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
 }
 
 .tripKm {
@@ -514,9 +597,9 @@
   grid-template-columns: repeat(3, 1fr);
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 14px 4px;
-  box-shadow: var(--card-shadow);
+  border-radius: var(--radius-card);
+  padding: 18px 4px;
+  box-shadow: var(--shadow-card);
 }
 
 .historySummaryItem {
@@ -528,8 +611,10 @@
 }
 
 .historySummaryValue {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .historySummaryLabel {
@@ -546,8 +631,9 @@
 }
 
 .dayTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .dayMeta {
@@ -558,9 +644,9 @@
 .dayCard {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--shadow-card);
 }
 
 .divider {
@@ -576,7 +662,7 @@
   gap: 10px;
   padding: 14px;
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 18px;
   background: var(--bg-color);
 }
 
@@ -601,8 +687,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 11px 14px;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
   border: 1px solid var(--border-color);
   background: var(--surface-color);
   color: var(--text-primary);
@@ -618,8 +704,8 @@
 }
 
 .pillButtonPrimary {
-  background: var(--primary-blue);
-  border-color: var(--primary-blue);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--on-primary);
 }
 

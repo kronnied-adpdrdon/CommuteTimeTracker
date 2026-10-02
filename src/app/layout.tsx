@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import AppLinks from "@/components/AppLinks";
 import BottomNav from "@/components/BottomNav";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
 
 // Downloaded once at build time and bundled with the app, so text renders offline.
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// Fraunces (serif) is for headings and big numbers; DM Sans is for everything else.
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap", axes: ["opsz"] });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Commute Time Tracker",
@@ -28,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     // The boot script may set data-theme before React hydrates.
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>

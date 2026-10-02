@@ -3,7 +3,7 @@ import styles from '@/app/page.module.css';
 const Check = ({ color = 'var(--success-color)' }: { color?: string }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: '1px' }}>
     <circle cx="12" cy="12" r="12" fill={color} />
-    <path d="M10 16l-4-4 1.4-1.4 2.6 2.6 6.6-6.6L18 8z" fill="#fff" />
+    <path d="M10 16l-4-4 1.4-1.4 2.6 2.6 6.6-6.6L18 8z" fill="var(--surface-color)" />
   </svg>
 );
 

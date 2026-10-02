@@ -17,7 +17,7 @@ export default function PricingPage() {
         <button
           aria-label="Back"
           onClick={() => router.back()}
-          style={{ background: 'none', border: 'none', color: 'var(--primary-blue)', cursor: 'pointer', padding: '4px', display: 'flex' }}
+          style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '4px', display: 'flex' }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
@@ -34,7 +34,7 @@ export default function PricingPage() {
           {!isPro && <div className={styles.cardText}>Your current plan</div>}
         </div>
 
-        <div className={styles.card} style={{ border: '2px solid var(--pro-color)' }}>
+        <div className={styles.card} style={{ border: '2px solid var(--gold)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div className={styles.cardTitle}>Pro</div>
@@ -46,7 +46,7 @@ export default function PricingPage() {
             </div>
           </div>
           <div className={styles.cardText}>Everything in Free, plus:</div>
-          <ProFeatureList features={PRO_FEATURES} color="var(--pro-color)" />
+          <ProFeatureList features={PRO_FEATURES} color="var(--gold)" />
           {isPro ? (
             <>
               <div style={{ color: 'var(--success-color)', fontWeight: 700 }}>You have Pro ✓</div>

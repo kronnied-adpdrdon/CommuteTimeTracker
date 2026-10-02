@@ -65,13 +65,13 @@ function Stats({ values }: { values: { label: string; value: string }[] }) {
 function LockedReports() {
   return (
     <>
-      <div className={styles.card} style={{ borderColor: 'var(--pro-color)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--pro-color)' }}>
+      <div className={styles.card} style={{ borderColor: 'var(--gold)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--gold)' }}>
           <LockIcon />
           <span className={styles.proBadge}>PRO</span>
         </div>
         <div className={styles.cardTitle}>Commute reports</div>
-        <ProFeatureList features={PRO_FEATURES} color="var(--pro-color)" />
+        <ProFeatureList features={PRO_FEATURES} color="var(--gold)" />
         <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
           <strong style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>₹49</strong> one-time · no subscription
         </div>
