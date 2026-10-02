@@ -322,6 +322,13 @@ describe('places', () => {
     expect(again.getState().placesPromptNeverAsk).toBe(false);
   });
 
+  it('ignores the "Maybe later" flag left by version 1.0, so the pop-up still appears after an update', async () => {
+    const { controller, store } = setup();
+    await store.set('placesPromptDismissed.v1', 'true');
+    await controller.init();
+    expect(controller.getState().placesPromptNeverAsk).toBe(false);
+  });
+
   it('keeps the address chosen for a place', async () => {
     const { controller } = setup();
     await controller.init();

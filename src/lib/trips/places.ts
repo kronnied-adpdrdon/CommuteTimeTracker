@@ -3,8 +3,12 @@ import { SavedPlaces } from './direction';
 
 export const PLACES_KEY = 'places.v1';
 
-/** Kept under its original name so anyone who already chose "don't ask" keeps that choice. */
-export const PLACES_PROMPT_DISMISSED_KEY = 'placesPromptDismissed.v1';
+/**
+ * The "Don't ask me again" choice. Version 1.0 stored its "Maybe later" button under `placesPromptDismissed.v1`,
+ * which meant something different, so that old key is deliberately ignored: phones that had it would
+ * otherwise never see the pop-up.
+ */
+export const PLACES_PROMPT_NEVER_ASK_KEY = 'placesPromptNeverAsk.v2';
 
 export interface PlacesStore {
   load(): Promise<SavedPlaces>;
@@ -27,7 +31,7 @@ export function createPlacesStore(store: KeyValueStore): PlacesStore {
       }
     },
     save: (places) => store.set(PLACES_KEY, JSON.stringify(places)),
-    isNeverAsk: async () => (await store.get(PLACES_PROMPT_DISMISSED_KEY)) === 'true',
-    setNeverAsk: (neverAsk) => (neverAsk ? store.set(PLACES_PROMPT_DISMISSED_KEY, 'true') : store.remove(PLACES_PROMPT_DISMISSED_KEY)),
+    isNeverAsk: async () => (await store.get(PLACES_PROMPT_NEVER_ASK_KEY)) === 'true',
+    setNeverAsk: (neverAsk) => (neverAsk ? store.set(PLACES_PROMPT_NEVER_ASK_KEY, 'true') : store.remove(PLACES_PROMPT_NEVER_ASK_KEY)),
   };
 }
