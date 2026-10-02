@@ -7,7 +7,7 @@ import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import AddressPicker from '@/components/AddressPicker';
 import { PRIVACY_POLICY_URL } from '@/lib/support';
-import { DEV_TOOLS } from '@/lib/devtools';
+import { useDevTools } from '@/lib/devtools';
 import { ThemePreference, useTheme } from '@/lib/theme';
 
 const THEMES: { id: ThemePreference; label: string }[] = [
@@ -41,6 +41,7 @@ export default function SettingsPage() {
   const state = useCommute();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [theme, setTheme] = useTheme();
+  const devTools = useDevTools();
   const tripCount = state.trips.length;
 
   return (
@@ -155,10 +156,10 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {DEV_TOOLS && (
+        {devTools && (
           <div className={styles.card} style={{ borderStyle: 'dashed' }}>
             <div className={styles.cardTitle}>Developer Preview</div>
-            <p className={styles.cardText}>Demo builds only. Switches between the Free and Pro screens without a purchase.</p>
+            <p className={styles.cardText}>Debug and demo builds only, never in the Play Store version. Switches between the Free and Pro screens without a purchase.</p>
             <div className={styles.segmented} role="radiogroup" aria-label="Plan preview">
               {[false, true].map((pro) => (
                 <button

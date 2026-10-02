@@ -3,6 +3,7 @@ package com.commute.tracker.support;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
@@ -42,6 +43,17 @@ public class SupportPlugin extends Plugin {
     @Override
     public void load() {
         DiagLog.init(getContext());
+    }
+
+    /**
+     * Whether this is a debug build. Release builds uploaded to Play are never debuggable, so the app uses this
+     * to show developer tools (the Free / Pro switch) only in debug builds.
+     */
+    @PluginMethod
+    public void buildInfo(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("debuggable", (getContext().getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
+        call.resolve(result);
     }
 
     /** Adds a line from the web layer (e.g. an uncaught error) to the same log the native code writes. */

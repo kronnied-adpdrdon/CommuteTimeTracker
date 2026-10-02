@@ -6,8 +6,8 @@ import { nativeTracker } from '../tracking/nativeTracker';
 import { createPlacesStore } from '../trips/places';
 import { createTripRepository } from '../trips/repository';
 import { CommuteState, INITIAL_COMMUTE_STATE, createCommuteController } from './controller';
-import { DEV_TOOLS } from '../devtools';
-import { nativeBilling } from './billing';
+import { DEV_TOOLS, isDevBuild } from '../devtools';
+import { ProBilling, nativeBilling } from './billing';
 import { createProStore } from './pro';
 
 /** Capacitor Preferences, imported lazily so the static build never loads native code. */
@@ -17,14 +17,30 @@ const preferences: KeyValueStore = {
   remove: async (key) => (await import('../storage/preferences')).preferencesStore.remove(key),
 };
 
+/**
+ * In a debug build, Google Play isn't consulted: `status` fails (so the Developer Preview switch's value stands)
+ * and `purchase` unlocks Pro locally. Release builds pass straight through to Google Play.
+ */
+function withDevBypass(billing: ProBilling): ProBilling {
+  return {
+    status: async () => {
+      if (await isDevBuild()) throw new Error('Debug build: purchases are simulated.');
+      return billing.status();
+    },
+    purchase: async () => ((await isDevBuild()) ? 'purchased' : billing.purchase()),
+    onUpdated: (callback) => billing.onUpdated(callback),
+  };
+}
+
 /** One controller for the whole app, outside any page, so it survives tab switches. */
 export const commute = createCommuteController({
   tracker: nativeTracker,
   trips: createTripRepository(preferences),
   places: createPlacesStore(preferences),
   pro: createProStore(preferences),
-  // Demo builds use the Developer Preview switch instead of real purchases.
-  billing: DEV_TOOLS ? null : nativeBilling,
+  // Demo builds use the Developer Preview switch instead of real purchases. Debug builds do the same:
+  // they are checked at run time, so the real billing client is wrapped and stands down there.
+  billing: DEV_TOOLS ? null : withDevBypass(nativeBilling),
 });
 
 if (typeof document !== 'undefined') {

@@ -210,7 +210,7 @@ Working backwards from the fixed constraints: production review after applying t
 - Build: `npm run build:android`, `npm run lint`, release `bundleRelease`
 - Device: ≥2 physical phones; compare a known route against Google Maps; lock screen mid-trip; force-stop mid-trip
 - Backup: `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `bmgr backupnow com.commute.tracker`, uninstall, reinstall; trips come back. Switch the transport back afterwards
-- Demo builds: `npm run build:android:demo` adds a **Developer Preview** switch in Settings to flip Free / Pro. **Never upload a demo build**; release builds use `npm run build:android`
+- Developer Preview (Settings): a Free / Pro switch that appears in **debug builds** (`./gradlew assembleDebug`, detected from Android's debuggable flag; Google Play is bypassed there) and in **demo builds** (`npm run build:android:demo`). Play release builds never show it (checked on the emulator). **Never upload a demo build**; release builds use `npm run build:android`
 - Emulator caution: it boots from a saved quick-boot snapshot. Launched with `-no-snapshot-save`, **everything done in that session is discarded on exit** (this is what "lost" the 30 Sep test trip; the app itself keeps data through force-stop and reboot)
 - Billing: licence-tester account for purchase, cancel, refund, restore on reinstall
 
