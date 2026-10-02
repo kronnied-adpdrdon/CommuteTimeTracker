@@ -129,6 +129,7 @@ body {
   font-feature-settings: 'ss01', 'kern';
   background-color: var(--bg-color);
   color: var(--text-primary);
+  min-height: 100vh;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -140,10 +141,12 @@ body {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  /* A faint emerald glow at the top gives the paper some depth. */
+  background: var(--bg-color);
+  /* A faint emerald glow at the top gives the paper some depth. Older WebViews skip this line and keep the plain colour. */
   background:
     radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent) 0%, transparent 70%),
     var(--bg-color);
+  min-height: 100vh;
   min-height: 100dvh;
   /* The app draws edge-to-edge; keep content out from under the status bar. */
   padding-top: env(safe-area-inset-top, 0px);
@@ -176,7 +179,8 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: color-mix(in srgb, var(--bg-color) 88%, transparent);
+  background: var(--bg-color);
+  background: color-mix(in srgb, var(--bg-color) 96%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   position: sticky;
@@ -260,7 +264,27 @@ body::before {
 
 .input-field:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* Bottom tab bar. */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  background-color: var(--surface-color);
+  box-shadow: var(--shadow-nav);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  /* Keep the tabs above Android's gesture bar / navigation buttons. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 50;
 }
 
 @media (prefers-reduced-motion: reduce) {

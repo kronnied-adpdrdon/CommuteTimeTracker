@@ -5,11 +5,10 @@ import Link from 'next/link';
 import styles from '../page.module.css';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
-import { DirectionIcon } from '@/components/TripRow';
-import { PlaceKind } from '@/lib/trips/edit';
+import AddressPicker from '@/components/AddressPicker';
+import { PRIVACY_POLICY_URL } from '@/lib/support';
 import { DEV_TOOLS } from '@/lib/devtools';
 import { ThemePreference, useTheme } from '@/lib/theme';
-import { recentTrips } from '@/lib/trips/stats';
 
 const THEMES: { id: ThemePreference; label: string }[] = [
   { id: 'system', label: 'System' },
@@ -17,67 +16,24 @@ const THEMES: { id: ThemePreference; label: string }[] = [
   { id: 'dark', label: 'Dark' },
 ];
 
-const PLACE_LABELS: Record<PlaceKind, string> = { home: 'Home', office: 'Office' };
-
-const card = {
-  background: 'var(--surface-color)',
-  borderRadius: '16px',
-  border: '1px solid var(--border-color)',
-  padding: '16px',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  gap: '10px',
-};
-
-const PinIcon = () => (
-  <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
+const Arrow = () => (
+  <svg className={styles.navRowArrow} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 );
 
-function PlaceCard({ kind }: { kind: PlaceKind }) {
-  const state = useCommute();
-  const lastTrip = recentTrips(state.trips, 1)[0];
-  const isSet = state.places[kind] !== undefined;
-  const busy = state.locating !== null || state.phase === 'loading';
-  const label = PLACE_LABELS[kind];
-
-  return (
-    <div className={styles.placeCard}>
-      <div className={styles.placeHeader}>
-        <div className={styles.tripIcon}>
-          <DirectionIcon direction={kind === 'home' ? 'home' : 'work'} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div className={styles.tripTitle}>{label}</div>
-          <div className={`${styles.placeStatus} ${isSet ? styles.placeStatusSet : ''}`}>{isSet ? 'Saved ✓' : 'Not set'}</div>
-        </div>
-        {isSet && (
-          <button
-            aria-label={`Clear ${label}`}
-            className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-            disabled={busy}
-            onClick={() => commute.setPlace(kind, null)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
-          </button>
-        )}
-      </div>
-
-      <button className={`${styles.pillButton} ${styles.pillButtonPrimary}`} disabled={busy} onClick={() => commute.setPlaceHere(kind)}>
-        <PinIcon />
-        {state.locating === kind ? 'Finding your location…' : 'Use current location'}
-      </button>
-
-      {lastTrip && (lastTrip.start || lastTrip.end) && (
-        <div className={styles.buttonRow}>
-          <button className={styles.pillButton} disabled={busy || !lastTrip.start} onClick={() => commute.setPlace(kind, lastTrip.start!)}>
-            Last trip start
-          </button>
-          <button className={styles.pillButton} disabled={busy || !lastTrip.end} onClick={() => commute.setPlace(kind, lastTrip.end!)}>
-            Last trip end
-          </button>
-        </div>
-      )}
-    </div>
+function NavRow({ href, title, subtitle, external }: { href: string; title: string; subtitle: string; external?: boolean }) {
+  const content = (
+    <>
+      <span className={styles.navRowText}>
+        {title}
+        <span className={styles.navRowSub}>{subtitle}</span>
+      </span>
+      <Arrow />
+    </>
+  );
+  return external ? (
+    <a href={href} className={styles.navRow} target="_blank" rel="noopener noreferrer">{content}</a>
+  ) : (
+    <Link href={href} className={styles.navRow}>{content}</Link>
   );
 }
 
@@ -93,7 +49,7 @@ export default function SettingsPage() {
         <h1 className="page-title">Settings</h1>
       </header>
 
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {state.error && (
           <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
             <span>{errorMessage(state.error)}</span>
@@ -114,7 +70,7 @@ export default function SettingsPage() {
           <p className={styles.cardText}>
             {state.isPro
               ? 'Reports and exports are unlocked. Thanks for supporting the app.'
-              : 'Unlock reports for any date range, with PDF and CSV export. ₹49, one-time.'}
+              : 'Unlock reports for any date range, PDF and CSV export, plus the monthly recap and slow-day alerts. ₹49, one-time.'}
           </p>
           <div className={styles.bannerActions} style={{ flexWrap: 'wrap', rowGap: '6px' }}>
             {!state.isPro && (
@@ -146,18 +102,32 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div style={card}>
-          <div style={{ fontSize: '1rem', fontWeight: 700 }}>Home and Office</div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            Used to label trips as &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Stored only on this phone.
+        <div className={styles.card}>
+          <div className={styles.cardTitle}>Home and Office</div>
+          <p className={styles.cardText}>
+            Search for an address to label trips &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Stored only on this phone.
           </p>
-          <PlaceCard kind="home" />
-          <PlaceCard kind="office" />
+          <AddressPicker kind="home" />
+          <AddressPicker kind="office" />
         </div>
 
-        <div style={card}>
-          <div style={{ fontSize: '1rem', fontWeight: 700 }}>Your Data</div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+        <div className={styles.card} style={{ gap: 0, paddingTop: '8px', paddingBottom: '8px' }}>
+          <NavRow href="/notifications" title="Notifications" subtitle="Leave-time, weekly summary and more" />
+          <div className={styles.rowDivider} />
+          <NavRow href="/feedback" title="Send feedback" subtitle="Ideas and comments, with screenshots" />
+          <div className={styles.rowDivider} />
+          <NavRow href="/report-bug" title="Report a bug" subtitle="Sends a diagnostics log to the developer" />
+          {PRIVACY_POLICY_URL && (
+            <>
+              <div className={styles.rowDivider} />
+              <NavRow href={PRIVACY_POLICY_URL} title="Privacy policy" subtitle="How your data is handled" external />
+            </>
+          )}
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardTitle}>Your Data</div>
+          <p className={styles.cardText}>
             {tripCount === 1 ? '1 trip is' : `${tripCount} trips are`} stored on this phone, including any older than the 2 weeks shown in History.
           </p>
           {tripCount > 0 && !confirmingDelete && (

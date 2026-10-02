@@ -37,9 +37,9 @@ export function retagTrips(trips: Trip[], places: SavedPlaces): Trip[] {
 
 export type PlaceKind = keyof SavedPlaces;
 
-export function withPlace(places: SavedPlaces, kind: PlaceKind, where: LatLng | null): SavedPlaces {
+export function withPlace(places: SavedPlaces, kind: PlaceKind, where: LatLng | null, label?: string): SavedPlaces {
   const next = { ...places };
-  if (where) next[kind] = { lat: where.lat, lng: where.lng };
+  if (where) next[kind] = label ? { lat: where.lat, lng: where.lng, label } : { lat: where.lat, lng: where.lng };
   else delete next[kind];
   return next;
 }

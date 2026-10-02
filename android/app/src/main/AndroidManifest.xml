@@ -47,6 +47,16 @@
                 android:resource="@xml/commute_widget_info" />
         </receiver>
 
+        <!-- Reminder alarms, and re-creating them after a restart or an app update. Not exported to other apps. -->
+        <receiver
+            android:name=".reminders.ReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Records commutes. Started from the app, the widget or its own notification. -->
         <service
             android:name=".tracking.TrackingService"
@@ -64,5 +74,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Re-create reminder alarms after the phone restarts. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

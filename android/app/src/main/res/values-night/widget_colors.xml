@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#1A1D23</color>
-    <color name="widget_text_primary">#F2F3F5</color>
-    <color name="widget_text_secondary">#9AA0A6</color>
-    <color name="widget_accent">#0A84FF</color>
-    <color name="widget_danger">#FF453A</color>
-    <color name="widget_success">#30D158</color>
-    <color name="widget_pill">#2A2E35</color>
-    <color name="widget_on_accent">#FFFFFF</color>
+    <color name="widget_background">#121916</color>
+    <color name="widget_text_primary">#F1EEE6</color>
+    <color name="widget_text_secondary">#98A29B</color>
+    <color name="widget_accent">#5FD6A8</color>
+    <color name="widget_danger">#FF7468</color>
+    <color name="widget_success">#5FD6A8</color>
+    <color name="widget_pill">#1E2924</color>
+    <color name="widget_on_accent">#06150F</color>
 </resources>

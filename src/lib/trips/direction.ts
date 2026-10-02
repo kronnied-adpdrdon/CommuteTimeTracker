@@ -1,9 +1,14 @@
 import { LatLng, haversineMeters } from '../tracking/geo';
 import { TripDirection } from './types';
 
+/** A saved Home or Office: its point, plus the address the user typed or picked, for display. */
+export interface SavedPlace extends LatLng {
+  label?: string;
+}
+
 export interface SavedPlaces {
-  home?: LatLng;
-  office?: LatLng;
+  home?: SavedPlace;
+  office?: SavedPlace;
 }
 
 /** A point within this distance of a saved place counts as being "at" it. */

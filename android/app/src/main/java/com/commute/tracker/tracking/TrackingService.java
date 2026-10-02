@@ -1,6 +1,7 @@
 package com.commute.tracker.tracking;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -21,12 +22,14 @@ import androidx.core.location.LocationManagerCompat;
 import com.commute.tracker.CommuteWidgetProvider;
 import com.commute.tracker.MainActivity;
 import com.commute.tracker.R;
+import com.commute.tracker.support.DiagLog;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -84,31 +87,100 @@ public class TrackingService extends Service {
     private long lastRedraw = 0;
     private long lastRedrawMeters = -1;
 
+    /** Non-null while recording through Android's own location service instead of Google's. */
+    private PlatformLocation.Updates platformUpdates;
+
     private final LocationCallback callback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult result) {
-            if (session == null) return;
-            for (Location l : result.getLocations()) {
-                Fix fix = new Fix(
-                    l.getLatitude(),
-                    l.getLongitude(),
-                    l.hasAccuracy() ? (double) l.getAccuracy() : null,
-                    l.hasSpeed() ? (double) l.getSpeed() : null,
-                    l.getTime()
-                );
-                session.engine.addFix(fix);
-                session.lastReadingAt = Math.max(session.lastReadingAt, fix.time);
-            }
-            store.saveSession(session);
-            Listener l = listener;
-            if (l != null) l.onUpdate(session);
-            maybeRedraw(false);
+            handleLocations(result.getLocations());
         }
     };
+
+    private void handleLocations(List<Location> locations) {
+        if (session == null) return;
+        for (Location l : locations) {
+            Fix fix = new Fix(
+                l.getLatitude(),
+                l.getLongitude(),
+                l.hasAccuracy() ? (double) l.getAccuracy() : null,
+                l.hasSpeed() ? (double) l.getSpeed() : null,
+                l.getTime()
+            );
+            session.engine.addFix(fix);
+            session.lastReadingAt = Math.max(session.lastReadingAt, fix.time);
+            if (++readings == 1) {
+                DiagLog.log("Tracking", "First reading: provider=" + l.getProvider() + " accuracy=" + (l.hasAccuracy() ? Math.round(l.getAccuracy()) + "m" : "n/a"));
+            }
+        }
+        store.saveSession(session);
+        Listener l = listener;
+        if (l != null) l.onUpdate(session);
+        maybeRedraw(false);
+    }
+
+    private int readings = 0;
+
+    /** Starts Google's fused location, falling back to Android's own GPS if that is missing or fails. */
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdates() {
+        readings = 0;
+        if (PlatformLocation.fusedAvailable(this)) {
+            LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
+                .setMinUpdateIntervalMillis(MIN_INTERVAL_MS)
+                .build();
+            try {
+                fused.requestLocationUpdates(request, callback, Looper.getMainLooper()).addOnFailureListener(e -> {
+                    DiagLog.log("Tracking", "Fused updates failed, switching to platform GPS: " + e);
+                    if (running && platformUpdates == null) startPlatformUpdates();
+                });
+                DiagLog.log("Tracking", "Started with Google fused location");
+                return;
+            } catch (SecurityException | IllegalStateException e) {
+                DiagLog.log("Tracking", "Fused request threw, switching to platform GPS: " + e);
+            }
+        } else {
+            DiagLog.log("Tracking", "Google Play services unavailable, using platform GPS");
+        }
+        startPlatformUpdates();
+    }
+
+    private void startPlatformUpdates() {
+        platformUpdates = PlatformLocation.startUpdates(this, INTERVAL_MS, location -> handleLocations(java.util.Collections.singletonList(location)));
+        if (platformUpdates == null) {
+            DiagLog.log("Tracking", "No location provider could start; stopping service");
+            fail();
+        }
+    }
+
+    /** Tells the app recording could not start, so it stops showing "tracking". */
+    private void fail() {
+        running = false;
+        // Android kills the app if a service started with startForegroundService never calls startForeground.
+        try {
+            promote(session);
+        } catch (RuntimeException e) {
+            DiagLog.log("Tracking", "Could not enter foreground while failing: " + e);
+        }
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf();
+        CommuteWidgetProvider.refreshAll(this);
+        Listener l = listener;
+        if (l != null) l.onEnded();
+    }
+
+    private void stopLocationUpdates() {
+        fused.removeLocationUpdates(callback);
+        if (platformUpdates != null) {
+            platformUpdates.stop();
+            platformUpdates = null;
+        }
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        DiagLog.init(this);
         store = new TrackingStore(this);
         fused = LocationServices.getFusedLocationProviderClient(this);
         createChannel();
@@ -127,7 +199,8 @@ public class TrackingService extends Service {
 
         if (!hasPreciseLocation(this)) {
             // Without precise location the service can't run; the app explains why when opened.
-            stopSelf();
+            DiagLog.log("Tracking", "Service started without precise location permission");
+            fail();
             return START_NOT_STICKY;
         }
 
@@ -139,23 +212,16 @@ public class TrackingService extends Service {
             }
         }
         if (session == null) {
-            stopSelf();
+            DiagLog.log("Tracking", "Service started with no trip to record");
+            fail();
             return START_NOT_STICKY;
         }
 
         promote(session);
         if (!running) {
             running = true;
-            LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
-                .setMinUpdateIntervalMillis(MIN_INTERVAL_MS)
-                .build();
-            try {
-                fused.requestLocationUpdates(request, callback, Looper.getMainLooper());
-            } catch (SecurityException e) {
-                running = false;
-                stopSelf();
-                return START_NOT_STICKY;
-            }
+            startLocationUpdates();
+            if (!running) return START_NOT_STICKY;
         }
         Listener l = listener;
         if (l != null) l.onUpdate(session);
@@ -165,7 +231,8 @@ public class TrackingService extends Service {
     }
 
     private void finishAndStop() {
-        fused.removeLocationUpdates(callback);
+        DiagLog.log("Tracking", "Trip stopped after " + readings + " readings");
+        stopLocationUpdates();
         TrackingStore.Session s = session != null ? session : store.loadSession();
         if (s != null) store.finish(s, System.currentTimeMillis());
         session = null;
@@ -179,7 +246,7 @@ public class TrackingService extends Service {
 
     @Override
     public void onDestroy() {
-        fused.removeLocationUpdates(callback);
+        stopLocationUpdates();
         running = false;
         CommuteWidgetProvider.refreshAll(this);
         super.onDestroy();

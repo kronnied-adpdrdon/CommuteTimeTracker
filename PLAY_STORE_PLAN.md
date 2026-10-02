@@ -137,7 +137,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Upload the AAB and enable Play App Signing
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
-- [ ] Privacy policy link inside the app (Settings) — Google requires it in the app as well as the listing; needs the hosted URL
+- [x] Privacy policy link inside the app (Settings): built; it appears once `NEXT_PUBLIC_PRIVACY_URL` is set in `.env.local` (needs the hosted URL, then rebuild)
 - [ ] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play"
 - [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
 - [ ] Check the new icon and splash screen on a phone
@@ -145,12 +145,23 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Icon 512×512 (done: `store/play-icon-512.png`), feature graphic 1024×500, ≥2 phone screenshots, short + full description (**drafted**: `store/listing.md`)
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video** of tapping Start and the notification appearing
-- [ ] Data safety form (**drafted**: `store/play-console-answers.md`; recommended answer "no data collected" since everything stays on the phone; two points to confirm in Play Console's help text: Android backup, Google's location engine)
+- [ ] Data safety form (**redrafted 2 Oct 2026**: `store/play-console-answers.md`; address search now sends typed text to Google's geocoder / OpenStreetMap, so the recommended answer is no longer "nothing collected"; confirm each point in Play Console)
 - [ ] Content rating (IARC), ads declaration, target audience
 - [x] 16 KB page size: the bundle has no native libraries, so nothing to align
 - [ ] Read the Pre-launch report after the first upload
 
 **Exit:** 12 testers opted in; day 1 of 14 logged.
+
+### Tester feedback round (2 Oct 2026)
+
+- [x] Premium redesign: "Emerald & Champagne" palette, Fraunces + DM Sans, hero tracking card, frosted tab bar, gold Pro accents, CSS fallbacks for old WebViews
+- [x] Older-phone location: falls back to Android's own GPS when Google Play services is missing or fails; start/resume no longer briefly show "Interrupted"; failure paths no longer crash the foreground service. **Not yet confirmed on a real older phone**: ask the tester to send a bug report from Settings
+- [x] Report a bug (diagnostics log attached) and Send feedback (up to 3 screenshots), via the user's email app. Set `NEXT_PUBLIC_SUPPORT_EMAIL` in `.env.local` before building
+- [x] Set Home/Office by address (Android Geocoder, OpenStreetMap fallback); "use current location" kept as a secondary link
+- [x] First-launch Home/Office pop-up: returns on every launch until both are set; Cancel = later, "Don't ask me again" = never (quiet card stays on Home)
+- [x] Notifications: time to leave, forgot to track, weekly summary (free); monthly recap, slow-day heads-up (Pro); set-up reminder after 2 and 5 days. Scheduled natively, decided when they fire
+- [x] Free vs Pro shown side by side, Pro including everything in Free
+- [ ] Test on an older emulator image (Android 7 to 9) and on a phone without Google Play services
 
 ## Phase 5 — Pro (₹49) and reports (Oct 8–20; **first thing cut if behind**)
 

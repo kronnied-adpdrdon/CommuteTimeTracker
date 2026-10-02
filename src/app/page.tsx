@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import TripRow, { DirectionIcon } from '@/components/TripRow';
+import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
@@ -33,8 +33,8 @@ export default function Home() {
   const week = weeklySummary(trips, new Date(now));
   const recent = recentTrips(trips, 3);
   const { places } = state;
-  const showPlacesPrompt =
-    phase !== 'loading' && phase !== 'interrupted' && !state.placesPromptDismissed && !(places.home && places.office);
+  // The pop-up (PlacesDialog) asks first; this quiet card stays for people who chose "Don't ask again".
+  const showPlacesReminder = phase !== 'loading' && phase !== 'interrupted' && state.placesPromptNeverAsk && !(places.home && places.office);
 
   return (
     <>
@@ -70,36 +70,11 @@ export default function Home() {
           </div>
         )}
 
-        {showPlacesPrompt && (
-          <div className={styles.banner}>
-            <span style={{ fontWeight: 700, fontSize: '1rem' }}>Set your Home and Office</span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              So trips are labelled &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap the one you&apos;re at now; do the other when you get there.
-            </span>
-            <div className={styles.buttonRow}>
-              {(['home', 'office'] as const).map((kind) => {
-                const saved = places[kind] !== undefined;
-                return (
-                  <button
-                    key={kind}
-                    className={`${styles.pillButton} ${saved ? '' : styles.pillButtonPrimary}`}
-                    disabled={saved || state.locating !== null}
-                    onClick={() => commute.setPlaceHere(kind)}
-                  >
-                    <DirectionIcon direction={kind === 'home' ? 'home' : 'work'} size={18} />
-                    {state.locating === kind
-                      ? 'Locating…'
-                      : saved
-                        ? `${kind === 'home' ? 'Home' : 'Office'} saved ✓`
-                        : `I'm at ${kind === 'home' ? 'Home' : 'the Office'}`}
-                  </button>
-                );
-              })}
-            </div>
-            <button className={styles.linkButton} style={{ color: 'var(--text-secondary)', alignSelf: 'center' }} onClick={() => commute.dismissPlacesPrompt()}>
-              Maybe later
-            </button>
-          </div>
+        {showPlacesReminder && (
+          <Link href="/settings" className={styles.banner} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <span style={{ fontWeight: 700 }}>Set your Home and Office</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Label trips &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap to add your addresses.</span>
+          </Link>
         )}
 
         {phase === 'interrupted' && session ? (

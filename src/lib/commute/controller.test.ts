@@ -276,7 +276,7 @@ describe('places', () => {
     await controller.setPlaceHere('home');
     const restarted = setup(store).controller;
     await restarted.init();
-    expect(restarted.getState().places.home).toEqual(home);
+    expect(restarted.getState().places.home).toMatchObject(home);
   });
 
   it('a failed reading shows the error and saves nothing', async () => {
@@ -294,16 +294,40 @@ describe('places', () => {
     await controller.start();
     recorder.progress(500, { lat: 12.95, lng: 77.6, accuracy: 7, timestamp: T0 });
     await controller.setPlaceHere('office');
-    expect(controller.getState().places.office).toEqual({ lat: 12.95, lng: 77.6 });
+    expect(controller.getState().places.office).toEqual({ lat: 12.95, lng: 77.6, label: 'Current location' });
   });
 
-  it('Later hides the first-launch prompt for good', async () => {
+  it('Cancel hides the prompt only until the app is opened again', async () => {
     const { controller, store } = setup();
     await controller.init();
-    await controller.dismissPlacesPrompt();
+    controller.snoozePlacesPrompt();
+    expect(controller.getState().placesPromptSnoozed).toBe(true);
     const restarted = setup(store).controller;
     await restarted.init();
-    expect(restarted.getState().placesPromptDismissed).toBe(true);
+    expect(restarted.getState().placesPromptSnoozed).toBe(false);
+    expect(restarted.getState().placesPromptNeverAsk).toBe(false);
+  });
+
+  it("Don't ask again is remembered, and can be undone", async () => {
+    const { controller, store } = setup();
+    await controller.init();
+    await controller.setPlacesPromptNeverAsk(true);
+    const restarted = setup(store).controller;
+    await restarted.init();
+    expect(restarted.getState().placesPromptNeverAsk).toBe(true);
+    await restarted.setPlacesPromptNeverAsk(false);
+    const again = setup(store).controller;
+    await again.init();
+    expect(again.getState().placesPromptNeverAsk).toBe(false);
+  });
+
+  it('keeps the address chosen for a place', async () => {
+    const { controller } = setup();
+    await controller.init();
+    await controller.setPlace('home', home, '12 Park Street, Bengaluru');
+    expect(controller.getState().places.home).toEqual({ ...home, label: '12 Park Street, Bengaluru' });
+    await controller.setPlace('home', null);
+    expect(controller.getState().places.home).toBeUndefined();
   });
 });
 

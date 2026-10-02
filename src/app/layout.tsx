@@ -3,6 +3,9 @@ import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import AppLinks from "@/components/AppLinks";
 import BottomNav from "@/components/BottomNav";
+import PlacesDialog from "@/components/PlacesDialog";
+import { DiagnosticsSync } from "@/lib/diagnostics";
+import { RemindersSync } from "@/lib/notifications";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
 
 // Downloaded once at build time and bundled with the app, so text renders offline.
@@ -37,11 +40,14 @@ export default function RootLayout({
       <body>
         <ThemeSync />
         <AppLinks />
+        <DiagnosticsSync />
+        <RemindersSync />
         <div className="mobile-container">
           <main className="content-area">
             {children}
           </main>
           <BottomNav />
+          <PlacesDialog />
         </div>
       </body>
     </html>

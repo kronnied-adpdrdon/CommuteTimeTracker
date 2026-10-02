@@ -7,17 +7,23 @@ const Check = ({ color = 'var(--success-color)' }: { color?: string }) => (
   </svg>
 );
 
+/** What every user gets. Pro includes all of it. */
 export const FREE_FEATURES = [
   'Unlimited commute tracking',
-  'Your last 3 commutes on the home screen',
+  'Home-screen widget: start and stop in one tap',
+  'Home and Office labels from your addresses',
   'Last 2 weeks of history, with edit and delete',
-  'Home and Office labels, weekly totals',
+  'Weekly totals and trend',
+  'Leave-time, forgot-to-track and weekly reminders',
 ];
 
+/** What Pro adds on top of everything in Free. */
 export const PRO_FEATURES = [
   'Reports for any date range, including trips older than 2 weeks',
   'Totals, averages, and to work vs to home',
   'Export as PDF or CSV to share or file a claim',
+  'Monthly commute recap',
+  'Slow-day heads-up before your slower weekdays',
 ];
 
 export default function ProFeatureList({ features, color }: { features: string[]; color?: string }) {

@@ -25,6 +25,9 @@ export const STALE_AFTER_MS = 6 * 60 * 60 * 1000;
 /** A reading at least this accurate is good enough to save as Home or Office. */
 export const PLACE_ACCURACY_METERS = 50;
 
+/** Shown for a place saved from GPS instead of a typed address. */
+export const CURRENT_LOCATION_LABEL = 'Current location';
+
 export type CommutePhase = 'loading' | 'idle' | 'tracking' | 'interrupted';
 
 export interface CommuteState {
@@ -41,8 +44,10 @@ export interface CommuteState {
   /** True while a start/stop/finish is in progress, so buttons can't be pressed twice. */
   busy: boolean;
   places: SavedPlaces;
-  /** The user tapped "Later" on the first-launch Home/Office card. */
-  placesPromptDismissed: boolean;
+  /** The user ticked "Don't ask again" on the Home/Office pop-up. Saved across launches. */
+  placesPromptNeverAsk: boolean;
+  /** The user cancelled the pop-up this time. Not saved, so it comes back the next time the app opens. */
+  placesPromptSnoozed: boolean;
   /** Which place is being set from the current location, if any. */
   locating: PlaceKind | null;
   isPro: boolean;
@@ -81,9 +86,12 @@ export interface CommuteController {
   dismissMessages(): void;
   /** Saves Home or Office from the current location (or the running trip's latest reading). */
   setPlaceHere(kind: PlaceKind): Promise<void>;
-  /** Saves Home or Office at a given point, or clears it with `null`. Re-tags every saved trip. */
-  setPlace(kind: PlaceKind, where: LatLng | null): Promise<void>;
-  dismissPlacesPrompt(): Promise<void>;
+  /** Saves Home or Office at a given point (with its address, for display), or clears it with `null`. Re-tags every saved trip. */
+  setPlace(kind: PlaceKind, where: LatLng | null, label?: string): Promise<void>;
+  /** Cancel on the pop-up: hides it until the app is opened again. */
+  snoozePlacesPrompt(): void;
+  /** The "Don't ask again" checkbox. */
+  setPlacesPromptNeverAsk(neverAsk: boolean): Promise<void>;
   deleteTrip(id: string): Promise<void>;
   /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
   setTripEndClock(id: string, clock: string): Promise<boolean>;
@@ -105,7 +113,8 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   notice: null,
   busy: false,
   places: {},
-  placesPromptDismissed: false,
+  placesPromptNeverAsk: false,
+  placesPromptSnoozed: false,
   locating: null,
   isPro: false,
   proPrice: null,
@@ -199,8 +208,8 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     }
   }
 
-  async function savePlace(kind: PlaceKind, where: LatLng | null) {
-    const places = withPlace(state.places, kind, where);
+  async function savePlace(kind: PlaceKind, where: LatLng | null, label?: string) {
+    const places = withPlace(state.places, kind, where, label);
     await deps.places.save(places);
     const retagged = retagTrips(await deps.trips.list(), places);
     await deps.trips.replaceAll(retagged);
@@ -216,13 +225,13 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
 
     init() {
       initPromise ??= (async () => {
-        const [trips, places, placesPromptDismissed, isPro] = await Promise.all([
+        const [trips, places, placesPromptNeverAsk, isPro] = await Promise.all([
           deps.trips.list(),
           deps.places.load(),
-          deps.places.isPromptDismissed(),
+          deps.places.isNeverAsk(),
           deps.pro.load(),
         ]);
-        set({ trips, places, placesPromptDismissed, isPro });
+        set({ trips, places, placesPromptNeverAsk, isPro });
         await fileFinished();
         applySnapshot(await deps.tracker.getState());
         void syncPro();
@@ -308,13 +317,13 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
           set({ error: { kind: 'timeout', message: 'No accurate location yet.' } });
           return;
         }
-        await savePlace(kind, latest);
+        await savePlace(kind, latest, CURRENT_LOCATION_LABEL);
         return;
       }
       set({ locating: kind, error: null });
       try {
         await deps.tracker.requestPermissions();
-        await savePlace(kind, await deps.tracker.currentFix());
+        await savePlace(kind, await deps.tracker.currentFix(), CURRENT_LOCATION_LABEL);
       } catch (error) {
         set({ error: asLocationError(error) });
       } finally {
@@ -322,11 +331,13 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       }
     },
 
-    setPlace: (kind, where) => savePlace(kind, where),
+    setPlace: (kind, where, label) => savePlace(kind, where, label),
 
-    async dismissPlacesPrompt() {
-      set({ placesPromptDismissed: true });
-      await deps.places.dismissPrompt();
+    snoozePlacesPrompt: () => set({ placesPromptSnoozed: true }),
+
+    async setPlacesPromptNeverAsk(neverAsk) {
+      set({ placesPromptNeverAsk: neverAsk });
+      await deps.places.setNeverAsk(neverAsk);
     },
 
     async deleteTrip(id) {

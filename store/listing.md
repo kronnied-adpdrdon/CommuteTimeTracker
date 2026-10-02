@@ -21,6 +21,14 @@ ONE TAP, EVEN FROM THE HOME SCREEN
 • Live timer and distance while you travel
 • Works with the screen locked
 
+SET HOME AND OFFICE BY ADDRESS
+• Type an address and pick the match, or use your current location
+• Trips are labelled "To work" or "To home" automatically
+
+GENTLE REMINDERS, ALL ON YOUR PHONE
+• A nudge before you usually leave, a Sunday summary of your week, and a "forgot to track?" check
+• Switch each one on or off, and choose the evening time
+
 SEE YOUR WEEK AT A GLANCE
 • This week's total commute time and your average per day
 • How this week compares with the last one
@@ -35,6 +43,7 @@ REPORTS WITH PRO (ONE-TIME UPGRADE)
 • Reports for any date range, including trips older than two weeks
 • Totals, averages, and to-work vs to-home breakdowns
 • Export as PDF or CSV to share, keep for your records, or attach to a travel claim
+• A monthly commute recap and a heads-up before your slower weekdays
 • A single one-time purchase through Google Play, no subscription. It restores automatically on any phone with the same Google account
 
 PRIVATE BY DESIGN
@@ -44,7 +53,8 @@ PRIVATE BY DESIGN
 • No ads
 
 ALSO
-• Dark mode
+• Report a bug or send feedback with screenshots from Settings
+• Premium light and dark themes
 • Android's own backup can bring your trips back on a new phone
 
 Commute Time Tracker is built for people who travel to work: by car, bike, bus, metro or on foot.

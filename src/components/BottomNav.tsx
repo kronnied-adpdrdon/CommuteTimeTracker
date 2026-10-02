@@ -46,25 +46,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: 'var(--nav-height)',
-      backgroundColor: 'color-mix(in srgb, var(--surface-color) 90%, transparent)',
-      backdropFilter: 'blur(18px)',
-      WebkitBackdropFilter: 'blur(18px)',
-      boxShadow: 'var(--shadow-nav)',
-      display: 'flex',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      // Keep the tabs above Android's gesture bar / navigation buttons.
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      maxWidth: '480px',
-      margin: '0 auto',
-      zIndex: 50,
-    }}>
+    <nav className="bottom-nav">
       {tabs.map((tab) => {
         const isActive = pathname === tab.path;
         return (

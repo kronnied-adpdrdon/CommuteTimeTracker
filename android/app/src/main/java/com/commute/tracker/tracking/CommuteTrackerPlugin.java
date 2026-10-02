@@ -5,10 +5,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.provider.Settings;
 import androidx.core.content.ContextCompat;
 import com.commute.tracker.CommuteWidgetProvider;
+import com.commute.tracker.support.DiagLog;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -36,6 +38,7 @@ public class CommuteTrackerPlugin extends Plugin {
 
     private static final double PLACE_ACCURACY_METERS = 50;
     private static final double APPROXIMATE_ACCURACY_METERS = 500;
+    private static final long PLATFORM_FIX_TIMEOUT_MS = 25_000;
 
     private TrackingStore store;
     /** Stop calls waiting for the service to finish the trip. */
@@ -43,6 +46,7 @@ public class CommuteTrackerPlugin extends Plugin {
 
     @Override
     public void load() {
+        DiagLog.init(getContext());
         store = new TrackingStore(getContext());
         TrackingService.setListener(
             new TrackingService.Listener() {
@@ -68,13 +72,21 @@ public class CommuteTrackerPlugin extends Plugin {
 
     /** Phase plus the trip in progress, if any. Same shape the app's controller expects. */
     private JSObject snapshot() {
+        return snapshot(false);
+    }
+
+    /**
+     * `starting` is true right after start/resume: the service takes a moment to come up (longer on older
+     * phones), and until it does `isRunning()` is still false, which would wrongly read as "interrupted".
+     */
+    private JSObject snapshot(boolean starting) {
         JSObject result = new JSObject();
         TrackingStore.Session s = store.loadSession();
         if (s == null) {
             result.put("phase", "idle");
             return result;
         }
-        result.put("phase", TrackingService.isRunning() ? "tracking" : "interrupted");
+        result.put("phase", starting || TrackingService.isRunning() ? "tracking" : "interrupted");
         JSObject session = new JSObject();
         session.put("id", s.id);
         session.put("startedAt", s.startedAt);
@@ -102,10 +114,12 @@ public class CommuteTrackerPlugin extends Plugin {
     private boolean checkCanTrack(PluginCall call) {
         if (!granted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             String message = granted(Manifest.permission.ACCESS_COARSE_LOCATION) ? "Location is set to Approximate." : "User denied location permission";
+            DiagLog.log("Plugin", "Cannot track: " + message);
             call.reject(message, granted(Manifest.permission.ACCESS_COARSE_LOCATION) ? "APPROXIMATE" : "NOT_AUTHORIZED");
             return false;
         }
         if (!TrackingService.isLocationEnabled(getContext())) {
+            DiagLog.log("Plugin", "Cannot track: location services are off");
             call.reject("Location services disabled.", "LOCATION_OFF");
             return false;
         }
@@ -122,14 +136,16 @@ public class CommuteTrackerPlugin extends Plugin {
         if (!checkCanTrack(call)) return;
         if (store.loadSession() == null) store.saveSession(TrackingStore.Session.begin(System.currentTimeMillis()));
         ContextCompat.startForegroundService(getContext(), TrackingService.intent(getContext(), TrackingService.ACTION_START));
-        call.resolve(snapshot());
+        DiagLog.log("Plugin", "start requested");
+        call.resolve(snapshot(true));
     }
 
     @PluginMethod
     public void resume(PluginCall call) {
         if (!checkCanTrack(call)) return;
         ContextCompat.startForegroundService(getContext(), TrackingService.intent(getContext(), TrackingService.ACTION_RESUME));
-        call.resolve(snapshot());
+        DiagLog.log("Plugin", "resume requested");
+        call.resolve(snapshot(true));
     }
 
     /** Stops a running trip; resolves once it has been finished and queued. */
@@ -177,31 +193,61 @@ public class CommuteTrackerPlugin extends Plugin {
         call.resolve(result);
     }
 
-    /** One accurate reading, e.g. to save Home or Office. */
+    /** One accurate reading, e.g. to save Home or Office. Uses Android's own GPS if Google's location is unavailable. */
     @SuppressLint("MissingPermission")
     @PluginMethod
     public void currentFix(PluginCall call) {
         if (!checkCanTrack(call)) return;
-        CancellationTokenSource cancel = new CancellationTokenSource();
-        LocationServices.getFusedLocationProviderClient(getContext())
-            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancel.getToken())
-            .addOnSuccessListener(location -> {
-                if (location == null) {
-                    call.reject("No accurate location in time.", "TIMEOUT");
-                } else if (location.hasAccuracy() && location.getAccuracy() > APPROXIMATE_ACCURACY_METERS) {
-                    call.reject("Location is set to Approximate.", "APPROXIMATE");
-                } else if (location.hasAccuracy() && location.getAccuracy() > PLACE_ACCURACY_METERS) {
-                    call.reject("No accurate location in time.", "TIMEOUT");
-                } else {
-                    JSObject fix = new JSObject();
-                    fix.put("lat", location.getLatitude());
-                    fix.put("lng", location.getLongitude());
-                    if (location.hasAccuracy()) fix.put("accuracy", location.getAccuracy());
-                    fix.put("timestamp", location.getTime());
-                    call.resolve(fix);
-                }
-            })
-            .addOnFailureListener(e -> call.reject(e.getMessage(), "UNKNOWN"));
+        if (PlatformLocation.fusedAvailable(getContext())) {
+            CancellationTokenSource cancel = new CancellationTokenSource();
+            LocationServices.getFusedLocationProviderClient(getContext())
+                .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancel.getToken())
+                .addOnSuccessListener(location -> {
+                    if (location == null) {
+                        DiagLog.log("Location", "Fused current location returned nothing; trying platform GPS");
+                        platformFix(call);
+                    } else {
+                        resolveFix(call, location);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    DiagLog.log("Location", "Fused current location failed: " + e + "; trying platform GPS");
+                    platformFix(call);
+                });
+        } else {
+            DiagLog.log("Location", "Google Play services unavailable; using platform GPS for current location");
+            platformFix(call);
+        }
+    }
+
+    private void platformFix(PluginCall call) {
+        PlatformLocation.currentFix(getContext(), PLATFORM_FIX_TIMEOUT_MS, PLACE_ACCURACY_METERS, new PlatformLocation.Callback() {
+            @Override
+            public void onLocation(Location location) {
+                resolveFix(call, location);
+            }
+
+            @Override
+            public void onTimeout() {
+                DiagLog.log("Location", "No location from any provider in time");
+                call.reject("No accurate location in time.", "TIMEOUT");
+            }
+        });
+    }
+
+    private void resolveFix(PluginCall call, Location location) {
+        if (location.hasAccuracy() && location.getAccuracy() > APPROXIMATE_ACCURACY_METERS) {
+            call.reject("Location is set to Approximate.", "APPROXIMATE");
+        } else if (location.hasAccuracy() && location.getAccuracy() > PLACE_ACCURACY_METERS) {
+            call.reject("No accurate location in time.", "TIMEOUT");
+        } else {
+            JSObject fix = new JSObject();
+            fix.put("lat", location.getLatitude());
+            fix.put("lng", location.getLongitude());
+            if (location.hasAccuracy()) fix.put("accuracy", location.getAccuracy());
+            fix.put("timestamp", location.getTime());
+            call.resolve(fix);
+        }
     }
 
     @PluginMethod
