@@ -6,9 +6,6 @@ import { isNativeApp, lazyPlugin } from './native';
  */
 export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? '';
 
-/** Hosted privacy policy. Set `NEXT_PUBLIC_PRIVACY_URL` once it is published; the Settings link appears only then. */
-export const PRIVACY_POLICY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL ?? '';
-
 export const MAX_IMAGES = 3;
 
 export interface EmailImage {

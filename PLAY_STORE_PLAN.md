@@ -66,7 +66,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
 - [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
 - [x] **Back up the keystore AND its password off this Mac**: keystore in Google Drive, password saved separately (user confirmed 1 Oct 2026)
-- [ ] Host privacy policy at a public URL — **draft rewritten for no accounts** in `docs/privacy-policy.md`; fill the `[PLACEHOLDERS]` and host it (GitHub Pages or Google Sites are free)
+- [ ] Host privacy policy at a public URL — generated from `src/lib/legal.ts` into `docs/privacy-policy.md` (no placeholders left; add the publisher's name on the hosted page if Play asks); host it (GitHub Pages or Google Sites are free)
 - ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
 - ~~Account-deletion URL~~ — not required: the app has no accounts
 
@@ -137,7 +137,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Upload the AAB and enable Play App Signing
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
-- [x] Privacy policy link inside the app (Settings): built; it appears once `NEXT_PUBLIC_PRIVACY_URL` is set in `.env.local` (needs the hosted URL, then rebuild)
+- [x] Privacy policy and Terms and conditions pages inside the app (Settings), offline. Text lives in `src/lib/legal.ts`; `npm run export:legal` writes `docs/privacy-policy.md` and `docs/terms.md`. **Still to do:** host `docs/privacy-policy.md` at a public URL (GitHub Pages / Google Sites) for the Play listing, and have the Terms' governing-law line (India) and the publisher's legal name reviewed
 - [ ] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play"
 - [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
 - [ ] Check the new icon and splash screen on a phone

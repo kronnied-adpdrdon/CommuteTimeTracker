@@ -1176,3 +1176,30 @@
     transform: translateX(256px);
   }
 }
+
+/* Privacy policy and terms */
+.legalHeading {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.legalText {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.legalList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.legalList li::marker {
+  color: var(--accent);
+}

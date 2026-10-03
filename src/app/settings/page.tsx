@@ -7,7 +7,6 @@ import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import AddressPicker from '@/components/AddressPicker';
 import DeveloperTools from '@/components/DeveloperTools';
-import { PRIVACY_POLICY_URL } from '@/lib/support';
 import { useDevTools } from '@/lib/devtools';
 import { ThemePreference, useTheme } from '@/lib/theme';
 
@@ -21,7 +20,7 @@ const Arrow = () => (
   <svg className={styles.navRowArrow} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 );
 
-function NavRow({ href, title, subtitle, external }: { href: string; title: string; subtitle: string; external?: boolean }) {
+function NavRow({ href, title, subtitle }: { href: string; title: string; subtitle: string }) {
   const content = (
     <>
       <span className={styles.navRowText}>
@@ -31,11 +30,7 @@ function NavRow({ href, title, subtitle, external }: { href: string; title: stri
       <Arrow />
     </>
   );
-  return external ? (
-    <a href={href} className={styles.navRow} target="_blank" rel="noopener noreferrer">{content}</a>
-  ) : (
-    <Link href={href} className={styles.navRow}>{content}</Link>
-  );
+  return <Link href={href} className={styles.navRow}>{content}</Link>;
 }
 
 export default function SettingsPage() {
@@ -119,12 +114,10 @@ export default function SettingsPage() {
           <NavRow href="/feedback" title="Send feedback" subtitle="Ideas and comments, with screenshots" />
           <div className={styles.rowDivider} />
           <NavRow href="/report-bug" title="Report a bug" subtitle="Sends a diagnostics log to the developer" />
-          {PRIVACY_POLICY_URL && (
-            <>
-              <div className={styles.rowDivider} />
-              <NavRow href={PRIVACY_POLICY_URL} title="Privacy policy" subtitle="How your data is handled" external />
-            </>
-          )}
+          <div className={styles.rowDivider} />
+          <NavRow href="/privacy" title="Privacy policy" subtitle="What the app uses and what leaves your phone" />
+          <div className={styles.rowDivider} />
+          <NavRow href="/terms" title="Terms and conditions" subtitle="The rules for using the app" />
         </div>
 
         <div className={styles.card}>

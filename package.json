@@ -10,6 +10,7 @@
     "build:android": "next build && npx cap sync android",
     "open:android": "npx cap open android",
     "test": "vitest run",
+    "export:legal": "node --experimental-strip-types scripts/export-legal.mjs",
     "build:android:demo": "NEXT_PUBLIC_DEV_TOOLS=1 next build && npx cap sync android"
   },
   "dependencies": {
