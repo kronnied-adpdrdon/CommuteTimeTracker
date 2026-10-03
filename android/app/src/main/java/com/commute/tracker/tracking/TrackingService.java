@@ -22,6 +22,7 @@ import androidx.core.location.LocationManagerCompat;
 import com.commute.tracker.CommuteWidgetProvider;
 import com.commute.tracker.MainActivity;
 import com.commute.tracker.R;
+import com.commute.tracker.auto.AutoStore;
 import com.commute.tracker.support.DiagLog;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -41,6 +42,16 @@ public class TrackingService extends Service {
     public static final String ACTION_START = "com.commute.tracker.action.START";
     public static final String ACTION_RESUME = "com.commute.tracker.action.RESUME";
     public static final String ACTION_STOP = "com.commute.tracker.action.STOP";
+    /** Automatic start: begin a trip backdated to EXTRA_TIME (when the phone left Home or Office). */
+    public static final String ACTION_AUTO_START = "com.commute.tracker.action.AUTO_START";
+    /** Automatic stop: save the automatic trip, ending at EXTRA_TIME, labelled EXTRA_DIRECTION. */
+    public static final String ACTION_AUTO_KEEP = "com.commute.tracker.action.AUTO_KEEP";
+    /** The automatic trip wasn't a commute (errand, expired): throw it away. */
+    public static final String ACTION_AUTO_DROP = "com.commute.tracker.action.AUTO_DROP";
+    /** "Not a commute" on the notification: throw the automatic trip away and stop waiting for an arrival. */
+    public static final String ACTION_AUTO_CANCEL = "com.commute.tracker.action.AUTO_CANCEL";
+    public static final String EXTRA_TIME = "time";
+    public static final String EXTRA_DIRECTION = "direction";
 
     private static final String CHANNEL_ID = "commute_tracking";
     private static final int NOTIFICATION_ID = 1001;
@@ -192,8 +203,28 @@ public class TrackingService extends Service {
 
         if (ACTION_STOP.equals(action)) {
             // Started with startForegroundService, so promote briefly before stopping, as Android requires.
-            promote(session != null ? session : store.loadSession());
-            finishAndStop();
+            TrackingStore.Session s = session != null ? session : store.loadSession();
+            promote(s);
+            // Stopped by hand: an automatic trip is finished now, and no arrival is awaited any more.
+            if (s != null && s.auto) AutoStore.clearCandidate(this);
+            finishAndStop(System.currentTimeMillis(), null);
+            return START_NOT_STICKY;
+        }
+
+        if (ACTION_AUTO_KEEP.equals(action) || ACTION_AUTO_DROP.equals(action) || ACTION_AUTO_CANCEL.equals(action)) {
+            TrackingStore.Session s = session != null ? session : store.loadSession();
+            tryPromote(s);
+            if (s == null || !s.auto) {
+                // A trip started by hand always wins over automatic stop.
+                if (!running) stopSelf();
+                return START_NOT_STICKY;
+            }
+            if (ACTION_AUTO_CANCEL.equals(action)) AutoStore.clearCandidate(this);
+            if (ACTION_AUTO_KEEP.equals(action)) {
+                finishAndStop(intent.getLongExtra(EXTRA_TIME, System.currentTimeMillis()), intent.getStringExtra(EXTRA_DIRECTION));
+            } else {
+                discardAndStop(action);
+            }
             return START_NOT_STICKY;
         }
 
@@ -204,12 +235,17 @@ public class TrackingService extends Service {
             return START_NOT_STICKY;
         }
 
-        if (session == null) {
-            session = store.loadSession();
-            if (session == null && ACTION_START.equals(action)) {
-                session = TrackingStore.Session.begin(System.currentTimeMillis());
-                store.saveSession(session);
-            }
+        if (session == null) session = store.loadSession();
+        if (ACTION_AUTO_START.equals(action) && (session == null || session.auto)) {
+            // A new automatic trip replaces any earlier automatic one (its arrival was missed).
+            if (session != null) DiagLog.log("Tracking", "Replacing an unfinished automatic trip");
+            session = TrackingStore.Session.beginAuto(intent.getLongExtra(EXTRA_TIME, System.currentTimeMillis()));
+            store.saveSession(session);
+            readings = 0;
+        }
+        if (session == null && ACTION_START.equals(action)) {
+            session = TrackingStore.Session.begin(System.currentTimeMillis());
+            store.saveSession(session);
         }
         if (session == null) {
             DiagLog.log("Tracking", "Service started with no trip to record");
@@ -230,11 +266,23 @@ public class TrackingService extends Service {
         return START_NOT_STICKY;
     }
 
-    private void finishAndStop() {
+    private void finishAndStop(long endedAt, String direction) {
         DiagLog.log("Tracking", "Trip stopped after " + readings + " readings");
         stopLocationUpdates();
         TrackingStore.Session s = session != null ? session : store.loadSession();
-        if (s != null) store.finish(s, System.currentTimeMillis());
+        if (s != null) store.finish(s, endedAt, direction);
+        endService();
+    }
+
+    /** Throws the trip in progress away (automatic trips only: an errand, or "Not a commute"). */
+    private void discardAndStop(String why) {
+        DiagLog.log("Tracking", "Automatic trip discarded (" + why + ") after " + readings + " readings");
+        stopLocationUpdates();
+        store.clearSession();
+        endService();
+    }
+
+    private void endService() {
         session = null;
         running = false;
         stopForeground(STOP_FOREGROUND_REMOVE);
@@ -242,6 +290,15 @@ public class TrackingService extends Service {
         CommuteWidgetProvider.refreshAll(this);
         Listener l = listener;
         if (l != null) l.onEnded();
+    }
+
+    /** Promote, tolerating Android refusing because the service was reached in the background and isn't running. */
+    private void tryPromote(TrackingStore.Session s) {
+        try {
+            promote(s);
+        } catch (RuntimeException e) {
+            DiagLog.log("Tracking", "Could not enter foreground: " + e);
+        }
     }
 
     @Override
@@ -286,17 +343,24 @@ public class TrackingService extends Service {
             this, 1, intent(this, ACTION_STOP), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
         String km = s != null ? String.format(Locale.US, "%.1f km", s.engine.totalMeters() / 1000) : "";
+        boolean auto = s != null && s.auto;
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_tracking)
             .setColor(ContextCompat.getColor(this, R.color.widget_accent))
-            .setContentTitle("Tracking your commute")
-            .setContentText(km)
+            .setContentTitle(auto ? "Trip started automatically" : "Tracking your commute")
+            .setContentText(auto ? km + (km.isEmpty() ? "" : " · ") + "Saved when you arrive" : km)
             .setContentIntent(open)
             .addAction(0, "Stop", stop)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE);
+        if (auto) {
+            PendingIntent cancel = PendingIntent.getService(
+                this, 2, intent(this, ACTION_AUTO_CANCEL), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+            );
+            builder.addAction(0, "Not a commute", cancel);
+        }
         if (s != null) builder.setWhen(s.startedAt).setUsesChronometer(true).setShowWhen(true);
         return builder.build();
     }

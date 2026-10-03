@@ -6,8 +6,9 @@ Commute Time Tracker has no accounts and no servers of ours. Your trips stay on 
 
 ## What the app uses
 
-- Precise location, only while you have started a commute. Tracking begins when you tap Start (in the app or on the home-screen widget) and ends when you tap Stop (in the app, on the widget or in the notification). While tracking, the app shows a notification and may keep reading location with the screen off or the app closed. It does not read location at any other time, except when you choose "Use my current location" to set Home or Office.
-- Trip data: for each commute, the start and end times, duration, distance, start and end points, and whether it was to work or to home. The full route is used only to measure distance while the trip runs. It is not saved.
+- Precise location while a trip is being recorded. Tracking begins when you tap Start (in the app or on the home-screen widget) and ends when you tap Stop (in the app, on the widget or in the notification). While tracking, the app shows a notification and may keep reading location with the screen off or the app closed. Apart from automatic start and stop (below), it does not read location at any other time, except when you choose "Use my current location" to set Home or Office.
+- Location in the background, only if you turn on automatic start and stop. It is off until you switch it on and allow location "all the time". Your phone then tells the app when you cross a circle around your saved Home or Office, even when the app is closed. Leaving one during the commute hours you chose starts recording a trip, with the usual notification; arriving at the other saves it, and anything else (an errand, never arriving) is thrown away. Outside your commute hours, crossings are ignored. Like all trip data, this stays on your phone.
+- Trip data: for each commute, the start and end times, duration, distance, start and end points, and whether it was to work or to home. The full route is used only to measure distance while the trip runs. It is not saved. If you edit a trip, the times, distance and direction first recorded are kept with it on your phone.
 - Saved places: the Home and Office you set, with the address you picked.
 - Reminder settings: which reminders you turned on and the evening time you chose.
 - Purchase status: whether you have bought Pro. Payments are handled entirely by Google Play. We never see your card or payment details.
@@ -47,6 +48,7 @@ Trips stay on your phone until you delete them or uninstall the app. History sho
 ## Your choices
 
 - You can deny or take back location permission at any time in your phone's settings. Tracking will not work without it.
+- You can turn automatic start and stop off in Settings at any time, or take back "Allow all the time" in your phone's settings. Start and Stop keep working without it.
 - You can turn each reminder off in Settings → Notifications, or turn notifications off for the app in your phone's settings.
 - You can skip address search and set Home or Office from your current location, or not set them at all.
 

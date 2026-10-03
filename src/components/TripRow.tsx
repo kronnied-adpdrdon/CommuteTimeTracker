@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import styles from '@/app/page.module.css';
+import { isEdited } from '@/lib/trips/edit';
 import { formatDayLabel, formatDistanceKm, formatDuration, formatTimeRange } from '@/lib/trips/format';
 import { Trip, TripDirection } from '@/lib/trips/types';
 
@@ -36,6 +37,7 @@ interface TripRowProps {
 
 export default function TripRow({ trip, showDay, inset, actions, children }: TripRowProps) {
   const when = formatTimeRange(trip.startedAt, trip.endedAt);
+  const sub = showDay ? `${formatDayLabel(trip.startedAt)} · ${when}` : when;
   return (
     <div>
       <div className={`${styles.tripRow} ${inset ? styles.tripRowInset : ''}`}>
@@ -44,7 +46,7 @@ export default function TripRow({ trip, showDay, inset, actions, children }: Tri
         </div>
         <div className={styles.tripMain}>
           <div className={styles.tripTitle}>{TITLES[trip.direction]}</div>
-          <div className={styles.tripSub}>{showDay ? `${formatDayLabel(trip.startedAt)} · ${when}` : when}</div>
+          <div className={styles.tripSub}>{[sub, trip.auto && 'Auto', isEdited(trip) && 'Edited'].filter(Boolean).join(' · ')}</div>
         </div>
         <div className={styles.tripStats}>
           <div className={styles.tripDuration}>{formatDuration(trip.durationSeconds)}</div>

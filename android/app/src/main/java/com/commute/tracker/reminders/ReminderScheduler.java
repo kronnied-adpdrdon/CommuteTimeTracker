@@ -51,7 +51,8 @@ public final class ReminderScheduler {
         return ReminderLogic.Config.fromJson(prefs(context).getString(CONFIG, null));
     }
 
-    private static List<ReminderLogic.Trip> trips(Context context) {
+    /** The trips the app has saved, read straight from its storage. */
+    public static List<ReminderLogic.Trip> trips(Context context) {
         String json = context.getApplicationContext().getSharedPreferences(APP_STORAGE, Context.MODE_PRIVATE).getString(TRIPS_KEY, null);
         return ReminderLogic.parseTrips(json);
     }

@@ -5,6 +5,7 @@ import AppLinks from "@/components/AppLinks";
 import BottomNav from "@/components/BottomNav";
 import PlacesDialog from "@/components/PlacesDialog";
 import { DiagnosticsSync } from "@/lib/diagnostics";
+import { AutoTrackingSync } from "@/lib/auto";
 import { RemindersSync } from "@/lib/notifications";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         <AppLinks />
         <DiagnosticsSync />
         <RemindersSync />
+        <AutoTrackingSync />
         <div className="mobile-container">
           <main className="content-area">
             {children}

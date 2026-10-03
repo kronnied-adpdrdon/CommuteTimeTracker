@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from '../page.module.css';
 import PageHeader from '@/components/PageHeader';
+import Switch from '@/components/Switch';
 import { commute, useCommute } from '@/lib/commute';
 import { notifications, useNotifications } from '@/lib/notifications';
 import { NotificationSettings, clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
@@ -22,14 +23,6 @@ const ROWS: Row[] = [
   { key: 'monthly', title: 'Monthly recap', text: 'On the 1st: last month’s total commute time, trips and distance.', pro: true },
   { key: 'slowDay', title: 'Slow-day heads-up', text: 'Tells you in the morning when today’s weekday is usually slower for you, so you can leave earlier.', pro: true },
 ];
-
-function Switch({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
-  return (
-    <button role="switch" aria-checked={checked} aria-label={label} className={`${styles.switch} ${checked ? styles.switchOn : ''}`} onClick={() => onChange(!checked)}>
-      <span className={styles.switchKnob} />
-    </button>
-  );
-}
 
 export default function NotificationsPage() {
   const { isPro } = useCommute();

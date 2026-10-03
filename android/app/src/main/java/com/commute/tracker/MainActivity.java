@@ -1,6 +1,7 @@
 package com.commute.tracker;
 
 import android.os.Bundle;
+import com.commute.tracker.auto.AutoTrackingPlugin;
 import com.commute.tracker.billing.ProBillingPlugin;
 import com.commute.tracker.places.GeocoderPlugin;
 import com.commute.tracker.reminders.RemindersPlugin;
@@ -18,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GeocoderPlugin.class);
         registerPlugin(SupportPlugin.class);
         registerPlugin(RemindersPlugin.class);
+        registerPlugin(AutoTrackingPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

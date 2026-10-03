@@ -57,7 +57,18 @@
             </intent-filter>
         </receiver>
 
-        <!-- Records commutes. Started from the app, the widget or its own notification. -->
+        <!-- Automatic start and stop: Home / Office crossings (geofences), the expiry check, and setting the
+             circles up again after a restart or an app update. Not exported to other apps. -->
+        <receiver
+            android:name=".auto.AutoReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Records commutes. Started from the app, the widget, its own notification, or leaving Home / Office. -->
         <service
             android:name=".tracking.TrackingService"
             android:exported="false"
@@ -67,14 +78,17 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Precise location while a trip runs. ACCESS_BACKGROUND_LOCATION is deliberately absent:
-         trips only start from a user tap in the app, the widget or the notification. -->
+    <!-- Precise location while a trip runs. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- "Allow all the time": only for automatic start and stop, which is off until the user turns it on
+         (after an in-app explanation). Lets Android tell the app when the phone leaves or reaches Home or
+         Office while the app is closed. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Re-create reminder alarms after the phone restarts. -->
+    <!-- Re-create reminder alarms and the Home / Office circles after the phone restarts. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

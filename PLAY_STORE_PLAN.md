@@ -77,7 +77,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Install `@capgo/background-geolocation` 8.4.7; set `android.useLegacyBridge: true` in `capacitor.config.ts`
 - [x] Manifest: location, foreground-service and notification permissions + `foregroundServiceType="location"` come from the plugin (verified in the merged manifest); plugin's geofence receivers and `RECEIVE_BOOT_COMPLETED` removed
 - [x] `com.android.vending.BILLING` (from Play Billing Library 9.1.0, in the release manifest)
-- [x] **No `ACCESS_BACKGROUND_LOCATION`** — verified: the emulator's permission prompt offers only "While using the app"
+- [x] **No `ACCESS_BACKGROUND_LOCATION`** — verified: the emulator's permission prompt offers only "While using the app" (**superseded 3 Oct 2026**: automatic start and stop adds it, asked for only when the user turns that feature on; see Phase 8)
 - [x] Permission flow: Android prompts on first Start; refused permission / location off show a message with Open Settings
 - [x] "Approximate" location, tested on the emulator: Android first offers to switch to Precise; if the user keeps Approximate, the plugin refuses to start and the app explains how to turn on Precise. A coarse-readings warning also covers the case defensively
 - [x] Haversine accumulation with accuracy filter, jitter threshold and GPS-jump rejection (`src/lib/tracking/`)
@@ -191,6 +191,100 @@ Working backwards from the fixed constraints: production review after applying t
 
 ---
 
+## Phase 7 — Anonymous commute analytics (v1.1 or later, added 3 Oct 2026)
+
+**Goal:** aggregate data on travel time, commute time and cost (city benchmarks, content, maybe "your commute vs the city average" later). Play Console can't provide this: it only sees installs, retention, crashes and Pro sales. **Not part of v1.** It reverses the "no Firebase" decision for this feature only, so start it once there are enough real users for the numbers to mean something. Needs trip cost first, which is already on the v2 backlog.
+
+**Principles:** opt-in, off by default · no accounts (anonymous install ID only) · summary numbers only, never addresses or GPS points · coarse area (city) · publish no group smaller than ~20 users.
+
+**Open question:** is the data for the owner's own insight and content (simple opt-in upload plus a spreadsheet), or shown back to users in the app (needs live aggregation and a read-only endpoint for precomputed aggregates)?
+
+**Build list**
+
+- [ ] Define the upload fields: duration, distance, cost, mode, time of day, day of week, coarse area (check what a `Trip` stores today)
+- [ ] Trip cost and transport mode captured in the app (v2 items, prerequisites)
+- [ ] Settings toggle "Share anonymous commute stats", off by default, with a plain-language consent screen
+- [ ] Anonymous install ID (random UUID stored locally; reinstalling makes a new one)
+- [ ] Upload job: batched, sent when online, retried on failure, no duplicates
+- [ ] "Delete my shared data" button (sends the install ID to a delete endpoint, clears the flag)
+- [ ] Backend (Firebase): Anonymous Auth + App Check (Play Integrity); one Cloud Function that validates ranges and rate-limits per install; Firestore write-only from the app (rules block reads); delete function
+- [ ] Aggregation: scheduled medians/averages/percentiles by city, mode and time of day; minimum group size ~20; outlier filtering
+- [ ] Viewing: BigQuery + Looker Studio (free) or a Google Sheet
+- [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated): what is collected, why, retention, how to opt out or delete
+- [ ] Update the Play Data safety form to match (coarse location-linked data counts as sensitive; keep it coarse)
+- [ ] Decide a retention period for raw records (suggested: delete after 12 months)
+- [ ] Set a Google Cloud budget alert (e.g. ₹500) before enabling Blaze
+
+**Cost (verify current Firebase pricing):** about ₹0 a month up to a few thousand opted-in users, because Auth, App Check, Functions (~2M calls/month), Firestore (~20k writes/day, 1 GB) and BigQuery (10 GB, 1 TB queries) all have free tiers. Cloud Functions needs the pay-as-you-go **Blaze** plan, so a billing card must be attached. Around 100,000 users: a few dollars to tens of dollars a month (Firestore writes ~$0.18 per 100k). Costs grow mainly from one-write-per-trip uploads, abuse, or keeping raw data for years. Other costs: legal review of the updated policy (optional, a few thousand rupees or more), and about 1–2 days of build time.
+
+**Suggested order:** define fields → backend with fake data → app toggle and upload → legal text and Data safety form → aggregation once real data arrives.
+
+---
+
+## Phase 8 — Automatic start and stop (in v1, Free, designed 3 Oct 2026)
+
+**Goal:** the commute is logged without tapping Start or Stop. **Decided 3 Oct 2026: goes into v1, and is Free.** Manual Start/Stop stays as the fallback. The Nov 1 date is dropped. Background location is Play's strictest review, so submit the declaration early. Builds on the existing Home and Office places.
+
+**How it works (geofence + candidate trip)**
+
+- Home and Office are registered as OS geofences (always on, near-zero battery).
+- Leaving a geofence inside the user's commute window starts a **candidate trip**, saved to disk. Nothing is logged yet. The rules run in Java on the phone (`android/.../auto/AutoLogic.java`), because geofence events arrive while the app's screens aren't running.
+- The candidate becomes a real trip only if it **ends inside the other place's geofence**. Start time is backdated to the exit event's timestamp; stop time is the entry event's timestamp.
+- Errands never appear: a trip that doesn't reach the other place, or is under ~5 minutes, is dropped silently.
+- The candidate is dropped if the user re-enters the origin geofence or the expiry passes. The window only decides whether a departure counts, so a 09:55 departure arriving at 10:30 is kept.
+
+**Rules and defaults**
+
+- **Window:** a departure from either place counts in either window (user-set, default Mon–Fri 7–10am and 4–8pm; a window may cross midnight for night shifts). **Changed while building (3 Oct):** outside the windows nothing is watched at all, and there is no "Log this as a commute?" prompt. Watching every departure would mean recording GPS (and showing the tracking notification) on weekend errands.
+- **Expiry:** about 2.5 x the expected commute, minimum 45 min, maximum 3 h. Expected commute is estimated from distance at first, then the user's median once trips exist. Hidden default, not a setting.
+- **Radius:** default 150 m, minimum 100 m (Android geofencing is only ~50–100 m accurate). Per-place slider (100 m to 1 km, no map: a map would need an online tile service), with the hint "Increase this if your office is a large campus" (campus 300–500 m). Stop means reaching the gate or car park, not the desk.
+- **Stops on the way** (school drop-off, petrol): still count as one trip. Open question: show the stop time separately?
+- **Visible feedback:** a notification "Trip started automatically, tap to cancel or edit", so mistakes are easy to fix.
+- **Not ready:** off, Home or Office missing, or the two circles touching (crossings couldn't tell them apart) means nothing is watched. Settings warns about the last two.
+- **Distance (decided 3 Oct: record GPS).** Leaving starts the normal recorder, backdated to the crossing, so distance is measured like a manual trip. The tracking notification ("Trip started automatically", with Stop and **Not a commute**) shows during errands too and disappears when the candidate is dropped. The few hundred metres inside each circle before the crossing is detected aren't measured.
+- **Manual always wins:** a trip started by hand is never replaced, kept or dropped by automatic start and stop. Stopping an automatic trip by hand saves it then and stops waiting for an arrival.
+
+**Build list**
+
+- [x] Commute-window setting: on/off, morning and evening hours, days (Settings card, debug and demo builds only until the geofences work)
+- [x] Per-place radius slider (default 150 m, 100 m to 1 km); warning when Home and Office are too close
+- [x] Register Home and Office geofences (`AutoGeofences.java`, Google geofencing via Play services; re-set whenever settings or places change)
+- [x] Re-register geofences after reboot, app update, app launch, and when location was switched off (`AutoReceiver.java`)
+- [x] Candidate-trip state saved to disk so it survives the app being killed (`AutoStore.java`)
+- [x] Complete / drop logic: arrival, re-entry to origin, expiry, 5-minute minimum, outside the window (18 Java tests)
+- [x] Backdate start and stop to the geofence event timestamps; auto trips carry their direction and an "Auto" label; changing Home or Office doesn't re-label them
+- [x] "Trip started automatically" notification with Stop and Not a commute (tapping it opens the app, where the trip can be edited once saved)
+- [x] Median-based expiry once there are 3+ trips in that direction in the last 60 days; distance estimate before that
+- [x] Background location: "Allow all the time" flow with a prominent in-app disclosure before the system prompt; "Paused" warning if the permission is taken back; message on phones without Google Play services
+- [ ] Play Console: background location declaration (**text drafted** in `store/play-console-answers.md`, with a video script) + record the demo video; check the Data safety form (location still stays on the phone)
+- [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated)
+- [ ] Battery-saver guidance for phones that kill background apps (Xiaomi, Samsung)
+- [x] Developer tools: 6 scenarios (commute to work, commute home, errand, under 5 min, never arrives, leaves at 2 pm) through the real Java rules; all matched on the emulator
+- [x] Decided: record GPS during a candidate
+- [x] Circle size uses − / + buttons, not a slider (a scroll starting on a slider changed the circle by accident on the emulator)
+- [x] Emulator end to end (3 Oct): left the sample Home at 16:11 → START within seconds, "Trip started automatically" notification with Stop / Not a commute → arrived at the Office → KEEP, trip saved with the app closed (4.49 km measured vs ~4.88 km straight line; the circles account for most of the gap) → History shows "To work · Auto". **Emulator catch:** fake GPS only reaches Google's location service while some app requests location, so keep Google Maps open when testing geofences on the emulator
+- [ ] Emulator: an errand (leave Home, come back) and the "Not a commute" button
+- [ ] Test on 2+ physical phones by walking or driving across the real radius edge (emulator fakes miss delayed events)
+
+**Editing trips (applies to manual and automatic trips)**
+
+- Editable: end time, start time, direction, distance (its own field, labelled "distance as measured"), delete, and add a trip by hand (marked, distance typed in or left out of distance totals).
+- Guard rails: speed warning if the times and distance imply over about 120 km/h or under 2 km/h (can still save); no future times; end after start; no overlap with another trip.
+- Trips that were edited get a small "edited" badge. The **original values are stored on the phone inside the trip record and are not shown to the user** (no accounts, so the developer cannot see them either). They are used for the badge and for later reports.
+- No time limit on editing.
+
+- [x] Saved original values (`original`) and `directionByUser` on `Trip` (`src/lib/trips/types.ts`). No migration needed: older trips simply have neither. Changing Home or Office no longer overwrites a direction the user picked
+- [x] Edit screen: start and end time, distance field, direction (To work / To home / Other), speed warning, validation (future, 24 h or longer, overlap, unreadable distance). Untouched fields keep their exact recorded values, so saving without changes doesn't mark a trip edited
+- [x] "Edited" label on trip rows (Home, History, Reports)
+- [ ] Add-trip-by-hand flow (needs a decision on blank distance in totals)
+- [x] Replace the note "distance stays as recorded" with a plain-language explanation
+- [x] Privacy Policy: one sentence on the originals kept with edited trips (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated)
+- [ ] Check the edit screen on the emulator (Developer tools → Load sample trips)
+
+**Later:** suggest a bigger radius when real arrivals land consistently outside the circle; support more than one work place.
+
+---
+
 ## Version 2 backlog (agreed to defer, 30 Sep 2026)
 
 - Forgot to start / stop: "Arrived? Tap to stop" prompt when still for a while or near Office/Home
@@ -201,8 +295,9 @@ Working backwards from the fixed constraints: production review after applying t
 - Sunday weekly summary notification
 - CSV export of trips
 - Optional "Sign in with Google" + cloud sync through Firebase (setup guide is in git history of this file)
+- Opt-in anonymous commute analytics, no accounts (see Phase 7)
 - Google Fused Location Provider (custom native plugin)
-- Automatic trip detection (needs background location: Play's strictest review)
+- Automatic trip detection (needs background location: Play's strictest review; designed in Phase 8)
 
 ## Verification
 

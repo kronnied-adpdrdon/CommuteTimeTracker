@@ -23,16 +23,24 @@ public final class TrackingStore {
         public final long startedAt;
         public long lastReadingAt;
         public final TrackerEngine engine;
+        /** Started by leaving Home or Office (automatic start), not by a tap. */
+        public final boolean auto;
 
-        Session(String id, long startedAt, long lastReadingAt, TrackerEngine engine) {
+        Session(String id, long startedAt, long lastReadingAt, TrackerEngine engine, boolean auto) {
             this.id = id;
             this.startedAt = startedAt;
             this.lastReadingAt = lastReadingAt;
             this.engine = engine;
+            this.auto = auto;
         }
 
         public static Session begin(long now) {
-            return new Session(UUID.randomUUID().toString(), now, 0, new TrackerEngine());
+            return new Session(UUID.randomUUID().toString(), now, 0, new TrackerEngine(), false);
+        }
+
+        /** An automatic trip, backdated to when the phone left the place. */
+        public static Session beginAuto(long leftAt) {
+            return new Session(UUID.randomUUID().toString(), leftAt, 0, new TrackerEngine(), true);
         }
     }
 
@@ -47,7 +55,13 @@ public final class TrackingStore {
         if (raw == null) return null;
         try {
             JSONObject json = new JSONObject(raw);
-            return new Session(json.getString("id"), json.getLong("startedAt"), json.optLong("lastReadingAt", 0), readEngine(json.getJSONObject("engine")));
+            return new Session(
+                json.getString("id"),
+                json.getLong("startedAt"),
+                json.optLong("lastReadingAt", 0),
+                readEngine(json.getJSONObject("engine")),
+                json.optBoolean("auto", false)
+            );
         } catch (JSONException e) {
             // Unreadable: set it aside rather than silently losing it.
             prefs.edit().putString(SESSION + ".corrupt." + System.currentTimeMillis(), raw).remove(SESSION).apply();
@@ -62,6 +76,7 @@ public final class TrackingStore {
                 .put("startedAt", s.startedAt)
                 .put("lastReadingAt", s.lastReadingAt)
                 .put("engine", writeEngine(s.engine));
+            if (s.auto) json.put("auto", true);
             prefs.edit().putString(SESSION, json.toString()).apply();
         } catch (JSONException ignored) {
             // put() only throws for NaN/infinite numbers, which the engine never produces.
@@ -74,6 +89,11 @@ public final class TrackingStore {
 
     /** Ends the session as a finished trip, queues it for the app, and clears the session. Synchronous. */
     public JSONObject finish(Session s, long endedAt) {
+        return finish(s, endedAt, null);
+    }
+
+    /** As above; `direction` ("work" / "home") is set for automatic trips, which know where they went. */
+    public JSONObject finish(Session s, long endedAt, String direction) {
         JSONObject trip = new JSONObject();
         try {
             trip.put("id", s.id)
@@ -82,6 +102,8 @@ public final class TrackingStore {
                 .put("distanceMeters", Math.round(s.engine.totalMeters()));
             if (s.engine.start != null) trip.put("start", latLng(s.engine.start));
             if (s.engine.anchor != null) trip.put("end", latLng(s.engine.anchor));
+            if (s.auto) trip.put("auto", true);
+            if (direction != null) trip.put("direction", direction);
             JSONArray queue = readFinished();
             queue.put(trip);
             prefs.edit().putString(FINISHED, queue.toString()).remove(SESSION).commit();

@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import styles from '@/app/page.module.css';
+import { AutoDecision, autoTracking } from '@/lib/auto';
+import { SCENARIOS, Scenario, runScenario } from '@/lib/auto/scenarios';
 import { commute, useCommute } from '@/lib/commute';
 import { ReminderKind, notifications } from '@/lib/notifications';
+import { formatTimeOfDay } from '@/lib/trips/format';
 import { generateSampleTrips, isSampleTrip } from '@/lib/trips/sample';
 
 const REMINDERS: { kind: ReminderKind; label: string; pro?: boolean }[] = [
@@ -15,6 +18,19 @@ const REMINDERS: { kind: ReminderKind; label: string; pro?: boolean }[] = [
   { kind: 'slowDay', label: 'Slow-day heads-up', pro: true },
 ];
 
+function describeDecision(d: AutoDecision): string {
+  switch (d.action) {
+    case 'KEEP':
+      return `kept, ${formatTimeOfDay(d.startedAt!)} to ${formatTimeOfDay(d.endedAt!)} (to ${d.direction})`;
+    case 'DROP':
+      return `dropped: ${d.reason}`;
+    case 'START':
+      return `waiting for arrival until ${formatTimeOfDay(d.expiresAt!)}`;
+    default:
+      return `ignored: ${d.reason}`;
+  }
+}
+
 /**
  * Debug and demo builds only (the caller checks). Everything needed to try the Free and Pro features
  * without waiting: a plan switch, sample trips and addresses, and buttons that fire each reminder now.
@@ -23,6 +39,15 @@ export default function DeveloperTools() {
   const state = useCommute();
   const [message, setMessage] = useState<string | null>(null);
   const sampleCount = state.trips.filter(isSampleTrip).length;
+
+  async function tryScenario(scenario: Scenario) {
+    try {
+      const decision = await runScenario(scenario, autoTracking.simulate);
+      setMessage(`${scenario.label}: ${describeDecision(decision)}. Expected: ${scenario.expect}.`);
+    } catch {
+      setMessage('Automatic start and stop can only be tested in the Android app.');
+    }
+  }
 
   async function preview(kind: ReminderKind) {
     try {
@@ -82,6 +107,18 @@ export default function DeveloperTools() {
           <button key={kind} className={styles.pillButton} onClick={() => preview(kind)}>
             {label}
             {pro && <span className={styles.proBadge}>PRO</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="eyebrow" style={{ marginTop: '6px' }}>Automatic start and stop</div>
+      <p className={styles.cardText}>
+        Pretend Home and Office crossings on the last weekday, run through the phone&apos;s real rules. Needs automatic start and stop switched on and both addresses set (sample addresses work). Only the decision is shown: nothing is recorded or saved. For the full path, move the emulator&apos;s location across a circle.
+      </p>
+      <div className={styles.buttonRow}>
+        {SCENARIOS.map((scenario) => (
+          <button key={scenario.id} className={styles.pillButton} onClick={() => tryScenario(scenario)}>
+            {scenario.label}
           </button>
         ))}
       </div>

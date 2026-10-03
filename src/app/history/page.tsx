@@ -4,10 +4,11 @@ import { useState } from 'react';
 import styles from '../page.module.css';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
-import { formatDistanceKm, formatDuration, formatRelativeDay, formatTimeOfDay } from '@/lib/trips/format';
+import { EditProblem, TripForm, speedWarning, tripForm } from '@/lib/trips/edit';
+import { formatDistanceKm, formatDuration, formatRelativeDay } from '@/lib/trips/format';
 import { summarize } from '@/lib/reports/summary';
 import { groupByDay, tripsSince, windowStart } from '@/lib/trips/stats';
-import { Trip } from '@/lib/trips/types';
+import { Trip, TripDirection } from '@/lib/trips/types';
 
 /** History shows this many calendar days, including today. Older trips stay stored for reports. */
 const HISTORY_DAYS = 14;
@@ -27,10 +28,26 @@ function RowButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
   );
 }
 
+const DIRECTIONS: { id: TripDirection; label: string }[] = [
+  { id: 'work', label: 'To work' },
+  { id: 'home', label: 'To home' },
+  { id: 'unknown', label: 'Other' },
+];
+
+const PROBLEMS: Record<EditProblem, string> = {
+  'bad-time': 'Please enter both times.',
+  'too-long': 'A trip can\u2019t be 24 hours or longer.',
+  'in-future': 'The trip can\u2019t end in the future.',
+  overlap: 'Those times overlap another trip.',
+  'bad-distance': 'Enter the distance in km, for example 12.4.',
+};
+
 function TripEditor({ trip, mode, onDone }: { trip: Trip; mode: EditMode; onDone: () => void }) {
-  const [endClock, setEndClock] = useState(() => formatTimeOfDay(trip.endedAt));
-  const [invalid, setInvalid] = useState(false);
-  const panel = { padding: '0 16px 16px', display: 'flex', flexDirection: 'column' as const, gap: '8px' };
+  const [form, setForm] = useState(() => tripForm(trip));
+  const [problem, setProblem] = useState<EditProblem | null>(null);
+  const panel = { padding: '0 16px 16px', display: 'flex', flexDirection: 'column' as const, gap: '10px' };
+  const label = { fontSize: '0.85rem', color: 'var(--text-secondary)', flex: 1 };
+  const input = { marginTop: '6px', padding: '12px' };
 
   if (mode === 'delete') {
     return (
@@ -46,32 +63,66 @@ function TripEditor({ trip, mode, onDone }: { trip: Trip; mode: EditMode; onDone
     );
   }
 
+  const change = (patch: Partial<TripForm>) => {
+    setForm((f) => ({ ...f, ...patch }));
+    setProblem(null);
+  };
+  const warning = speedWarning(trip, form);
+
   return (
     <div style={panel}>
-      <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-        Arrived at (distance stays as recorded)
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <label style={label}>
+          Left at
+          <input className="input-field" type="time" value={form.startClock} onChange={(e) => change({ startClock: e.target.value })} style={input} />
+        </label>
+        <label style={label}>
+          Arrived at
+          <input className="input-field" type="time" value={form.endClock} onChange={(e) => change({ endClock: e.target.value })} style={input} />
+        </label>
+      </div>
+      <label style={label}>
+        Distance (km)
         <input
           className="input-field"
-          type="time"
-          value={endClock}
-          onChange={(e) => {
-            setEndClock(e.target.value);
-            setInvalid(false);
-          }}
-          style={{ marginTop: '6px', padding: '12px' }}
+          type="text"
+          inputMode="decimal"
+          value={form.distanceKm}
+          onChange={(e) => change({ distanceKm: e.target.value })}
+          style={input}
         />
       </label>
-      {invalid && (
-        <span style={{ color: 'var(--danger-color)', fontSize: '0.85rem' }}>
-          That time doesn&apos;t work: it must be after the trip started ({formatTimeOfDay(trip.startedAt)}) and within 24 hours.
+      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+        Changing the times doesn&apos;t change the distance. The route isn&apos;t saved, so only you can correct it.
+      </span>
+      <div className={styles.segmented} role="radiogroup" aria-label="Trip direction">
+        {DIRECTIONS.map((d) => (
+          <button
+            key={d.id}
+            role="radio"
+            aria-checked={form.direction === d.id}
+            className={`${styles.segment} ${form.direction === d.id ? styles.segmentActive : ''}`}
+            onClick={() => change({ direction: d.id })}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+      {warning && !problem && (
+        <span style={{ color: 'var(--link)', fontSize: '0.85rem' }}>
+          {warning.kind === 'fast'
+            ? `That works out to ${warning.kmh} km/h. Check the times and distance.`
+            : `That works out to ${warning.kmh} km/h, slower than walking. Check the times and distance.`}
         </span>
       )}
+      {problem && <span style={{ color: 'var(--danger-color)', fontSize: '0.85rem' }}>{PROBLEMS[problem]}</span>}
       <div className={styles.bannerActions}>
         <button
           className={styles.linkButton}
           onClick={async () => {
-            if (await commute.setTripEndClock(trip.id, endClock)) onDone();
-            else setInvalid(true);
+            const result = await commute.editTrip(trip.id, form);
+            if (result) setProblem(result);
+            else onDone();
           }}
         >
           Save

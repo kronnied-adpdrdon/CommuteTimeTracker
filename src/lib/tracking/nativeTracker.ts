@@ -39,6 +39,10 @@ export interface FinishedTrip {
   distanceMeters: number;
   start?: LatLng;
   end?: LatLng;
+  /** Started and stopped automatically (leaving Home / Office). */
+  auto?: boolean;
+  /** Automatic trips know where they went, so they arrive already labelled. */
+  direction?: 'work' | 'home';
 }
 
 /**

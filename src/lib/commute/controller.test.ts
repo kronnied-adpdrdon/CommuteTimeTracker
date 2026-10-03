@@ -4,6 +4,7 @@ import { LocationFix } from '../tracking/geo';
 import { FinishedTrip, LocationError, SessionSnapshot, TrackerService, TrackerSnapshot } from '../tracking/nativeTracker';
 import { createPlacesStore } from '../trips/places';
 import { SAMPLE_PLACES, generateSampleTrips, isSampleTrip } from '../trips/sample';
+import { tripForm } from '../trips/edit';
 import { createTripRepository } from '../trips/repository';
 import { STALE_AFTER_MS, createCommuteController, toTrip } from './controller';
 import { ProBilling, ProStatus, PurchaseOutcome } from './billing';
@@ -389,18 +390,37 @@ describe('editing trips', () => {
     return ctx;
   }
 
-  it('changing the end time recalculates duration and keeps distance', async () => {
+  it('changing the end time recalculates duration, keeps distance and marks the trip edited', async () => {
     const { controller } = await withOneTrip();
     const trip = controller.getState().trips[0];
-    expect(await controller.setTripEndClock(trip.id, '08:03')).toBe(true);
-    expect(controller.getState().trips[0]).toMatchObject({ durationSeconds: 180, distanceMeters: trip.distanceMeters });
+    expect(await controller.editTrip(trip.id, { ...tripForm(trip), endClock: '08:03' })).toBeNull();
+    const edited = controller.getState().trips[0];
+    expect(edited).toMatchObject({ durationSeconds: 180, distanceMeters: trip.distanceMeters });
+    expect(edited.original).toMatchObject({ endedAt: trip.endedAt, durationSeconds: trip.durationSeconds });
   });
 
-  it('a nonsense end time is refused and nothing changes', async () => {
+  it('a nonsense time or a time in the future is refused and nothing changes', async () => {
     const { controller } = await withOneTrip();
     const trip = controller.getState().trips[0];
-    expect(await controller.setTripEndClock(trip.id, '99:99')).toBe(false);
+    expect(await controller.editTrip(trip.id, { ...tripForm(trip), endClock: '99:99' })).toBe('bad-time');
+    expect(await controller.editTrip(trip.id, { ...tripForm(trip), endClock: '09:00' })).toBe('in-future');
     expect(controller.getState().trips[0]).toEqual(trip);
+  });
+
+  it('saving without changes does not mark the trip edited', async () => {
+    const { controller } = await withOneTrip();
+    const trip = controller.getState().trips[0];
+    expect(await controller.editTrip(trip.id, tripForm(trip))).toBeNull();
+    expect(controller.getState().trips[0]).toEqual(trip);
+  });
+
+  it('a direction picked by hand survives changing Home or Office', async () => {
+    const { controller } = await withOneTrip();
+    const trip = controller.getState().trips[0];
+    await controller.editTrip(trip.id, { ...tripForm(trip), direction: 'home' });
+    await controller.setPlace('home', home);
+    await controller.setPlace('office', office);
+    expect(controller.getState().trips[0].direction).toBe('home');
   });
 
   it('deletes one trip, or all of them', async () => {
@@ -428,6 +448,11 @@ describe('toTrip', () => {
   it('builds duration, rounds distance and tags direction', () => {
     const trip = toTrip({ id: 'x', startedAt: T0, endedAt: T0 + 61_500, distanceMeters: 4999.6, start: home, end: office }, { home, office });
     expect(trip).toMatchObject({ durationSeconds: 62, distanceMeters: 5000, direction: 'work' });
+  });
+  it('an automatic trip keeps its direction and is marked auto', () => {
+    const trip = toTrip({ id: 'x', startedAt: T0, endedAt: T0 + 600_000, distanceMeters: 5000, auto: true, direction: 'home' }, {});
+    expect(trip).toMatchObject({ direction: 'home', auto: true });
+    expect(toTrip({ id: 'y', startedAt: T0, endedAt: T0 + 600_000, distanceMeters: 5000 }, {})).not.toHaveProperty('auto');
   });
   it('an end before the start becomes zero duration', () => {
     expect(toTrip({ id: 'x', startedAt: T0, endedAt: T0 - 1, distanceMeters: 0 }, {}).durationSeconds).toBe(0);

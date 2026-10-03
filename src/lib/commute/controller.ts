@@ -8,7 +8,7 @@ import {
   toLocationError,
 } from '../tracking/nativeTracker';
 import { SavedPlaces, tagDirection } from '../trips/direction';
-import { PlaceKind, endTimeFromClock, retagTrips, withEndTime, withPlace } from '../trips/edit';
+import { EditProblem, PlaceKind, TripForm, applyTripForm, retagTrips, withPlace } from '../trips/edit';
 import { PlacesStore } from '../trips/places';
 import { TripRepository } from '../trips/repository';
 import { isSampleTrip } from '../trips/sample';
@@ -94,8 +94,8 @@ export interface CommuteController {
   /** The "Don't ask again" checkbox. */
   setPlacesPromptNeverAsk(neverAsk: boolean): Promise<void>;
   deleteTrip(id: string): Promise<void>;
-  /** Changes a trip's end time from a clock time like "09:10". Returns false if the time doesn't make sense. */
-  setTripEndClock(id: string, clock: string): Promise<boolean>;
+  /** Saves the edit form for a trip. Returns what's wrong with it, or null once saved (or nothing changed). */
+  editTrip(id: string, form: TripForm): Promise<EditProblem | null>;
   deleteAllTrips(): Promise<void>;
   /** Developer tools: replaces any earlier sample trips with these, and saves these Home and Office places. */
   loadSampleData(data: { trips: Trip[]; places: SavedPlaces }): Promise<void>;
@@ -137,9 +137,10 @@ export function toTrip(finished: FinishedTrip, places: SavedPlaces): Trip {
     endedAt,
     durationSeconds: Math.round((endedAt - finished.startedAt) / 1000),
     distanceMeters: Math.round(finished.distanceMeters),
-    direction: tagDirection(finished.start, finished.end, places),
+    direction: finished.direction ?? tagDirection(finished.start, finished.end, places),
     start: finished.start,
     end: finished.end,
+    ...(finished.auto ? { auto: true } : {}),
   };
 }
 
@@ -352,14 +353,15 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       set({ trips: await deps.trips.list() });
     },
 
-    async setTripEndClock(id, clock) {
+    async editTrip(id, form) {
       const trip = state.trips.find((t) => t.id === id);
-      const endedAt = trip ? endTimeFromClock(trip.startedAt, clock) : null;
-      const updated = trip && endedAt !== null ? withEndTime(trip, endedAt) : null;
-      if (!updated) return false;
+      if (!trip) return null;
+      const updated = applyTripForm(trip, form, state.trips, now());
+      if (typeof updated === 'string') return updated;
+      if (updated === trip) return null;
       await deps.trips.save(updated);
       set({ trips: await deps.trips.list() });
-      return true;
+      return null;
     },
 
     async deleteAllTrips() {

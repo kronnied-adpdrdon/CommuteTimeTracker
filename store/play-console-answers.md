@@ -55,12 +55,29 @@ Expected rating: Everyone / 3+.
 **Type:** Location (`FOREGROUND_SERVICE_LOCATION`)
 
 **Description of the feature:**
-> The app records a commute the user starts by tapping Start in the app, on its home-screen widget, or in its notification. While recording, the app shows an ongoing notification with a live timer, the distance so far and a Stop button. Location is used to measure the trip's distance and continues when the screen is off or the user switches apps, so the whole commute is measured. Recording stops as soon as the user taps Stop. The app never starts recording on its own and does not use background location.
+> The app records a commute, started either by the user tapping Start (in the app, on its home-screen widget, or in its notification) or, if the user has turned on "Automatic start and stop", by the phone leaving the user's saved Home or Office during the commute hours they chose. While recording, the app shows an ongoing notification with a live timer, the distance so far and a Stop button (plus "Not a commute" for automatic trips). Location is used to measure the trip's distance and continues when the screen is off or the user switches apps, so the whole commute is measured. Recording stops when the user taps Stop, or for automatic trips when the phone arrives at the other saved place.
 
 **User impact if the task is deferred or interrupted:**
 > The commute would be measured incompletely: distance travelled while the screen is off would be lost, making the trip's time and distance wrong.
 
 **Demo video** (to record): tap Start on Home → Android's location prompt → notification appears with timer and distance → lock screen, travel → unlock, distance has increased → tap Stop in the notification → trip appears in History. Then the same from the widget.
+
+## Location permissions (App content → Sensitive permissions → Location: background)
+
+**Added 3 Oct 2026 for automatic start and stop.** Draft; check the form's current wording.
+
+**Which feature uses background location?**
+> Automatic start and stop of commute trips. The user saves a Home and an Office and turns the feature on in Settings (it is off by default). The app registers a geofence around each place. When the phone leaves one during the commute hours the user chose, the app starts recording the trip; when it arrives at the other, the trip is saved to the user's history. Departures that don't end at the other place (errands) are discarded. Outside the chosen hours, geofence events are ignored.
+
+**Why is background location needed (why not only while the app is open)?**
+> The commute starts when the user walks out of the door, when the app is not open. Without background location the user has to remember to open the app and tap Start, which is the problem the feature solves. The app only receives the geofence crossings for the two saved places and records location only during a trip, with the ongoing notification showing.
+
+**Prominent disclosure (in the app, before the system prompt):**
+> Location in the background. Commute Time Tracker collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone. On the next screen, choose Allow all the time. You can turn this off here at any time.
+
+**Data use:** on the phone only. Not sent to the developer or third parties (see Data safety).
+
+**Demo video** (to record, under 30 s if possible): Settings → Automatic start and stop switch → the in-app disclosure → Continue → Android's "Allow all the time" page → back, switch on → (emulator location moved out of the Home circle) → "Trip started automatically" notification → location moved into the Office circle → notification disappears and the trip appears in History labelled "Auto".
 
 ## News app / COVID-19 / Government / Financial features declarations
 
