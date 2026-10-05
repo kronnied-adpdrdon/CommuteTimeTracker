@@ -66,7 +66,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
 - [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
 - [x] **Back up the keystore AND its password off this Mac**: keystore in Google Drive, password saved separately (user confirmed 1 Oct 2026)
-- [ ] Host privacy policy at a public URL — generated from `src/lib/legal.ts` into `docs/privacy-policy.md` (no placeholders left; add the publisher's name on the hosted page if Play asks); host it (GitHub Pages or Google Sites are free)
+- [ ] Host privacy policy at a public URL — generated from `src/lib/legal.ts` into `docs/privacy-policy.md` (no placeholders left); host it (GitHub Pages or Google Sites are free). **Needs the publisher name and contact email first** (see Legal and compliance below)
 - ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
 - ~~Account-deletion URL~~ — not required: the app has no accounts
 
@@ -138,7 +138,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
 - [x] Privacy policy and Terms and conditions pages inside the app (Settings), offline. Text lives in `src/lib/legal.ts`; `npm run export:legal` writes `docs/privacy-policy.md` and `docs/terms.md`. **Still to do:** host `docs/privacy-policy.md` at a public URL (GitHub Pages / Google Sites) for the Play listing, and have the Terms' governing-law line (India) and the publisher's legal name reviewed
-- [ ] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play"
+- [x] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play" (4 Oct: "Pro isn't available to buy yet. Everything in Free keeps working.")
 - [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
 - [ ] Check the new icon and splash screen on a phone
 - [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
@@ -146,7 +146,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video** of tapping Start and the notification appearing
 - [ ] Data safety form (**redrafted 2 Oct 2026**: `store/play-console-answers.md`; address search now sends typed text to Google's geocoder / OpenStreetMap, so the recommended answer is no longer "nothing collected"; confirm each point in Play Console)
-- [ ] Content rating (IARC), ads declaration, target audience
+- [ ] Content rating (IARC), ads declaration (no ads), target audience (**suggested: 18 and over**, see Legal and compliance below)
 - [x] 16 KB page size: the bundle has no native libraries, so nothing to align
 - [ ] Read the Pre-launch report after the first upload
 
@@ -236,7 +236,7 @@ Working backwards from the fixed constraints: production review after applying t
 **Rules and defaults**
 
 - **Window:** a departure from either place counts in either window (user-set, default Mon–Fri 7–10am and 4–8pm; a window may cross midnight for night shifts). **Changed while building (3 Oct):** outside the windows nothing is watched at all, and there is no "Log this as a commute?" prompt. Watching every departure would mean recording GPS (and showing the tracking notification) on weekend errands.
-- **Expiry:** about 2.5 x the expected commute, minimum 45 min, maximum 3 h. Expected commute is estimated from distance at first, then the user's median once trips exist. Hidden default, not a setting.
+- **Expiry:** 2.5 x the commute time the user gives ("Usually takes about", default 45 min, 5 min to 3 h), minimum 45 min, maximum 3 h. **Changed 4 Oct:** the user's own answer replaces the distance estimate (straight line x 1.4 at 20 km/h), which was far too short for slow traffic, and the switch to the median of past trips was dropped (user's choice: one rule, easy to explain). Asked on the setup's commute-times page and in Settings.
 - **Radius:** default 150 m, minimum 100 m (Android geofencing is only ~50–100 m accurate). Per-place slider (100 m to 1 km, no map: a map would need an online tile service), with the hint "Increase this if your office is a large campus" (campus 300–500 m). Stop means reaching the gate or car park, not the desk.
 - **Stops on the way** (school drop-off, petrol): still count as one trip. Open question: show the stop time separately?
 - **Visible feedback:** a notification "Trip started automatically, tap to cancel or edit", so mistakes are easy to fix.
@@ -254,16 +254,17 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Complete / drop logic: arrival, re-entry to origin, expiry, 5-minute minimum, outside the window (18 Java tests)
 - [x] Backdate start and stop to the geofence event timestamps; auto trips carry their direction and an "Auto" label; changing Home or Office doesn't re-label them
 - [x] "Trip started automatically" notification with Stop and Not a commute (tapping it opens the app, where the trip can be edited once saved)
-- [x] Median-based expiry once there are 3+ trips in that direction in the last 60 days; distance estimate before that
+- [x] ~~Median-based expiry; distance estimate before that~~ replaced 4 Oct by the user's "Usually takes about" time (setup + Settings), with the wait shown in plain words under it
 - [x] Background location: "Allow all the time" flow with a prominent in-app disclosure before the system prompt; "Paused" warning if the permission is taken back; message on phones without Google Play services
 - [ ] Play Console: background location declaration (**text drafted** in `store/play-console-answers.md`, with a video script) + record the demo video; check the Data safety form (location still stays on the phone)
 - [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated)
-- [ ] Battery-saver guidance for phones that kill background apps (Xiaomi, Samsung)
+- [ ] Battery-saver guidance for phones that kill background apps (Xiaomi, Samsung): **built into the first-time setup** (brand-specific steps + Open app settings, 4 Oct); still to check the wording on a real Xiaomi and Samsung
 - [x] Developer tools: 6 scenarios (commute to work, commute home, errand, under 5 min, never arrives, leaves at 2 pm) through the real Java rules; all matched on the emulator
 - [x] Decided: record GPS during a candidate
 - [x] Circle size uses − / + buttons, not a slider (a scroll starting on a slider changed the circle by accident on the emulator)
 - [x] Emulator end to end (3 Oct): left the sample Home at 16:11 → START within seconds, "Trip started automatically" notification with Stop / Not a commute → arrived at the Office → KEEP, trip saved with the app closed (4.49 km measured vs ~4.88 km straight line; the circles account for most of the gap) → History shows "To work · Auto". **Emulator catch:** fake GPS only reaches Google's location service while some app requests location, so keep Google Maps open when testing geofences on the emulator
-- [ ] Emulator: an errand (leave Home, come back) and the "Not a commute" button
+- [x] Emulator: an errand (leave Home, come back) and the "Not a commute" button (4 Oct): leaving Home started a candidate with the "Trip started automatically" notification; walking back in dropped it and the notification disappeared. Leaving again then tapping **Not a commute** removed the notification, and driving on to the Office afterwards saved nothing (Office entry event arrived, no trip). History showed no trip for the day
+- [x] The app shows an automatic trip (4 Oct): Home says "Auto · Tracking", "Started automatically when you left Home at 20:35. Saves itself when you reach the Office, or is dropped as an errand if you're not there by 22:27", with **Stop and save** and **Not a commute** (before, it looked like a manual trip and had no Not a commute button). Emulator: left the Electronic City Home → Home screen as above → Not a commute → back to Ready, notification gone, nothing saved
 - [ ] Test on 2+ physical phones by walking or driving across the real radius edge (emulator fakes miss delayed events)
 
 **Editing trips (applies to manual and automatic trips)**
@@ -282,6 +283,58 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Check the edit screen on the emulator (Developer tools → Load sample trips)
 
 **Later:** suggest a bigger radius when real arrivals land consistently outside the circle; support more than one work place.
+
+---
+
+## First-time setup (in v1, decided and built 4 Oct 2026)
+
+**Goal:** new users find automatic start and stop, which was buried in Settings. Replaces the old Home/Office pop-up.
+
+**Decided (4 Oct):** a step-by-step **full-screen page** over the app (one question per screen, progress dots, Skip on every screen, main button pinned to the bottom; changed from a bottom pop-up the same day) plus a "Finish setting up" card on Home for whatever was skipped. Automatic recording is the recommended choice; Start/Stop is the alternative.
+
+**Screens:** Welcome (new users only; one button, "Set up (1 minute)": the setup itself can't be skipped, only its individual steps) → Home and Office → "When do you usually leave?" (leave home, leave work, days; commute hours become 1 h before to 90 min after) → How should trips be recorded? (Automatically, with the background-location disclosure, or Start and Stop) → Reminders (Time to leave, Forgot to track, Weekly summary; asks for notifications) → Battery (Xiaomi, Samsung, OnePlus/OPPO/realme, vivo/iQOO, Huawei/Honor and others only) → All set (summary).
+
+**Rules:** resumes where it stopped if the app is closed; existing users who update see only what they haven't set up (no welcome); turning automatic off in Settings counts as choosing Start and Stop; a deliberate "no" counts as done, a skip doesn't. Logic in `src/lib/setup/logic.ts` (tested), screens in `SetupWizard.tsx` and `SetupChecklist.tsx`.
+
+- [x] Build the screens, the Home card and the progress store
+- [x] "Use my current location" for an address asks for location only (it used to ask for notifications too, mid-step)
+- [x] Emulator (4 Oct): full new-user run (welcome → addresses → times → automatic with "Allow all the time" → notifications → summary; Settings shows the chosen hours and days), "Not now" → Home card 0 of 3 → automatic without addresses jumps to the address step → Start and Stop → reminders → card disappears; an existing set-up user sees nothing
+- [x] Developer tools: "Show every first-time setup screen"
+- [x] Full-screen version (4 Oct): welcome page with the Home screen's dark route-line card; Google's location explanation gets full-size Continue / Not now buttons; Android's back button goes back a screen (on the first screen it sends the app to the background, and the setup resumes there); re-tested on the emulator end to end, including notifications refused → "Continue without" → Home card → Reminders page
+- [x] Feedback round (4 Oct): more space under the welcome card; "Not now" removed from the welcome page; day picker with Mon–Fri / Mon–Sat / Every day presets and a tile per day (Mon, Tue, ...); the closing tick centred; animations (screens slide in the direction you move, welcome points and summary rows arrive one after another, the tick pops in and draws itself, progress dot stretches for the current step, cards and day tiles press in), switched off when the phone's "Remove animations" setting is on
+- [ ] See the battery screen on a real Xiaomi or Samsung (the emulator reports Google, so it never shows there)
+- [ ] Re-record the background-location demo video through the setup (or Settings), per `store/play-console-answers.md`
+
+---
+
+## Legal and compliance (checked 4 Oct 2026)
+
+**Checked against a common launch checklist.** No accounts, no servers, no cookies, no analytics and no emails from the app, so several website-style items don't apply.
+
+| Item | Needed? | Status (4 Oct) |
+|---|---|---|
+| Privacy Policy | Yes (Play requires it; location app) | In the app (Settings → Privacy policy) and `docs/privacy-policy.md`, in sync. Not hosted yet. Missing publisher name and contact email |
+| Terms of Service | Recommended | Done: Settings → Terms and conditions |
+| Refund policy | Covered | Terms: refunds follow Google Play's policy (automatic within 48 h; later refunds from Play Console). No separate page |
+| Cookie policy / consent banner | No | No cookies, analytics or ad tracking; fonts are bundled |
+| Form consents | Mostly no | Feedback and bug reports go through the user's own email app; address search sends only the typed text (in the policy); background location has the prominent disclosure before Android's prompt |
+| No unnecessary data | Yes | Done: merged manifest has only location, background location, foreground service (location), notifications, boot, internet, network state, billing. No advertising ID |
+| No dark patterns | Yes | Done: no countdowns or fake offers; price from Google Play; manual recording is a full-size choice next to "Recommended" automatic; every setup step can be skipped |
+| No hidden fees | Yes | Done: one-time ₹49, no subscription, stated in Terms |
+| Age consent | Play form only | No in-app age gate. Target audience in Play Console: 18 and over (suggested). Policy says not directed at under-13s |
+| Unsubscribe links | No | The app sends no emails |
+| Font and image licences | Yes | Barlow / Barlow Condensed are SIL Open Font License (bundling allowed; licence text should ship with them). Icon is our own. Five unused Next.js starter images are still bundled |
+| Data deletion request | No web form needed (no accounts) | In app: delete a trip, delete all trips, clear Home/Office; uninstall or clear storage for everything; described in the policy |
+
+**To do before launch**
+
+- [x] Privacy Policy and Terms: publisher **Kaustav Dutta**, contact **provibsol@gmail.com** (in the app and `docs/`, written into `src/lib/legal.ts` since the policy is public anyway); automatic start and stop settings listed; dated 4 October 2026
+- [ ] Host the Privacy Policy (GitHub Pages; repo is public) and put the URL in Play Console (same as the Phase 1 item)
+- [x] Settings → "Open-source licences" page (`src/lib/licenses.ts`): Barlow under the SIL OFL (text from Google Fonts), MIT (React, Next.js, styled-jsx, Capacitor), Apache 2.0 (SWC helpers, AndroidX), Google Play services and Billing under the Android SDK licence
+- [x] Delete the unused starter images in `public/` (`file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg`)
+- [ ] Play Console target audience: 18 and over
+- [x] Free vs Pro list: "Automatic start and stop when you leave and arrive" added to Free; store listing draft (`store/listing.md`) now leads with it, short description "Times your commute by itself: starts when you leave, stops when you arrive."
+- [ ] Optional: "Delete everything" in Settings → Your Data (trips, Home/Office, settings), instead of clearing storage in phone settings
 
 ---
 

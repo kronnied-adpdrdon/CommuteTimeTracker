@@ -1,7 +1,9 @@
 package com.commute.tracker.auto;
 
 import android.Manifest;
+import android.content.Context;
 import android.os.Build;
+import android.os.PowerManager;
 import com.commute.tracker.support.DiagLog;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -77,6 +79,19 @@ public class AutoTrackingPlugin extends Plugin {
         result.put("background", AutoGeofences.hasBackgroundLocation(getContext()));
         result.put("supported", AutoGeofences.supported(getContext()));
         return result;
+    }
+
+    /**
+     * For the first-time setup's battery step: who made the phone (some makers stop background apps), and
+     * whether Android's battery setting for this app is "Unrestricted".
+     */
+    @PluginMethod
+    public void checkBattery(PluginCall call) {
+        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        JSObject result = new JSObject();
+        result.put("manufacturer", Build.MANUFACTURER);
+        result.put("unrestricted", power != null && power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
+        call.resolve(result);
     }
 
     /** Whether the rules can run, and the candidate trip waiting for its arrival, if any. */

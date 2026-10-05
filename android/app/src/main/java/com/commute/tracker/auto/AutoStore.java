@@ -2,7 +2,6 @@ package com.commute.tracker.auto;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import com.commute.tracker.reminders.ReminderScheduler;
 import com.commute.tracker.support.DiagLog;
 
 /**
@@ -54,7 +53,7 @@ public final class AutoStore {
     }
 
     public static synchronized AutoLogic.Result exited(Context context, String place, long at) {
-        return apply(context, "exit " + place, AutoLogic.onExit(candidate(context), place, at, config(context), ReminderScheduler.trips(context)));
+        return apply(context, "exit " + place, AutoLogic.onExit(candidate(context), place, at, config(context)));
     }
 
     public static synchronized AutoLogic.Result entered(Context context, String place, long at) {

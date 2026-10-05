@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore } from '../storage/kv';
-import { DEFAULT_AUTO_SETTINGS, clampRadius, createAutoSettingsStore, placesTooClose, sanitize, toggleDay } from './settings';
+import { DEFAULT_AUTO_SETTINGS, clampCommute, clampRadius, createAutoSettingsStore, formatMinutesLong, placesTooClose, sanitize, toggleDay, waitMinutes } from './settings';
 
 describe('auto settings', () => {
   it('starts off, with Mon-Fri 7-10am and 4-8pm and 150 m circles', async () => {
@@ -45,5 +45,26 @@ describe('auto settings', () => {
     expect(placesTooClose({ home, office: near }, DEFAULT_AUTO_SETTINGS)).toBe(true);
     expect(placesTooClose({ home, office: far }, DEFAULT_AUTO_SETTINGS)).toBe(false);
     expect(placesTooClose({ home }, DEFAULT_AUTO_SETTINGS)).toBe(false);
+  });
+
+  it('waits 2.5 times the commute the user gave, between 45 minutes and 3 hours', () => {
+    expect(DEFAULT_AUTO_SETTINGS.commuteMinutes).toBe(45);
+    expect(waitMinutes(40)).toBe(100);
+    expect(waitMinutes(10)).toBe(45);
+    expect(waitMinutes(90)).toBe(180);
+    expect(waitMinutes(45)).toBe(112);
+  });
+
+  it('keeps the commute time within 5 minutes and 3 hours', () => {
+    expect(clampCommute(0)).toBe(5);
+    expect(clampCommute(400)).toBe(180);
+    expect(sanitize({ commuteMinutes: 'long' }).commuteMinutes).toBe(45);
+    expect(sanitize({ commuteMinutes: 30 }).commuteMinutes).toBe(30);
+  });
+
+  it('writes minutes the way people say them', () => {
+    expect(formatMinutesLong(45)).toBe('45 min');
+    expect(formatMinutesLong(60)).toBe('1 h');
+    expect(formatMinutesLong(112)).toBe('1 h 52 min');
   });
 });

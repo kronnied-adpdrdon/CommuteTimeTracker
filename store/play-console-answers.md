@@ -67,13 +67,13 @@ Expected rating: Everyone / 3+.
 **Added 3 Oct 2026 for automatic start and stop.** Draft; check the form's current wording.
 
 **Which feature uses background location?**
-> Automatic start and stop of commute trips. The user saves a Home and an Office and turns the feature on in Settings (it is off by default). The app registers a geofence around each place. When the phone leaves one during the commute hours the user chose, the app starts recording the trip; when it arrives at the other, the trip is saved to the user's history. Departures that don't end at the other place (errands) are discarded. Outside the chosen hours, geofence events are ignored.
+> Automatic start and stop of commute trips. The user saves a Home and an Office and turns the feature on in the first-time setup or in Settings (it is off by default; the setup recommends it but offers manual Start and Stop as an equal-sized alternative). The app registers a geofence around each place. When the phone leaves one during the commute hours the user chose, the app starts recording the trip; when it arrives at the other, the trip is saved to the user's history. Departures that don't end at the other place (errands) are discarded. Outside the chosen hours, geofence events are ignored.
 
 **Why is background location needed (why not only while the app is open)?**
 > The commute starts when the user walks out of the door, when the app is not open. Without background location the user has to remember to open the app and tap Start, which is the problem the feature solves. The app only receives the geofence crossings for the two saved places and records location only during a trip, with the ongoing notification showing.
 
 **Prominent disclosure (in the app, before the system prompt):**
-> Location in the background. Commute Time Tracker collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone. On the next screen, choose Allow all the time. You can turn this off here at any time.
+> Location in the background. Commute Time Tracker collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone. On the next screen, choose Allow all the time. You can turn this off in Settings at any time.
 
 **Data use:** on the phone only. Not sent to the developer or third parties (see Data safety).
 

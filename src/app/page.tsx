@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import RouteLine from '@/components/RouteLine';
+import SetupChecklist from '@/components/SetupChecklist';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
@@ -30,12 +31,13 @@ export default function Home() {
   const elapsedSeconds = tracking ? (now - session.startedAt) / 1000 : 0;
   const distanceMeters = session?.distanceMeters ?? 0;
   const waitingForGps = tracking && !session.hasFix;
+  // Started by leaving Home or the Office: it saves itself on arrival, or can be thrown away.
+  const auto = tracking && session.auto === true;
+  const autoFrom = session?.autoFrom === 'office' ? 'the Office' : 'Home';
+  const autoTo = session?.autoFrom === 'office' ? 'Home' : 'the Office';
 
   const week = weeklySummary(trips, new Date(now));
   const recent = recentTrips(trips, 3);
-  const { places } = state;
-  // The pop-up (PlacesDialog) asks first; this quiet card stays for people who chose "Don't ask again".
-  const showPlacesReminder = phase !== 'loading' && phase !== 'interrupted' && state.placesPromptNeverAsk && !(places.home && places.office);
 
   return (
     <>
@@ -71,12 +73,7 @@ export default function Home() {
           </div>
         )}
 
-        {showPlacesReminder && (
-          <Link href="/settings" className={styles.banner} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span style={{ fontWeight: 700 }}>Set your Home and Office</span>
-            <span style={{ color: 'var(--text-secondary)' }}>Label trips &ldquo;to work&rdquo; or &ldquo;to home&rdquo;. Tap to add your addresses.</span>
-          </Link>
-        )}
+        {phase !== 'loading' && phase !== 'interrupted' && <SetupChecklist />}
 
         {phase === 'interrupted' && session ? (
           <div className={styles.trackingCard}>
@@ -108,7 +105,7 @@ export default function Home() {
         ) : (
           <div className={styles.trackingCard}>
             {tracking ? (
-              <div className={`${styles.trackingPill} ${styles.trackingPillLive}`}>Tracking</div>
+              <div className={`${styles.trackingPill} ${styles.trackingPillLive}`}>{auto ? 'Auto · Tracking' : 'Tracking'}</div>
             ) : (
               <div className={styles.trackingPill}>
                 Ready
@@ -124,10 +121,23 @@ export default function Home() {
             <RouteLine active={tracking} />
 
             {tracking ? (
-              <button className={styles.stopButton} disabled={busy} onClick={() => commute.stop()}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
-                Stop
-              </button>
+              <>
+                <button className={styles.stopButton} disabled={busy} onClick={() => commute.stop()}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+                  {auto ? 'Stop and save' : 'Stop'}
+                </button>
+                {auto && (
+                  <>
+                    <button className={styles.secondaryButton} disabled={busy} onClick={() => commute.notCommute()}>
+                      Not a commute
+                    </button>
+                    <p className={styles.hint}>
+                      Started automatically when you left {autoFrom} at {formatTimeOfDay(session.startedAt)}. Saves itself when you reach {autoTo}
+                      {session.expiresAt ? `, or is dropped as an errand if you're not there by ${formatTimeOfDay(session.expiresAt)}` : ''}.
+                    </p>
+                  </>
+                )}
+              </>
             ) : (
               <>
                 <button className={styles.startButton} disabled={busy || phase === 'loading' || state.locating !== null} onClick={() => commute.start()}>

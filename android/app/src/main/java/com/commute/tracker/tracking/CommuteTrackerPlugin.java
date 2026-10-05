@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.provider.Settings;
 import androidx.core.content.ContextCompat;
 import com.commute.tracker.CommuteWidgetProvider;
+import com.commute.tracker.auto.AutoLogic;
+import com.commute.tracker.auto.AutoStore;
 import com.commute.tracker.support.DiagLog;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -93,6 +95,15 @@ public class CommuteTrackerPlugin extends Plugin {
         if (s.lastReadingAt > 0) session.put("lastReadingAt", s.lastReadingAt);
         session.put("distanceMeters", Math.round(s.engine.totalMeters()));
         session.put("hasFix", s.engine.anchor != null);
+        if (s.auto) {
+            // Started by leaving Home or the Office: say which, and when it gives up waiting for the arrival.
+            session.put("auto", true);
+            AutoLogic.Candidate candidate = AutoStore.candidate(getContext());
+            if (candidate != null) {
+                session.put("autoFrom", candidate.from);
+                session.put("expiresAt", candidate.expiresAt);
+            }
+        }
         Fix last = s.engine.last != null ? s.engine.last : s.engine.candidate;
         if (last != null) {
             JSObject fix = new JSObject();
@@ -169,6 +180,29 @@ public class CommuteTrackerPlugin extends Plugin {
             CommuteWidgetProvider.refreshAll(getContext());
         }
         call.resolve();
+    }
+
+    /**
+     * "Not a commute" in the app: throws away a trip that started automatically, like the notification's
+     * button. Resolves once it has ended. A trip started by hand is left alone.
+     */
+    @PluginMethod
+    public void notCommute(PluginCall call) {
+        TrackingStore.Session s = store.loadSession();
+        if (s == null || !s.auto) {
+            call.resolve();
+            return;
+        }
+        if (!TrackingService.isRunning()) {
+            store.clearSession();
+            AutoStore.clearCandidate(getContext());
+            CommuteWidgetProvider.refreshAll(getContext());
+            call.resolve();
+            return;
+        }
+        call.setKeepAlive(true);
+        pendingStops.add(call);
+        ContextCompat.startForegroundService(getContext(), TrackingService.intent(getContext(), TrackingService.ACTION_AUTO_CANCEL));
     }
 
     @PluginMethod

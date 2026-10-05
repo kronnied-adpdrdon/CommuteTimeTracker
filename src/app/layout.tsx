@@ -3,7 +3,7 @@ import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import AppLinks from "@/components/AppLinks";
 import BottomNav from "@/components/BottomNav";
-import PlacesDialog from "@/components/PlacesDialog";
+import SetupWizard from "@/components/SetupWizard";
 import { DiagnosticsSync } from "@/lib/diagnostics";
 import { AutoTrackingSync } from "@/lib/auto";
 import { RemindersSync } from "@/lib/notifications";
@@ -49,7 +49,7 @@ export default function RootLayout({
             {children}
           </main>
           <BottomNav />
-          <PlacesDialog />
+          <SetupWizard />
         </div>
       </body>
     </html>

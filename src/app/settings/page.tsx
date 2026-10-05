@@ -121,6 +121,8 @@ export default function SettingsPage() {
           <NavRow href="/privacy" title="Privacy policy" subtitle="What the app uses and what leaves your phone" />
           <div className={styles.rowDivider} />
           <NavRow href="/terms" title="Terms and conditions" subtitle="The rules for using the app" />
+          <div className={styles.rowDivider} />
+          <NavRow href="/licenses" title="Open-source licences" subtitle="The fonts and libraries the app is built with" />
         </div>
 
         <div className={styles.card}>

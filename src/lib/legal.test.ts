@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEGAL_UPDATED, PRIVACY_POLICY, TERMS, toMarkdown } from './legal';
+import { CONTACT_EMAIL, LEGAL_UPDATED, PRIVACY_POLICY, PUBLISHER_NAME, TERMS, toMarkdown } from './legal';
 
 describe('legal documents', () => {
   for (const doc of [PRIVACY_POLICY, TERMS]) {
@@ -20,11 +20,17 @@ describe('legal documents', () => {
     }
   });
 
-  it('renders Markdown, adding the contact address when given', () => {
+  it('names the publisher and a contact email in both documents, as Google Play requires', () => {
+    for (const doc of [PRIVACY_POLICY, TERMS]) {
+      const markdown = toMarkdown(doc);
+      expect(markdown).toContain(PUBLISHER_NAME);
+      expect(markdown).toContain(CONTACT_EMAIL);
+    }
+  });
+
+  it('renders Markdown', () => {
     const plain = toMarkdown(TERMS);
     expect(plain.startsWith('# Terms and Conditions')).toBe(true);
     expect(plain).toContain('## Pro');
-    expect(toMarkdown(PRIVACY_POLICY, 'help@example.com')).toContain('Email help@example.com');
-    expect(plain).not.toContain('help@example.com');
   });
 });

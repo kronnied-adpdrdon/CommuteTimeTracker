@@ -1,11 +1,7 @@
 package com.commute.tracker.auto;
 
-import com.commute.tracker.reminders.ReminderLogic;
 import com.commute.tracker.tracking.Fix;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,18 +22,16 @@ public final class AutoLogic {
     public static final String OFFICE = "office";
 
     static final long MINUTE_MS = 60_000L;
-    private static final long DAY_MS = 24L * 60 * MINUTE_MS;
     /** Shorter than this between leaving and arriving is a mistake, not a commute. */
     static final long MIN_TRIP_MS = 5 * MINUTE_MS;
     /** How long to wait for the arrival: this many times the expected commute, within the limits below. */
     static final double WAIT_FACTOR = 2.5;
     static final long MIN_WAIT_MS = 45 * MINUTE_MS;
     static final long MAX_WAIT_MS = 3 * 60 * MINUTE_MS;
-    /** Without past trips: straight-line distance x this, at this speed (city traffic). */
-    static final double ROAD_FACTOR = 1.4;
-    static final double CITY_SPEED_MPS = 20_000 / 3600.0;
-    /** Past trips needed before their median replaces the estimate. */
-    static final int MIN_TRIPS_FOR_MEDIAN = 3;
+    /** "Your commute usually takes about": the default, and the limits the app's setting allows. */
+    static final int DEFAULT_COMMUTE_MINUTES = 45;
+    static final int MIN_COMMUTE_MINUTES = 5;
+    static final int MAX_COMMUTE_MINUTES = 180;
     static final int DEFAULT_RADIUS_METERS = 150;
     static final int MIN_RADIUS_METERS = 100;
     static final int MAX_RADIUS_METERS = 1000;
@@ -64,6 +58,8 @@ public final class AutoLogic {
         public boolean[] days = { false, false, true, true, true, true, true, false };
         public int homeRadius = DEFAULT_RADIUS_METERS;
         public int officeRadius = DEFAULT_RADIUS_METERS;
+        /** How long the user says the commute usually takes. */
+        public int commuteMinutes = DEFAULT_COMMUTE_MINUTES;
         public Place home;
         public Place office;
 
@@ -101,6 +97,7 @@ public final class AutoLogic {
                 }
                 c.homeRadius = radius(o, "homeRadius");
                 c.officeRadius = radius(o, "officeRadius");
+                c.commuteMinutes = Math.max(MIN_COMMUTE_MINUTES, Math.min(MAX_COMMUTE_MINUTES, o.optInt("commuteMinutes", DEFAULT_COMMUTE_MINUTES)));
                 c.home = place(o.optJSONObject("home"));
                 c.office = place(o.optJSONObject("office"));
             } catch (JSONException ignored) {
@@ -213,14 +210,14 @@ public final class AutoLogic {
     // ---- Events -----------------------------------------------------------------------------------------
 
     /** The phone left Home or Office at `at` (the geofence's own timestamp, not when the event was delivered). */
-    public static Result onExit(Candidate current, String place, long at, Config config, List<ReminderLogic.Trip> trips) {
+    public static Result onExit(Candidate current, String place, long at, Config config) {
         String skip = !config.ready() ? "not-ready" : !inWindow(config, at) ? "outside-window" : null;
         if (skip != null) {
             // An unfinished candidate can't still be right: the phone has since been back inside a place.
             return current != null ? Result.drop(skip) : Result.none(null, skip);
         }
         // Any earlier candidate is replaced: its arrival was missed, or it already expired.
-        return Result.start(new Candidate(place, at, at + waitMs(config, trips, place, at)));
+        return Result.start(new Candidate(place, at, at + waitMs(config)));
     }
 
     /** The phone arrived at Home or Office at `at`. */
@@ -253,24 +250,9 @@ public final class AutoLogic {
         return start <= end ? minute >= start && minute < end : minute >= start || minute < end;
     }
 
-    /** How long to wait for the arrival after leaving `from`. */
-    static long waitMs(Config config, List<ReminderLogic.Trip> trips, String from, long now) {
-        long expected = expectedCommuteMs(config, trips, from, now);
+    /** How long to wait for the arrival: 2.5 x the commute time the user gave, between 45 minutes and 3 hours. */
+    static long waitMs(Config config) {
+        long expected = config.commuteMinutes * MINUTE_MS;
         return Math.max(MIN_WAIT_MS, Math.min(MAX_WAIT_MS, Math.round(expected * WAIT_FACTOR)));
-    }
-
-    /** The median of the last 60 days' trips in this direction, or an estimate from the distance between the places. */
-    static long expectedCommuteMs(Config config, List<ReminderLogic.Trip> trips, String from, long now) {
-        String direction = HOME.equals(from) ? "work" : "home";
-        List<Integer> seconds = new ArrayList<>();
-        for (ReminderLogic.Trip t : trips) {
-            if (direction.equals(t.direction) && t.startedAt <= now && now - t.startedAt <= 60 * DAY_MS && t.durationSeconds > 0) seconds.add(t.durationSeconds);
-        }
-        if (seconds.size() >= MIN_TRIPS_FOR_MEDIAN) {
-            Collections.sort(seconds);
-            return seconds.get(seconds.size() / 2) * 1000L;
-        }
-        if (config.home == null || config.office == null) return 0;
-        return Math.round(config.placeDistance() * ROAD_FACTOR / CITY_SPEED_MPS * 1000);
     }
 }

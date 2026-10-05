@@ -58,6 +58,11 @@ function fakeRecorder(clock: () => number) {
       session = undefined;
       phase = 'idle';
     },
+    notCommute: async () => {
+      if (!session?.auto) return;
+      session = undefined;
+      phase = 'idle';
+    },
     drainFinished: async () => {
       const out = queue;
       queue = [];
@@ -92,6 +97,11 @@ function fakeRecorder(clock: () => number) {
     /** A trip recorded entirely from the widget while the app was closed. */
     queueWidgetTrip(trip: FinishedTrip) {
       queue.push(trip);
+    },
+    /** Leaving Home started an automatic trip while the app was closed. */
+    autoStart(startedAt: number) {
+      session = { id: 'auto-1', startedAt, distanceMeters: 0, hasFix: false, auto: true, autoFrom: 'home', expiresAt: startedAt + 112 * 60_000 };
+      phase = 'tracking';
     },
     /** Recorder stopped unexpectedly (phone restarted) with a trip in progress. */
     interrupt(s: SessionSnapshot) {
@@ -299,17 +309,6 @@ describe('places', () => {
     expect(controller.getState().places.office).toEqual({ lat: 12.95, lng: 77.6, label: 'Current location' });
   });
 
-  it('Cancel hides the prompt only until the app is opened again', async () => {
-    const { controller, store } = setup();
-    await controller.init();
-    controller.snoozePlacesPrompt();
-    expect(controller.getState().placesPromptSnoozed).toBe(true);
-    const restarted = setup(store).controller;
-    await restarted.init();
-    expect(restarted.getState().placesPromptSnoozed).toBe(false);
-    expect(restarted.getState().placesPromptNeverAsk).toBe(false);
-  });
-
   it("Don't ask again is remembered, and can be undone", async () => {
     const { controller, store } = setup();
     await controller.init();
@@ -365,17 +364,49 @@ describe('sample data (developer tools)', () => {
     expect(controller.getState().trips.some(isSampleTrip)).toBe(false);
   });
 
-  it('can bring the first-launch pop-up back', async () => {
+  it('can clear Home, Office and "Don\'t ask again"', async () => {
     const { controller } = setup();
     await controller.init();
     await controller.loadSampleData(generateSampleTrips(T0));
     await controller.setPlacesPromptNeverAsk(true);
-    controller.snoozePlacesPrompt();
     await controller.resetPlacesPrompt();
     const state = controller.getState();
     expect(state.places).toEqual({});
     expect(state.placesPromptNeverAsk).toBe(false);
-    expect(state.placesPromptSnoozed).toBe(false);
+  });
+});
+
+describe('buying Pro before it is on sale', () => {
+  it('says Pro is not available yet, instead of blaming the connection', async () => {
+    const play = fakeBilling();
+    const { controller } = setup(createMemoryStore(), play);
+    await controller.init();
+    play.setOutcome(Object.assign(new Error("Pro isn't available to buy yet."), { code: 'PRODUCT_UNAVAILABLE' }));
+    await controller.upgrade();
+    expect(controller.getState().notice).toMatch(/isn't available to buy yet/);
+    play.setOutcome(new Error('offline'));
+    await controller.upgrade();
+    expect(controller.getState().notice).toMatch(/Couldn't reach Google Play/);
+  });
+});
+
+describe('trips that started automatically', () => {
+  it('shows as running when the app opens, and "Not a commute" throws it away', async () => {
+    const { controller, recorder } = setup();
+    recorder.autoStart(T0 - 10 * 60_000);
+    await controller.init();
+    expect(controller.getState()).toMatchObject({ phase: 'tracking', session: { auto: true, autoFrom: 'home' } });
+    await controller.notCommute();
+    expect(controller.getState()).toMatchObject({ phase: 'idle', session: null, trips: [] });
+    expect(controller.getState().notice).toMatch(/not a commute/);
+  });
+
+  it('leaves a trip started by hand alone', async () => {
+    const { controller } = setup();
+    await controller.init();
+    await controller.start();
+    await controller.notCommute();
+    expect(controller.getState().phase).toBe('tracking');
   });
 });
 

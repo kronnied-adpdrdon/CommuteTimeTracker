@@ -8,6 +8,14 @@ export const AUTO_SETTINGS_KEY = 'autoTracking.v1';
 export const MIN_RADIUS_METERS = 100;
 export const MAX_RADIUS_METERS = 1000;
 export const DEFAULT_RADIUS_METERS = 150;
+/** "Your commute usually takes about". Must match the limits in the Android `AutoLogic`. */
+export const MIN_COMMUTE_MINUTES = 5;
+export const MAX_COMMUTE_MINUTES = 180;
+export const DEFAULT_COMMUTE_MINUTES = 45;
+/** A trip that hasn't arrived after this many times the commute is an errand (kept between 45 minutes and 3 hours). */
+const WAIT_FACTOR = 2.5;
+const MIN_WAIT_MINUTES = 45;
+const MAX_WAIT_MINUTES = 180;
 
 export interface AutoSettings {
   enabled: boolean;
@@ -21,6 +29,8 @@ export interface AutoSettings {
   /** Circle sizes around Home and Office, in metres. */
   homeRadius: number;
   officeRadius: number;
+  /** How long the commute usually takes, in minutes. Sets how long a trip waits to arrive before it's an errand. */
+  commuteMinutes: number;
 }
 
 export const DEFAULT_AUTO_SETTINGS: AutoSettings = {
@@ -32,6 +42,7 @@ export const DEFAULT_AUTO_SETTINGS: AutoSettings = {
   days: [1, 2, 3, 4, 5],
   homeRadius: DEFAULT_RADIUS_METERS,
   officeRadius: DEFAULT_RADIUS_METERS,
+  commuteMinutes: DEFAULT_COMMUTE_MINUTES,
 };
 
 export interface AutoSettingsStore {
@@ -68,6 +79,7 @@ export function sanitize(value: unknown): AutoSettings {
   const days = Array.isArray(input.days)
     ? [...new Set(input.days.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))].sort()
     : DEFAULT_AUTO_SETTINGS.days;
+  const commute = input.commuteMinutes;
   return {
     enabled: typeof input.enabled === 'boolean' ? input.enabled : DEFAULT_AUTO_SETTINGS.enabled,
     morningStart: minutes('morningStart'),
@@ -77,7 +89,28 @@ export function sanitize(value: unknown): AutoSettings {
     days,
     homeRadius: radius('homeRadius'),
     officeRadius: radius('officeRadius'),
+    commuteMinutes: typeof commute === 'number' && Number.isFinite(commute) ? clampCommute(commute) : DEFAULT_AUTO_SETTINGS.commuteMinutes,
   };
+}
+
+export function clampCommute(minutes: number): number {
+  return Math.round(Math.min(MAX_COMMUTE_MINUTES, Math.max(MIN_COMMUTE_MINUTES, minutes)));
+}
+
+/**
+ * How long a trip waits to reach the other place, in whole minutes. Mirrors `AutoLogic.waitMs` on Android, rounded
+ * down so the app never promises longer than the phone waits (45 min x 2.5 = 112.5, shown as 1 h 52 min).
+ */
+export function waitMinutes(commuteMinutes: number): number {
+  return Math.max(MIN_WAIT_MINUTES, Math.min(MAX_WAIT_MINUTES, Math.floor(commuteMinutes * WAIT_FACTOR)));
+}
+
+/** "45 min", "1 h", "1 h 30 min". */
+export function formatMinutesLong(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
 export function clampRadius(meters: number): number {

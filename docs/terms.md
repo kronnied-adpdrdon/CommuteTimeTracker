@@ -1,8 +1,8 @@
 # Terms and Conditions — Commute Time Tracker
 
-Last updated: 2 October 2026
+Last updated: 4 October 2026
 
-These terms are the rules for using Commute Time Tracker ("the app"). By installing and using the app you agree to them. If you do not agree, please do not use the app.
+These terms are the rules for using Commute Time Tracker ("the app"), made by Kaustav Dutta ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.
 
 ## What the app does
 
@@ -52,4 +52,4 @@ These terms are governed by the laws of India, and its courts decide any dispute
 
 ## Contact
 
-Questions about these terms? Use Settings → Send feedback in the app.
+Questions about these terms? Email provibsol@gmail.com, or use Settings → Send feedback in the app.

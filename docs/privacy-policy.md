@@ -1,8 +1,8 @@
 # Privacy Policy — Commute Time Tracker
 
-Last updated: 2 October 2026
+Last updated: 4 October 2026
 
-Commute Time Tracker has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.
+Commute Time Tracker is made by Kaustav Dutta ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.
 
 ## What the app uses
 
@@ -11,6 +11,7 @@ Commute Time Tracker has no accounts and no servers of ours. Your trips stay on 
 - Trip data: for each commute, the start and end times, duration, distance, start and end points, and whether it was to work or to home. The full route is used only to measure distance while the trip runs. It is not saved. If you edit a trip, the times, distance and direction first recorded are kept with it on your phone.
 - Saved places: the Home and Office you set, with the address you picked.
 - Reminder settings: which reminders you turned on and the evening time you chose.
+- Automatic start and stop settings: whether it is on, your commute hours and days, how long your commute usually takes, and the size of the Home and Office circles.
 - Purchase status: whether you have bought Pro. Payments are handled entirely by Google Play. We never see your card or payment details.
 
 ## What can leave your phone, and only when you act
@@ -62,4 +63,4 @@ If our practices change, we will update this page and the date at the top.
 
 ## Contact
 
-Questions about privacy? Use Settings → Send feedback in the app.
+Questions about privacy, or about your data? Email Kaustav Dutta at provibsol@gmail.com, or use Settings → Send feedback in the app.

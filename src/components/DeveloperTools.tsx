@@ -6,6 +6,7 @@ import { AutoDecision, autoTracking } from '@/lib/auto';
 import { SCENARIOS, Scenario, runScenario } from '@/lib/auto/scenarios';
 import { commute, useCommute } from '@/lib/commute';
 import { ReminderKind, notifications } from '@/lib/notifications';
+import { setup } from '@/lib/setup';
 import { formatTimeOfDay } from '@/lib/trips/format';
 import { generateSampleTrips, isSampleTrip } from '@/lib/trips/sample';
 
@@ -98,7 +99,10 @@ export default function DeveloperTools() {
         </button>
       )}
       <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => commute.resetPlacesPrompt()}>
-        Clear Home and Office and show the pop-up again
+        Clear Home and Office
+      </button>
+      <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => setup.preview()}>
+        Show every first-time setup screen
       </button>
 
       <div className="eyebrow" style={{ marginTop: '6px' }}>Fire a reminder now</div>

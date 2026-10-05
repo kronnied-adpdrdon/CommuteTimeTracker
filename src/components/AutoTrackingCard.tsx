@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 import styles from '@/app/page.module.css';
+import BackgroundDisclosure from '@/components/BackgroundDisclosure';
 import Switch from '@/components/Switch';
 import { autoTracking, useAutoTracking } from '@/lib/auto';
-import { AutoSettings, MAX_RADIUS_METERS, MIN_RADIUS_METERS, clampRadius, placesTooClose, toggleDay } from '@/lib/auto/settings';
+import { AutoSettings, MAX_COMMUTE_MINUTES, MAX_RADIUS_METERS, MIN_COMMUTE_MINUTES, MIN_RADIUS_METERS, clampCommute, clampRadius, formatMinutesLong, placesTooClose, toggleDay, waitMinutes } from '@/lib/auto/settings';
 import { commute, useCommute } from '@/lib/commute';
+import { setup } from '@/lib/setup';
 import { clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
 
 /** Monday first, as people read a week. Values are JavaScript weekdays (0 = Sunday). */
-const DAYS: { day: number; label: string; name: string }[] = [
+export const DAYS: { day: number; label: string; name: string }[] = [
   { day: 1, label: 'M', name: 'Monday' },
   { day: 2, label: 'T', name: 'Tuesday' },
   { day: 3, label: 'W', name: 'Wednesday' },
@@ -39,6 +41,50 @@ function TimeInput({ value, field, label }: { value: number; field: WindowKey; l
 const RADIUS_STEP = 50;
 const STEP_BUTTON = { width: '40px', height: '40px', fontSize: '1.25rem', color: 'var(--text-primary)' };
 
+const COMMUTE_STEP = 5;
+/** Quick picks, with short labels so all five fit on one line. */
+const COMMUTE_PICKS = [
+  { minutes: 15, label: '15 min' },
+  { minutes: 30, label: '30 min' },
+  { minutes: 45, label: '45 min' },
+  { minutes: 60, label: '1 h' },
+  { minutes: 90, label: '1½ h' },
+];
+
+/**
+ * "Your commute usually takes about": − / + in 5-minute steps and a few quick picks. Sets how long a trip that
+ * started automatically waits to reach the other place before it counts as an errand.
+ */
+export function CommuteTimePicker({ minutes, onChange }: { minutes: number; onChange: (minutes: number) => void }) {
+  const set = (next: number) => onChange(clampCommute(next));
+  return (
+    <div className={styles.setupStack} style={{ gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+        <span>Usually takes about</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button className={styles.iconButton} aria-label="Shorter commute" style={STEP_BUTTON} disabled={minutes <= MIN_COMMUTE_MINUTES} onClick={() => set(minutes - COMMUTE_STEP)}>
+            −
+          </button>
+          <strong style={{ minWidth: '84px', textAlign: 'center' }}>{formatMinutesLong(minutes)}</strong>
+          <button className={styles.iconButton} aria-label="Longer commute" style={STEP_BUTTON} disabled={minutes >= MAX_COMMUTE_MINUTES} onClick={() => set(minutes + COMMUTE_STEP)}>
+            +
+          </button>
+        </span>
+      </div>
+      <div className={styles.commutePicks}>
+        {COMMUTE_PICKS.map((pick) => (
+          <button key={pick.minutes} aria-pressed={minutes === pick.minutes} className={`${styles.dayPreset} ${minutes === pick.minutes ? styles.dayPresetActive : ''}`} onClick={() => set(pick.minutes)}>
+            {pick.label}
+          </button>
+        ))}
+      </div>
+      <p className={styles.cardText}>
+        A trip that started by itself and hasn&apos;t reached the other place after {formatMinutesLong(waitMinutes(minutes))} is treated as an errand and not saved.
+      </p>
+    </div>
+  );
+}
+
 /**
  * − / + buttons rather than a slider: a scroll that starts on a slider moves it, which would silently
  * change the circle.
@@ -64,48 +110,6 @@ function RadiusStepper({ settings, kind }: { settings: AutoSettings; kind: 'home
   );
 }
 
-/**
- * Google Play's "prominent disclosure": shown in the app before Android's own background-location prompt,
- * saying what is collected, why, and that it happens with the app closed.
- */
-function Disclosure({ onDone }: { onDone: () => void }) {
-  const [asking, setAsking] = useState(false);
-  const [refused, setRefused] = useState(false);
-  return (
-    <div className={styles.banner} role="dialog" aria-label="About automatic start and stop">
-      <strong>Location in the background</strong>
-      <span>
-        Commute Time Tracker collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone.
-      </span>
-      <span>
-        On the next screen, choose <strong>Allow all the time</strong>. You can turn this off here at any time.
-      </span>
-      {refused && (
-        <span className={styles.fieldError}>
-          Automatic start and stop needs location set to &ldquo;Allow all the time&rdquo;. You can change it in the phone&apos;s settings for this app.
-        </span>
-      )}
-      <div className={styles.bannerActions}>
-        <button
-          className={styles.linkButton}
-          disabled={asking}
-          onClick={async () => {
-            setAsking(true);
-            const on = await autoTracking.enable();
-            setAsking(false);
-            if (on) onDone();
-            else setRefused(true);
-          }}
-        >
-          {refused ? 'Try again' : 'Continue'}
-        </button>
-        {refused && <button className={styles.linkButton} onClick={() => commute.openSettings()}>Open phone settings</button>}
-        <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={onDone}>Not now</button>
-      </div>
-    </div>
-  );
-}
-
 /** Automatic start and stop: on/off (with the disclosure), commute hours, days and circle sizes. */
 export default function AutoTrackingCard() {
   const { settings, loaded, background, supported } = useAutoTracking();
@@ -119,6 +123,8 @@ export default function AutoTrackingCard() {
     if (!value) {
       setDisclosing(false);
       void autoTracking.update({ enabled: false });
+      // A deliberate choice, so the "Finish setting up" card doesn't list it.
+      void setup.answer({ recording: 'manual' });
     } else if (background) {
       void autoTracking.update({ enabled: true });
     } else {
@@ -138,7 +144,7 @@ export default function AutoTrackingCard() {
         <Switch label="Automatic start and stop" checked={settings.enabled || disclosing} onChange={toggle} />
       </div>
 
-      {disclosing && <Disclosure onDone={() => setDisclosing(false)} />}
+      {disclosing && <BackgroundDisclosure onEnabled={() => setDisclosing(false)} onCancel={() => setDisclosing(false)} />}
       {supported === false && (
         <p className={styles.fieldError}>This phone doesn&apos;t have Google Play services, which automatic start and stop needs. Start and Stop still work.</p>
       )}
@@ -190,6 +196,9 @@ export default function AutoTrackingCard() {
               );
             })}
           </div>
+
+          <div className="eyebrow" style={{ marginTop: '6px' }}>Commute length</div>
+          <CommuteTimePicker minutes={settings.commuteMinutes} onChange={(commuteMinutes) => void autoTracking.update({ commuteMinutes })} />
 
           <div className="eyebrow" style={{ marginTop: '6px' }}>Circle size</div>
           <RadiusStepper settings={settings} kind="home" />

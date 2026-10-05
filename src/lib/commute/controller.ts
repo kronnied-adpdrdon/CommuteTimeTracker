@@ -45,10 +45,8 @@ export interface CommuteState {
   /** True while a start/stop/finish is in progress, so buttons can't be pressed twice. */
   busy: boolean;
   places: SavedPlaces;
-  /** The user ticked "Don't ask again" on the Home/Office pop-up. Saved across launches. */
+  /** The user ticked "Don't ask again" on the old Home/Office pop-up. The first-time setup treats it as a skipped step. */
   placesPromptNeverAsk: boolean;
-  /** The user cancelled the pop-up this time. Not saved, so it comes back the next time the app opens. */
-  placesPromptSnoozed: boolean;
   /** Which place is being set from the current location, if any. */
   locating: PlaceKind | null;
   isPro: boolean;
@@ -83,14 +81,14 @@ export interface CommuteController {
   finishInterrupted(): Promise<void>;
   /** Interrupted trip: throw it away. */
   discardInterrupted(): Promise<void>;
+  /** A trip that started automatically: throw it away, as the notification's "Not a commute" does. */
+  notCommute(): Promise<void>;
   openSettings(): Promise<void>;
   dismissMessages(): void;
   /** Saves Home or Office from the current location (or the running trip's latest reading). */
   setPlaceHere(kind: PlaceKind): Promise<void>;
   /** Saves Home or Office at a given point (with its address, for display), or clears it with `null`. Re-tags every saved trip. */
   setPlace(kind: PlaceKind, where: LatLng | null, label?: string): Promise<void>;
-  /** Cancel on the pop-up: hides it until the app is opened again. */
-  snoozePlacesPrompt(): void;
   /** The "Don't ask again" checkbox. */
   setPlacesPromptNeverAsk(neverAsk: boolean): Promise<void>;
   deleteTrip(id: string): Promise<void>;
@@ -101,7 +99,7 @@ export interface CommuteController {
   loadSampleData(data: { trips: Trip[]; places: SavedPlaces }): Promise<void>;
   /** Developer tools: removes sample trips, leaving real ones alone. */
   removeSampleData(): Promise<void>;
-  /** Developer tools: clears Home and Office and brings the first-launch pop-up back. */
+  /** Developer tools: clears Home and Office and the old "Don't ask again" flag. */
   resetPlacesPrompt(): Promise<void>;
   /** Demo builds only: flip Pro without buying. */
   setPro(isPro: boolean): Promise<void>;
@@ -121,7 +119,6 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   busy: false,
   places: {},
   placesPromptNeverAsk: false,
-  placesPromptSnoozed: false,
   locating: null,
   isPro: false,
   proPrice: null,
@@ -312,6 +309,15 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
             set({ error: null });
           }),
 
+    notCommute: () =>
+      state.phase !== 'tracking' || !state.session?.auto || state.busy
+        ? Promise.resolve()
+        : guarded(async () => {
+            await deps.tracker.notCommute();
+            applySnapshot(await deps.tracker.getState());
+            set({ notice: 'Not saved: marked as not a commute.' });
+          }),
+
     openSettings: () => deps.tracker.openSettings().catch(() => undefined),
 
     dismissMessages: () => set({ error: null, notice: null }),
@@ -330,7 +336,8 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       }
       set({ locating: kind, error: null });
       try {
-        await deps.tracker.requestPermissions();
+        // An address needs location only; notifications are asked for when a trip starts, or in the setup.
+        await deps.tracker.requestPermissions({ notifications: false });
         await savePlace(kind, await deps.tracker.currentFix(), CURRENT_LOCATION_LABEL);
       } catch (error) {
         set({ error: asLocationError(error) });
@@ -340,8 +347,6 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     },
 
     setPlace: (kind, where, label) => savePlace(kind, where, label),
-
-    snoozePlacesPrompt: () => set({ placesPromptSnoozed: true }),
 
     async setPlacesPromptNeverAsk(neverAsk) {
       set({ placesPromptNeverAsk: neverAsk });
@@ -385,7 +390,7 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       await savePlace('home', null);
       await savePlace('office', null);
       await deps.places.setNeverAsk(false);
-      set({ placesPromptNeverAsk: false, placesPromptSnoozed: false });
+      set({ placesPromptNeverAsk: false });
     },
 
     async setPro(isPro) {
@@ -409,8 +414,14 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
         } else if (outcome === 'pending') {
           set({ notice: "Payment pending. Pro unlocks automatically once Google Play confirms it." });
         }
-      } catch {
-        set({ notice: "Couldn't reach Google Play. Check your connection and try again." });
+      } catch (error) {
+        // Before the Pro product is set up in Play Console (e.g. during the closed test), Google Play has nothing to sell.
+        const unavailable = (error as { code?: string } | null)?.code === 'PRODUCT_UNAVAILABLE';
+        set({
+          notice: unavailable
+            ? "Pro isn't available to buy yet. Everything in Free keeps working."
+            : "Couldn't reach Google Play. Check your connection and try again.",
+        });
       } finally {
         set({ purchasing: false });
       }

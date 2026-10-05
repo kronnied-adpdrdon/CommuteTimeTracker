@@ -10,6 +10,7 @@ const Check = ({ color = 'var(--success-color)' }: { color?: string }) => (
 /** What every user gets. Pro includes all of it. */
 export const FREE_FEATURES = [
   'Unlimited commute tracking',
+  'Automatic start and stop when you leave and arrive',
   'Home-screen widget: start and stop in one tap',
   'Home and Office labels from your addresses',
   'Last 2 weeks of history, with edit and delete',

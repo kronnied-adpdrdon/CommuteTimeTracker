@@ -803,71 +803,436 @@
 }
 
 /* Dialog (bottom sheet) */
-.dialogBackdrop {
+
+
+
+
+
+
+
+/* First-time setup: a full-screen page over the app, bottom bar included. */
+.setupPage {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 100;
-  background: rgba(10, 12, 16, 0.6);
+  inset: 0;
+  z-index: 200;
+  background: var(--bg-color);
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: env(safe-area-inset-top, 0px);
   animation: fadeIn 0.2s ease;
 }
 
-.dialog {
-  width: 100%;
-  max-width: 480px;
-  max-height: 92vh;
-  max-height: 92dvh;
+.setupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 8px 20px;
+}
+
+.setupContent {
+  flex: 1;
   overflow-y: auto;
-  background: var(--bg-color);
-  border-radius: 28px 28px 0 0;
-  border: 1px solid var(--border-color);
-  border-bottom: none;
-  padding: 10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  animation: slideUp 0.25s ease;
+  gap: 14px;
+  padding: 12px 20px 0;
+  animation: slideFromRight 0.3s ease;
 }
 
-.dialogHandle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--divider-muted);
-  align-self: center;
-  margin-bottom: 6px;
+/* Pinned to the bottom: sits at the end of a short screen and stays in view on a long one. */
+.setupActions {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--bg-color) 16px);
 }
 
-.dialogTitle {
+.setupTitle {
   font-family: var(--font-display);
-  font-size: 1.80rem;
+  font-size: 2.2rem;
   font-weight: 600;
+  line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
-.dialogBody {
+.setupStack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.checkRow {
+.setupHero {
+  gap: 14px;
+  padding-bottom: 18px;
+  margin-top: 20px;
+}
+
+.setupHeroTitle {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.setupFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 18px;
+  padding: 8px 4px;
+}
+
+.setupFeature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.setupFeatureIcon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--link);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.setupDoneHead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 28px 0 8px;
+  text-align: center;
+}
+
+.setupDoneIcon {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--success-color);
+  color: var(--surface-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+/* A ring that ripples out once as the tick lands. */
+.setupDoneIcon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--success-color);
+  opacity: 0;
+  animation: ripple 0.9s ease-out 0.35s;
+}
+
+.setupDoneCheck {
+  stroke-dasharray: 24;
+  animation: drawCheck 0.4s ease-out 0.3s backwards;
+}
+
+.setupDots {
+  display: flex;
+  gap: 6px;
+}
+
+.setupDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-color);
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.setupDotActive {
+  background: var(--accent);
+}
+
+/* The current step stretches into a short bar. */
+.setupDotCurrent {
+  width: 22px;
+}
+
+.setupList {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.choiceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  background: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.choiceCard:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.choiceCardRecommended {
+  border: 2px solid var(--accent);
+}
+
+.choiceTitle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.recommendedBadge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--link);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.choiceNote {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--link);
+}
+
+.setupSummary {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-color);
+}
+
+.setupSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
   font-size: 0.92rem;
+}
+
+/* Day picker on the commute-times screen */
+.dayPresets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dayPreset {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.dayPresetActive {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--link);
+}
+
+.commutePicks {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.commutePicks .dayPreset {
+  padding: 8px 0;
+  white-space: nowrap;
+}
+
+.licenceText {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.dayTile {
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.dayTileOn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-primary);
+  animation: tilePop 0.25s ease;
+}
+
+.dayPreset:active,
+.dayTile:active,
+.choiceCard:active {
+  transform: scale(0.96);
+}
+
+/* Setup motion: screens slide in the way you're moving, and parts of a screen arrive one after another. */
+.setupContentBack {
+  animation-name: slideFromLeft;
+}
+
+.setupHero {
+  animation: riseIn 0.5s ease backwards;
+}
+
+.setupFeature,
+.choiceCard,
+.setupSummaryRow,
+.setupActions {
+  animation: riseIn 0.4s ease backwards;
+}
+
+.setupFeature:nth-child(1) { animation-delay: 0.15s; }
+.setupFeature:nth-child(2) { animation-delay: 0.25s; }
+.setupFeature:nth-child(3) { animation-delay: 0.35s; }
+.choiceCard:nth-child(2) { animation-delay: 0.08s; }
+.setupSummaryRow:nth-child(1) { animation-delay: 0.45s; }
+.setupSummaryRow:nth-child(2) { animation-delay: 0.55s; }
+.setupSummaryRow:nth-child(3) { animation-delay: 0.65s; }
+.setupActions { animation-delay: 0.2s; }
+
+@keyframes riseIn {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideFromLeft {
+  from {
+    transform: translateX(-28px);
+    opacity: 0;
+  }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes drawCheck {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes tilePop {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setupPage,
+  .setupPage *,
+  .setupPage *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.checklistRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
   cursor: pointer;
 }
 
-.checkRow input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--accent);
+.checklistMark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.checklistMarkDone {
+  border-color: var(--success-color);
+  background: var(--success-color);
+  color: var(--surface-color);
 }
 
 @keyframes fadeIn {
@@ -876,9 +1241,9 @@
   }
 }
 
-@keyframes slideUp {
+@keyframes slideFromRight {
   from {
-    transform: translateY(24px);
+    transform: translateX(28px);
     opacity: 0;
   }
 }

@@ -17,13 +17,17 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-export const LEGAL_UPDATED = '2 October 2026';
+export const LEGAL_UPDATED = '4 October 2026';
+
+/** Who publishes the app. Shown publicly in both documents, as Google Play requires a privacy contact. */
+export const PUBLISHER_NAME = 'Kaustav Dutta';
+export const CONTACT_EMAIL = 'provibsol@gmail.com';
 
 export const PRIVACY_POLICY: LegalDocument = {
   title: 'Privacy Policy',
   updated: LEGAL_UPDATED,
   intro:
-    'Commute Time Tracker has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.',
+    `Commute Time Tracker is made by ${PUBLISHER_NAME} ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.`,
   sections: [
     {
       heading: 'What the app uses',
@@ -33,6 +37,7 @@ export const PRIVACY_POLICY: LegalDocument = {
         'Trip data: for each commute, the start and end times, duration, distance, start and end points, and whether it was to work or to home. The full route is used only to measure distance while the trip runs. It is not saved. If you edit a trip, the times, distance and direction first recorded are kept with it on your phone.',
         'Saved places: the Home and Office you set, with the address you picked.',
         'Reminder settings: which reminders you turned on and the evening time you chose.',
+        'Automatic start and stop settings: whether it is on, your commute hours and days, how long your commute usually takes, and the size of the Home and Office circles.',
         'Purchase status: whether you have bought Pro. Payments are handled entirely by Google Play. We never see your card or payment details.',
       ],
     },
@@ -98,7 +103,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'Contact',
-      paragraphs: ['Questions about privacy? Use Settings → Send feedback in the app.'],
+      paragraphs: [`Questions about privacy, or about your data? Email ${PUBLISHER_NAME} at ${CONTACT_EMAIL}, or use Settings → Send feedback in the app.`],
     },
   ],
 };
@@ -107,7 +112,7 @@ export const TERMS: LegalDocument = {
   title: 'Terms and Conditions',
   updated: LEGAL_UPDATED,
   intro:
-    'These terms are the rules for using Commute Time Tracker ("the app"). By installing and using the app you agree to them. If you do not agree, please do not use the app.',
+    `These terms are the rules for using Commute Time Tracker ("the app"), made by ${PUBLISHER_NAME} ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.`,
   sections: [
     {
       heading: 'What the app does',
@@ -175,17 +180,17 @@ export const TERMS: LegalDocument = {
     },
     {
       heading: 'Contact',
-      paragraphs: ['Questions about these terms? Use Settings → Send feedback in the app.'],
+      paragraphs: [`Questions about these terms? Email ${CONTACT_EMAIL}, or use Settings → Send feedback in the app.`],
     },
   ],
 };
 
 /** The document as Markdown, for hosting on a web page (the Play Store listing needs a public privacy URL). */
-export function toMarkdown(doc: LegalDocument, contactEmail?: string): string {
+export function toMarkdown(doc: LegalDocument): string {
   const lines = [`# ${doc.title} — Commute Time Tracker`, '', `Last updated: ${doc.updated}`, '', doc.intro, ''];
   for (const section of doc.sections) {
     lines.push(`## ${section.heading}`, '');
-    for (const paragraph of section.paragraphs ?? []) lines.push(paragraph.replace(/Use Settings → Send feedback in the app\./, contactEmail ? `Email ${contactEmail}, or use Settings → Send feedback in the app.` : '$&'), '');
+    for (const paragraph of section.paragraphs ?? []) lines.push(paragraph, '');
     for (const bullet of section.bullets ?? []) lines.push(`- ${bullet}`);
     if (section.bullets?.length) lines.push('');
   }

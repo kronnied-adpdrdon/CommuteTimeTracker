@@ -6,10 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.commute.tracker.reminders.ReminderLogic;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import org.junit.Test;
 
 public class AutoLogicTest {
@@ -37,10 +34,8 @@ public class AutoLogicTest {
         return c;
     }
 
-    private static final List<ReminderLogic.Trip> NO_TRIPS = new ArrayList<>();
-
     private static AutoLogic.Candidate leftHomeAt(long at) {
-        AutoLogic.Result r = AutoLogic.onExit(null, AutoLogic.HOME, at, config(), NO_TRIPS);
+        AutoLogic.Result r = AutoLogic.onExit(null, AutoLogic.HOME, at, config());
         assertEquals(AutoLogic.Action.START, r.action);
         return r.candidate;
     }
@@ -60,7 +55,7 @@ public class AutoLogicTest {
 
     @Test
     public void officeToHomeInTheEveningIsAHomeTrip() {
-        AutoLogic.Result start = AutoLogic.onExit(null, AutoLogic.OFFICE, MONDAY_17, config(), NO_TRIPS);
+        AutoLogic.Result start = AutoLogic.onExit(null, AutoLogic.OFFICE, MONDAY_17, config());
         AutoLogic.Result r = AutoLogic.onEnter(start.candidate, AutoLogic.HOME, MONDAY_17 + 50 * MIN);
         assertEquals(AutoLogic.Action.KEEP, r.action);
         assertEquals("home", r.direction);
@@ -101,7 +96,7 @@ public class AutoLogicTest {
     public void leavingAgainReplacesAnUnfinishedCandidate() {
         // Arrival at the office was missed; leaving it again starts afresh from the office.
         AutoLogic.Candidate first = leftHomeAt(MONDAY_8);
-        AutoLogic.Result r = AutoLogic.onExit(first, AutoLogic.OFFICE, MONDAY_8 + 60 * MIN, config(), NO_TRIPS);
+        AutoLogic.Result r = AutoLogic.onExit(first, AutoLogic.OFFICE, MONDAY_8 + 60 * MIN, config());
         assertEquals(AutoLogic.Action.START, r.action);
         assertEquals(AutoLogic.OFFICE, r.candidate.from);
     }
@@ -112,10 +107,10 @@ public class AutoLogicTest {
     public void outsideTheWindowsNothingIsWatched() {
         long monday2pm = time(2026, 10, 5, 14, 0);
         long saturday8am = time(2026, 10, 10, 8, 0);
-        assertEquals("outside-window", AutoLogic.onExit(null, AutoLogic.HOME, monday2pm, config(), NO_TRIPS).reason);
-        assertEquals(AutoLogic.Action.NONE, AutoLogic.onExit(null, AutoLogic.HOME, saturday8am, config(), NO_TRIPS).action);
+        assertEquals("outside-window", AutoLogic.onExit(null, AutoLogic.HOME, monday2pm, config()).reason);
+        assertEquals(AutoLogic.Action.NONE, AutoLogic.onExit(null, AutoLogic.HOME, saturday8am, config()).action);
         // An unfinished candidate is dropped rather than left hanging.
-        AutoLogic.Result r = AutoLogic.onExit(leftHomeAt(MONDAY_8), AutoLogic.HOME, monday2pm, config(), NO_TRIPS);
+        AutoLogic.Result r = AutoLogic.onExit(leftHomeAt(MONDAY_8), AutoLogic.HOME, monday2pm, config());
         assertEquals(AutoLogic.Action.DROP, r.action);
     }
 
@@ -145,7 +140,7 @@ public class AutoLogicTest {
     public void offOrMissingPlacesWatchesNothing() {
         AutoLogic.Config off = config();
         off.enabled = false;
-        assertEquals("not-ready", AutoLogic.onExit(null, AutoLogic.HOME, MONDAY_8, off, NO_TRIPS).reason);
+        assertEquals("not-ready", AutoLogic.onExit(null, AutoLogic.HOME, MONDAY_8, off).reason);
         AutoLogic.Config noOffice = config();
         noOffice.office = null;
         assertFalse(noOffice.ready());
@@ -162,30 +157,29 @@ public class AutoLogicTest {
     // ---- How long to wait -------------------------------------------------------------------------------
 
     @Test
-    public void withoutPastTripsTheWaitComesFromTheDistance() {
-        // 10 km x 1.4 at 20 km/h = 42 min expected; x 2.5 = 105 min.
-        assertEquals(42 * MIN, AutoLogic.expectedCommuteMs(config(), NO_TRIPS, AutoLogic.HOME, MONDAY_8), MIN);
-        assertEquals(105 * MIN, AutoLogic.waitMs(config(), NO_TRIPS, AutoLogic.HOME, MONDAY_8), MIN);
-    }
-
-    @Test
-    public void withPastTripsTheWaitFollowsTheirMedian() {
-        List<ReminderLogic.Trip> trips = new ArrayList<>();
-        for (int minutes : new int[] { 30, 32, 60 }) trips.add(new ReminderLogic.Trip(MONDAY_8 - 2 * 24 * 60 * MIN, minutes * 60, 10_000, "work"));
-        assertEquals(32 * MIN, AutoLogic.expectedCommuteMs(config(), trips, AutoLogic.HOME, MONDAY_8));
-        assertEquals(80 * MIN, AutoLogic.waitMs(config(), trips, AutoLogic.HOME, MONDAY_8));
-        // Trips the other way don't count, so the evening falls back to the distance estimate.
-        assertEquals(42 * MIN, AutoLogic.expectedCommuteMs(config(), trips, AutoLogic.OFFICE, MONDAY_17), MIN);
+    public void theWaitIsTwoAndAHalfTimesTheCommuteTheUserGave() {
+        AutoLogic.Config c = config();
+        c.commuteMinutes = 40;
+        assertEquals(100 * MIN, AutoLogic.waitMs(c));
+        AutoLogic.Result r = AutoLogic.onExit(null, AutoLogic.HOME, MONDAY_8, c);
+        assertEquals(MONDAY_8 + 100 * MIN, r.candidate.expiresAt);
     }
 
     @Test
     public void theWaitStaysBetween45MinutesAnd3Hours() {
-        AutoLogic.Config near = config();
-        near.office = new AutoLogic.Place(12.97 + 1_000 / METERS_PER_DEGREE_LAT, 77.59);
-        assertEquals(45 * MIN, AutoLogic.waitMs(near, NO_TRIPS, AutoLogic.HOME, MONDAY_8));
-        AutoLogic.Config far = config();
-        far.office = new AutoLogic.Place(12.97 + 60_000 / METERS_PER_DEGREE_LAT, 77.59);
-        assertEquals(180 * MIN, AutoLogic.waitMs(far, NO_TRIPS, AutoLogic.HOME, MONDAY_8));
+        AutoLogic.Config c = config();
+        c.commuteMinutes = 10;
+        assertEquals(45 * MIN, AutoLogic.waitMs(c));
+        c.commuteMinutes = 90;
+        assertEquals(180 * MIN, AutoLogic.waitMs(c));
+    }
+
+    @Test
+    public void theCommuteTimeIsReadFromSettingsWithinItsLimits() {
+        assertEquals(45, AutoLogic.Config.fromJson("{}").commuteMinutes);
+        assertEquals(30, AutoLogic.Config.fromJson("{\"commuteMinutes\":30}").commuteMinutes);
+        assertEquals(180, AutoLogic.Config.fromJson("{\"commuteMinutes\":999}").commuteMinutes);
+        assertEquals(5, AutoLogic.Config.fromJson("{\"commuteMinutes\":0}").commuteMinutes);
     }
 
     // ---- Saved data -------------------------------------------------------------------------------------

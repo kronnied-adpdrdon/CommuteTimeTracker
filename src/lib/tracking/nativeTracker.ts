@@ -24,6 +24,11 @@ export interface SessionSnapshot {
   /** False until the recorder has a confirmed first position. */
   hasFix: boolean;
   lastFix?: LocationFix;
+  /** Started automatically by leaving Home or the Office. */
+  auto?: boolean;
+  /** Automatic trips: which place it left, and when it stops waiting to arrive at the other (an errand). */
+  autoFrom?: 'home' | 'office';
+  expiresAt?: number;
 }
 
 export interface TrackerSnapshot {
@@ -52,8 +57,11 @@ export interface FinishedTrip {
  */
 export interface TrackerService {
   getState(): Promise<TrackerSnapshot>;
-  /** Shows Android's permission prompts if location hasn't been granted yet. */
-  requestPermissions(): Promise<void>;
+  /**
+   * Shows Android's permission prompts for location, and for notifications (the trip notification) unless
+   * `notifications` is false, e.g. when only saving an address.
+   */
+  requestPermissions(options?: { notifications?: boolean }): Promise<void>;
   start(): Promise<TrackerSnapshot>;
   resume(): Promise<TrackerSnapshot>;
   /** Resolves once the trip has been finished and queued. */
@@ -61,6 +69,8 @@ export interface TrackerService {
   /** Interrupted trip: queue it as finished, ending at its last reading. */
   finishInterrupted(): Promise<void>;
   discard(): Promise<void>;
+  /** A trip that started automatically: throw it away ("Not a commute"). Resolves once it has ended. */
+  notCommute(): Promise<void>;
   /** Finished trips not yet filed, oldest first. Clears them from the queue. */
   drainFinished(): Promise<FinishedTrip[]>;
   currentFix(): Promise<LocationFix>;
@@ -96,6 +106,7 @@ interface CommuteTrackerPlugin {
   stop(): Promise<void>;
   finishInterrupted(): Promise<void>;
   discard(): Promise<void>;
+  notCommute(): Promise<void>;
   drainFinished(): Promise<{ trips: FinishedTrip[] }>;
   currentFix(): Promise<LocationFix>;
   openSettings(): Promise<void>;
@@ -131,18 +142,20 @@ const call = async <T>(run: (p: CommuteTrackerPlugin) => Promise<T>): Promise<T>
 
 export const nativeTracker: TrackerService = {
   getState: () => call((p) => p.getState()).catch(() => ({ phase: 'idle' as const })),
-  requestPermissions: () =>
+  requestPermissions: ({ notifications = true } = {}) =>
     call(async (p) => {
       const current = await p.checkPermissions();
-      if (current.location !== 'granted' || current.notifications === 'prompt') {
-        await p.requestPermissions({ permissions: ['location', 'notifications'] });
-      }
+      const wanted: ('location' | 'notifications')[] = [];
+      if (current.location !== 'granted') wanted.push('location');
+      if (notifications && current.notifications === 'prompt') wanted.push('notifications');
+      if (wanted.length > 0) await p.requestPermissions({ permissions: wanted });
     }),
   start: () => call((p) => p.start()),
   resume: () => call((p) => p.resume()),
   stop: () => call((p) => p.stop()),
   finishInterrupted: () => call((p) => p.finishInterrupted()),
   discard: () => call((p) => p.discard()),
+  notCommute: () => call((p) => p.notCommute()),
   drainFinished: () => call(async (p) => (await p.drainFinished()).trips).catch(() => []),
   currentFix: () => call((p) => p.currentFix()),
   openSettings: () => call((p) => p.openSettings()),
