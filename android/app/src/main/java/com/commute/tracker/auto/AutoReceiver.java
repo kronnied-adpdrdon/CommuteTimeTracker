@@ -44,9 +44,11 @@ public class AutoReceiver extends BroadcastReceiver {
         for (Geofence fence : event.getTriggeringGeofences()) {
             String place = fence.getRequestId();
             if (!AutoLogic.HOME.equals(place) && !AutoLogic.OFFICE.equals(place)) continue;
+            Double lat = where != null ? where.getLatitude() : null;
+            Double lng = where != null ? where.getLongitude() : null;
             AutoLogic.Result result = transition == Geofence.GEOFENCE_TRANSITION_EXIT
-                ? AutoStore.exited(context, place, at)
-                : AutoStore.entered(context, place, at);
+                ? AutoStore.exitReported(context, place, at, lat, lng)
+                : AutoStore.enterReported(context, place, at, lat, lng);
             AutoActions.apply(context, result);
         }
     }

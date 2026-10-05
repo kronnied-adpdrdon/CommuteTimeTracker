@@ -14,6 +14,10 @@ public final class AutoStore {
     private static final String PREFS = "CommuteAuto";
     private static final String CONFIG = "config";
     private static final String CANDIDATE = "candidate";
+    /** The place the phone was last seen entering ("home" or "office"), until it is seen leaving. */
+    private static final String INSIDE = "inside";
+    /** The circles `INSIDE` refers to, so it can be forgotten when Home, Office or a circle size changes. */
+    private static final String INSIDE_FOR = "insideFor";
 
     private AutoStore() {}
 
@@ -52,6 +56,47 @@ public final class AutoStore {
         return result;
     }
 
+    /**
+     * Forgets where the phone is if Home, Office or a circle size changed since it was seen there (Android then
+     * reports the circle the phone is in). Not on every set-up: re-adding unchanged circles doesn't always repeat it.
+     */
+    /** The circles are off: nothing will report where the phone goes, so stop remembering where it was. */
+    public static void forgetInside(Context context) {
+        prefs(context).edit().remove(INSIDE).remove(INSIDE_FOR).commit();
+    }
+
+    public static void forgetInsideIfCirclesChanged(Context context, AutoLogic.Config config) {
+        String circles = config.home.lat + "," + config.home.lng + "," + config.homeRadius + "|" + config.office.lat + "," + config.office.lng + "," + config.officeRadius;
+        if (circles.equals(prefs(context).getString(INSIDE_FOR, null))) return;
+        prefs(context).edit().remove(INSIDE).putString(INSIDE_FOR, circles).commit();
+    }
+
+    /**
+     * A real exit report from Android, with the location that triggered it if known. Reports that can't be a real
+     * departure (see `AutoLogic.fakeExit`) are logged and ignored, leaving any candidate as it was.
+     */
+    public static synchronized AutoLogic.Result exitReported(Context context, String place, long at, Double lat, Double lng) {
+        String fake = AutoLogic.fakeExit(config(context), place, prefs(context).getString(INSIDE, null), lat, lng);
+        if (fake != null) {
+            DiagLog.log("auto", "exit " + place + " ignored (" + fake + ")");
+            return AutoLogic.Result.none(candidate(context), fake);
+        }
+        prefs(context).edit().remove(INSIDE).commit();
+        return exited(context, place, at);
+    }
+
+    /** A real enter report from Android: remembers where the phone is, then runs the rules. */
+    public static synchronized AutoLogic.Result enterReported(Context context, String place, long at, Double lat, Double lng) {
+        String fake = AutoLogic.fakeEnter(config(context), place, lat, lng);
+        if (fake != null) {
+            DiagLog.log("auto", "enter " + place + " ignored (" + fake + ")");
+            return AutoLogic.Result.none(candidate(context), fake);
+        }
+        prefs(context).edit().putString(INSIDE, place).commit();
+        return entered(context, place, at);
+    }
+
+    /** Runs an exit through the rules. Developer tools call this directly, without the checks or the remembered place. */
     public static synchronized AutoLogic.Result exited(Context context, String place, long at) {
         return apply(context, "exit " + place, AutoLogic.onExit(candidate(context), place, at, config(context)));
     }

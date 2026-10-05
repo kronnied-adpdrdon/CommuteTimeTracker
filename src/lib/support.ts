@@ -1,10 +1,11 @@
+import { CONTACT_EMAIL } from './legal';
 import { isNativeApp, lazyPlugin } from './native';
 
 /**
- * Where bug reports and feedback are addressed. Set `NEXT_PUBLIC_SUPPORT_EMAIL` in `.env.local` (kept out of git,
- * so a public repo doesn't publish it). Without it the email opens with no recipient and the user picks one.
+ * Where bug reports and feedback are addressed: the public contact address from the Privacy Policy, unless
+ * `NEXT_PUBLIC_SUPPORT_EMAIL` in `.env.local` overrides it (e.g. to test sending to yourself).
  */
-export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? '';
+export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || CONTACT_EMAIL;
 
 export const MAX_IMAGES = 3;
 

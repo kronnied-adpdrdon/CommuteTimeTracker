@@ -209,6 +209,33 @@ public final class AutoLogic {
 
     // ---- Events -----------------------------------------------------------------------------------------
 
+    /** An exit whose location is closer than this share of the radius to the centre was not a real exit. */
+    static final double STILL_INSIDE_SHARE = 0.5;
+    /** An enter whose location is farther than this many radii from the centre was not a real arrival. */
+    static final double FAR_OUTSIDE_RADII = 3;
+
+    /**
+     * Why an exit report is not a real departure, or null if it is. Setting up the circles can make Android
+     * report leaving both places at once while the phone hasn't moved, which would start a pretend trip. So an
+     * exit only counts if the phone was last seen inside that place (`lastInside`, from enter events), and the
+     * location that triggered it (if known) is not well inside the circle.
+     */
+    public static String fakeExit(Config config, String place, String lastInside, Double lat, Double lng) {
+        if (!place.equals(lastInside)) return "not-inside";
+        Place p = HOME.equals(place) ? config.home : config.office;
+        int radius = HOME.equals(place) ? config.homeRadius : config.officeRadius;
+        if (p != null && lat != null && lng != null && Fix.distanceMeters(lat, lng, p.lat, p.lng) < radius * STILL_INSIDE_SHARE) return "still-inside";
+        return null;
+    }
+
+    /** Why an enter report is not a real arrival (its location is far outside the circle), or null if it is. */
+    public static String fakeEnter(Config config, String place, Double lat, Double lng) {
+        Place p = HOME.equals(place) ? config.home : config.office;
+        int radius = HOME.equals(place) ? config.homeRadius : config.officeRadius;
+        if (p != null && lat != null && lng != null && Fix.distanceMeters(lat, lng, p.lat, p.lng) > radius * FAR_OUTSIDE_RADII) return "far-outside";
+        return null;
+    }
+
     /** The phone left Home or Office at `at` (the geofence's own timestamp, not when the event was delivered). */
     public static Result onExit(Candidate current, String place, long at, Config config) {
         String skip = !config.ready() ? "not-ready" : !inWindow(config, at) ? "outside-window" : null;

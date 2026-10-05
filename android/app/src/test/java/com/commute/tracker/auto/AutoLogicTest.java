@@ -182,6 +182,40 @@ public class AutoLogicTest {
         assertEquals(5, AutoLogic.Config.fromJson("{\"commuteMinutes\":0}").commuteMinutes);
     }
 
+    // ---- Reports that aren't real crossings -------------------------------------------------------------
+
+    private static final double HOME_LAT = 12.97;
+    private static final double HOME_LNG = 77.59;
+
+    @Test
+    public void anExitCountsOnlyFromThePlaceThePhoneWasLastSeenEntering() {
+        // Setting up the circles at home: Android reports leaving both places.
+        assertEquals("not-inside", AutoLogic.fakeExit(config(), AutoLogic.OFFICE, AutoLogic.HOME, HOME_LAT, HOME_LNG));
+        assertEquals("not-inside", AutoLogic.fakeExit(config(), AutoLogic.HOME, null, null, null));
+    }
+
+    @Test
+    public void anExitFromWellInsideTheCircleIsIgnored() {
+        assertEquals("still-inside", AutoLogic.fakeExit(config(), AutoLogic.HOME, AutoLogic.HOME, HOME_LAT, HOME_LNG));
+    }
+
+    @Test
+    public void aRealExitPasses() {
+        double outside = HOME_LAT + 200 / METERS_PER_DEGREE_LAT;
+        assertNull(AutoLogic.fakeExit(config(), AutoLogic.HOME, AutoLogic.HOME, outside, HOME_LNG));
+        // Without a location, having been inside is enough.
+        assertNull(AutoLogic.fakeExit(config(), AutoLogic.HOME, AutoLogic.HOME, null, null));
+    }
+
+    @Test
+    public void anEnterFarFromThePlaceIsIgnored() {
+        // The Office is 10 km away; 150 m circle.
+        assertEquals("far-outside", AutoLogic.fakeEnter(config(), AutoLogic.OFFICE, HOME_LAT, HOME_LNG));
+        double nearOffice = HOME_LAT + 9_900 / METERS_PER_DEGREE_LAT;
+        assertNull(AutoLogic.fakeEnter(config(), AutoLogic.OFFICE, nearOffice, HOME_LNG));
+        assertNull(AutoLogic.fakeEnter(config(), AutoLogic.OFFICE, null, null));
+    }
+
     // ---- Saved data -------------------------------------------------------------------------------------
 
     @Test

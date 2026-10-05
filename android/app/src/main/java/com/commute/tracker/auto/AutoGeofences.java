@@ -60,13 +60,15 @@ public final class AutoGeofences {
         AutoLogic.Config config = AutoStore.config(context);
         if (!config.ready() || !hasBackgroundLocation(context)) {
             client.removeGeofences(pendingIntent(context));
+            AutoStore.forgetInside(context);
             if (!config.ready()) AutoStore.clearCandidate(context);
             DiagLog.log("auto", "Geofences off (" + (!config.ready() ? "not ready" : "no background location") + ")");
             return;
         }
+        // Android reports which circle the phone is already in (an enter event), so exits can be checked against it.
+        AutoStore.forgetInsideIfCirclesChanged(context, config);
         GeofencingRequest request = new GeofencingRequest.Builder()
-            // No event for where the phone already is when the circles are set up.
-            .setInitialTrigger(0)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofences(Arrays.asList(circle(AutoLogic.HOME, config.home, config.homeRadius), circle(AutoLogic.OFFICE, config.office, config.officeRadius)))
             .build();
         try {

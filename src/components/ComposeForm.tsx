@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from 'react';
 import styles from '@/app/page.module.css';
-import { MAX_IMAGES, SUPPORT_EMAIL, SendError, composeEmail, prepareImage } from '@/lib/support';
+import { MAX_IMAGES, SendError, composeEmail, prepareImage } from '@/lib/support';
 
 type Mode = 'bug' | 'feedback';
 
@@ -132,7 +132,6 @@ export default function ComposeForm({ mode }: { mode: Mode }) {
           A small diagnostics file is attached: your phone model, Android version, location settings and recent app events. It contains no addresses, locations or trip details. You can read it before sending.
         </p>
       )}
-      {!SUPPORT_EMAIL && <p className={styles.fieldError}>No support address is set in this build, so you&apos;ll choose the recipient yourself.</p>}
       {error && <p className={styles.fieldError} role="alert">{error}</p>}
 
       <button className="btn-primary" disabled={busy} onClick={send}>
