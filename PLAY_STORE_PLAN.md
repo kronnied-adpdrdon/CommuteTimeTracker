@@ -217,21 +217,23 @@ Working backwards from the fixed constraints: production review after applying t
 - No PII is the design already (no name, phone, email, account, exact places or routes). Consent, the policy update and the Data safety form are still required (Play checks them; DPDP can treat location patterns + a device ID as personal data). A lawyer is optional, not a launch step.
 
 **Owner to do**
-- [ ] Create the Firebase project **MYCE** with **provibsol@gmail.com**, region asia-south1
-- [ ] Blaze (pay-as-you-go) plan + card; **budget alert ₹500** immediately
-- [ ] Install the Firebase CLI on this Mac and run `firebase login` yourself (so Claude can deploy without sharing passwords)
-- [ ] Register the Android app (`com.provibsol.myce`), download `google-services.json` into `android/app/`
+- [x] Create the Firebase project **MYCE** (`myce-3da63`) with **provibsol@gmail.com**, region asia-south1
+- [x] Blaze (pay-as-you-go) plan + card; **budget alert ₹500** immediately
+- [x] Install the Firebase CLI on this Mac and run `firebase login` yourself (so Claude can deploy without sharing passwords)
+- [x] Register the Android app (`com.provibsol.myce`), download `google-services.json` into `android/app/` (gitignored)
 - [x] Decide raw-data retention: **24 months raw**, aggregates kept (7 Oct)
 - [ ] Optional, later: lawyer review of the Privacy Policy once there are many users (not needed to launch; DPDP rules are being phased in, check current status)
 
 **Build list (Claude)**
-- [ ] Consent screen in the first-time setup ("Help map commutes in your city", plain language, not pre-ticked) + Settings switches
-- [ ] Firebase Analytics wiring and events; nothing sent until the usage switch is on
-- [ ] Install ID, upload queue, "Delete my shared data" button (deletes rows by install ID)
-- [ ] Cloud Function + App Check + BigQuery schema; tests with fake data first
+- [x] Consent screen in the first-time setup (step 1, right after the welcome, so the choice covers the setup itself) ("Help map commutes in your city", plain language, not pre-ticked) + Settings switches
+- [x] Firebase Analytics wiring and events; nothing sent until the usage switch is on (AD_ID and ad-services permissions removed; `src/lib/sharing/events.ts`; native `not_a_commute`)
+- [x] Install ID, upload queue, "Delete commute times I've shared" button (hidden at once via view `trips_current`, purged nightly)
+- [x] Cloud Functions `shareTrips`, `deleteSharedTrips`, `purgeDeletedTrips` (asia-south1, deployed 7 Oct) + App Check (record-only until Play) + BigQuery `myce.shared_trips` (partitions expire after 730 days); emulator-tested end to end
+- [ ] After the first Play upload: set `ENFORCE_APP_CHECK=true` in `functions/.env` and redeploy; link Play Integrity in Play Console → App integrity; register the App Check debug token for emulator tests
+- [ ] Once Google Analytics' BigQuery dataset (`analytics_*`) appears: set its default table expiry to 24 months (the privacy policy promises it)
 - [ ] Looker Studio starter dashboards (adoption funnel, retention; corridor medians by hour/day)
-- [ ] Privacy Policy and Terms: what is shared, why, how to stop and delete; **18+ only** (DPDP treats under-18s as children); welcome page "Your trips never leave this phone" → "…unless you choose to share"
-- [ ] Data safety form answers redrafted (approximate location, app activity, device or other IDs; optional; not shared; encrypted in transit; deletable)
+- [x] Privacy Policy and Terms: what is shared, why, how to stop and delete; **18+ only** (DPDP treats under-18s as children); welcome page "Your trips never leave this phone" → "…unless you choose to share"
+- [x] Data safety form answers redrafted (`store/play-console-answers.md`; confirm in Play Console) (approximate location, app activity, device or other IDs; optional; not shared; encrypted in transit; deletable)
 - [ ] Play Console target audience 18+
 
 **Cost (verify current pricing):** about ₹0 a month up to a few thousand users (Analytics free; Functions, BigQuery free tiers); a few dollars to tens of dollars a month around 100,000 users. Build time about 3 to 5 days.

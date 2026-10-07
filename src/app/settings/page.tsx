@@ -8,6 +8,7 @@ import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import AddressPicker from '@/components/AddressPicker';
 import AutoTrackingCard from '@/components/AutoTrackingCard';
 import DeveloperTools from '@/components/DeveloperTools';
+import SharingCard from '@/components/SharingCard';
 import { useDevTools } from '@/lib/devtools';
 import { ThemePreference, useTheme } from '@/lib/theme';
 
@@ -110,6 +111,8 @@ export default function SettingsPage() {
         </div>
 
         <AutoTrackingCard />
+
+        <SharingCard />
 
         <div className={styles.card} style={{ gap: 0, paddingTop: '8px', paddingBottom: '8px' }}>
           <NavRow href="/notifications" title="Notifications" subtitle="Leave-time, weekly summary and more" />

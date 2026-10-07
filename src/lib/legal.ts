@@ -27,7 +27,7 @@ export const PRIVACY_POLICY: LegalDocument = {
   title: 'Privacy Policy',
   updated: LEGAL_UPDATED,
   intro:
-    `MYCE is made by ${PUBLISHER_NAME} ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.`,
+    `MYCE is made by ${PUBLISHER_NAME} ("we"). It has no accounts. Your trips stay on your phone, unless you choose to help improve MYCE by sharing how you use the app or your commute times. Both are off until you turn them on. This page explains what the app uses, what leaves your phone and when, and the choices you have.`,
   sections: [
     {
       heading: 'What the app uses',
@@ -51,6 +51,21 @@ export const PRIVACY_POLICY: LegalDocument = {
       ],
     },
     {
+      heading: 'Help improve MYCE (optional)',
+      paragraphs: [
+        'The app asks once during setup, and you can change your answer any time in Settings → Help improve MYCE. Both choices are off unless you turn them on, and the app works the same either way.',
+      ],
+      bullets: [
+        'Share how you use the app. The app records which features you use: setup screens finished or skipped, whether you chose automatic or manual recording, turning automatic start and stop on or off, that a trip was saved, edited or deleted (not its times, distance or places), reminder switches, and taps on the Pro button or a purchase. This uses Google Analytics for Firebase, which also records a random app-instance ID, your phone model, Android version, app version and country or region. The advertising ID is never collected, and nothing is used for advertising. Turning this off stops it and resets the app-instance ID. Google Analytics keeps this for 14 months; our copy is kept for up to 24 months.',
+        'Share commute times. For each trip that starts after you turn this on: the date and weekday, the start time rounded down to 15 minutes, how long it took, the distance to 0.1 km, whether it was to work, to home or neither, whether it started automatically, whether you edited it, and the areas it started and ended in, each about 5 km across. Never your exact Home, Office, addresses, route or GPS points. Each record carries a random ID made on your phone, which is not linked to your name, email, phone number or Google account. If you edit or delete a trip on your phone, the shared copy is updated or deleted too.',
+        'Where it goes. Shared commute times are sent over an encrypted connection to our server in Mumbai, India (Google Cloud), and stored in Google BigQuery. Firebase App Check, using Google Play Integrity, confirms each upload comes from the genuine app. Google processes this data for us as a service provider.',
+        'Why. To understand how long commutes take, by area, day and time of day, and to see which parts of the app work and which confuse people. If we ever publish figures, such as average commute times in a city, they will be totals for groups of at least 20 people, never individual trips.',
+        'How long. Each shared commute record is deleted automatically 24 months after it arrives.',
+        'Deleting it. Settings → Help improve MYCE → "Delete commute times I\'ve shared" deletes everything shared from your phone: it is hidden from us at once and removed within 48 hours. This also turns commute sharing off and replaces the random ID. If you uninstall without deleting, the shared records can no longer be linked to your phone, and they are deleted after 24 months.',
+        'We never sell this data, never use it for advertising, and never give it to anyone else.',
+      ],
+    },
+    {
       heading: 'Reminders',
       paragraphs: [
         'If you leave notifications on, the app schedules reminders on your phone (for example a weekly summary or a note before you usually leave). They are worked out on your phone from your saved trips when they are due. Nothing is sent anywhere for this.',
@@ -59,26 +74,27 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: 'Where your data is stored',
       paragraphs: [
-        'Everything above is stored on your phone. We do not run servers and do not receive your trips or location.',
+        'Everything above is stored on your phone, except what you choose to share under "Help improve MYCE". Without that, we do not receive your trips or location.',
         'If Android backup is switched on for your Google account, Android may include the app\'s data in your device backup, stored by Google, so it can be restored on a reinstall or a new phone. This is controlled in your phone\'s settings, not by the app.',
       ],
     },
     {
       heading: 'How your data is used',
       paragraphs: [
-        'To time your commutes and measure distance, label trips to work or to home, show your history and weekly summaries, send the reminders you turn on, create the reports you ask for, and unlock Pro. Emails you send us are used to reply to you and to fix problems. We do not sell your data, use it for advertising, or share it with advertisers.',
+        'To time your commutes and measure distance, label trips to work or to home, show your history and weekly summaries, send the reminders you turn on, create the reports you ask for, and unlock Pro. If you choose to share, to understand commute times and improve the app (see "Help improve MYCE"). Emails you send us are used to reply to you and to fix problems. We do not sell your data, use it for advertising, or share it with advertisers.',
       ],
     },
     {
       heading: 'How long it is kept',
       paragraphs: [
-        'Trips stay on your phone until you delete them or uninstall the app. History shows the last two weeks, and older trips are kept so they can be included in reports. Diagnostics files are created only when you ask for a report and are replaced each time.',
+        'Trips stay on your phone until you delete them or uninstall the app. History shows the last two weeks, and older trips are kept so they can be included in reports. Diagnostics files are created only when you ask for a report and are replaced each time. Shared commute times are kept for 24 months, and app-usage statistics as described above.',
       ],
     },
     {
       heading: 'Deleting your data',
       bullets: [
         'Delete a trip in History, or all trips at once in Settings → Your Data.',
+        'Delete commute times you shared in Settings → Help improve MYCE.',
         'Clear Home or Office in Settings.',
         'Delete everything by clearing the app\'s storage (phone Settings → Apps → MYCE → Storage) or by uninstalling the app.',
         'Device backups kept by Google are managed in your Google account and phone backup settings.',
@@ -91,11 +107,12 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You can turn automatic start and stop off in Settings at any time, or take back "Allow all the time" in your phone\'s settings. Start and Stop keep working without it.',
         'You can turn each reminder off in Settings → Notifications, or turn notifications off for the app in your phone\'s settings.',
         'You can skip address search and set Home or Office from your current location, or not set them at all.',
+        'You can turn "Share how you use the app" and "Share commute times" on or off at any time in Settings → Help improve MYCE.',
       ],
     },
     {
       heading: 'Children',
-      paragraphs: ['The app is not directed at children under 13.'],
+      paragraphs: ['MYCE is for adults aged 18 and over. It is not directed at children, and we do not knowingly collect data from anyone under 18.'],
     },
     {
       heading: 'Changes to this policy',
@@ -121,6 +138,10 @@ export const TERMS: LegalDocument = {
       ],
     },
     {
+      heading: 'Who can use it',
+      paragraphs: ['You must be 18 or older to use the app.'],
+    },
+    {
       heading: 'Stay safe',
       bullets: [
         'Do not use the app while driving or riding. Start and stop a trip before you set off or after you arrive, or use the widget or notification at a safe moment.',
@@ -131,7 +152,7 @@ export const TERMS: LegalDocument = {
     {
       heading: 'Your data',
       paragraphs: [
-        'Your trips stay on your phone. How the app handles your information is described in the Privacy Policy, which forms part of these terms. You are responsible for keeping your phone and any exported reports safe.',
+        'Your trips stay on your phone unless you choose to share commute times. How the app handles your information is described in the Privacy Policy, which forms part of these terms. You are responsible for keeping your phone and any exported reports safe.',
       ],
     },
     {

@@ -23,6 +23,7 @@ import com.provibsol.myce.CommuteWidgetProvider;
 import com.provibsol.myce.MainActivity;
 import com.provibsol.myce.R;
 import com.provibsol.myce.auto.AutoStore;
+import com.provibsol.myce.sharing.Usage;
 import com.provibsol.myce.support.DiagLog;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -223,6 +224,7 @@ public class TrackingService extends Service {
             if (ACTION_AUTO_KEEP.equals(action)) {
                 finishAndStop(intent.getLongExtra(EXTRA_TIME, System.currentTimeMillis()), intent.getStringExtra(EXTRA_DIRECTION));
             } else {
+                if (ACTION_AUTO_DROP.equals(action)) Usage.log(this, "not_a_commute", null);
                 discardAndStop(action);
             }
             return START_NOT_STICKY;

@@ -54,8 +54,8 @@ REPORTS WITH PRO (ONE-TIME UPGRADE)
 
 PRIVATE BY DESIGN
 • No account, no sign-up, no login
-• Your trips stay on your phone. There are no servers of ours
-• Location is used only while a trip is running, and a notification always shows when it is
+• Your trips stay on your phone. Sharing rough commute times to help improve MYCE is optional and off unless you turn it on
+• A notification always shows while a trip is being recorded
 • No ads
 
 ALSO

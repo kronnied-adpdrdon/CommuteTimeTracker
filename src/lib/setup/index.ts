@@ -5,6 +5,8 @@ import { autoTracking } from '../auto';
 import { commute } from '../commute';
 import { isNativeApp, lazyPlugin } from '../native';
 import { notifications } from '../notifications';
+import { sharing, track } from '../sharing';
+import { sharingAnswered } from '../sharing/settings';
 import { KeyValueStore } from '../storage/kv';
 import { ChecklistItem, INITIAL_PROGRESS, SetupFacts, SetupProgress, SetupStep, createSetupStore, itemApplies, wizardSteps } from './logic';
 
@@ -63,6 +65,7 @@ export function currentFacts(): SetupFacts {
     notificationsAllowed: notifications.getState().allowed,
     manufacturer: state.manufacturer,
     batteryUnrestricted: state.batteryUnrestricted,
+    sharingAnswered: sharingAnswered(sharing.getState().settings),
   };
 }
 
@@ -97,7 +100,7 @@ function start(): Promise<void> {
   started ??= (async () => {
     const progress = await store.load();
     set({ progress });
-    await Promise.all([commute.init(), autoTracking.start(), notifications.start(), refreshBattery()]);
+    await Promise.all([commute.init(), autoTracking.start(), notifications.start(), sharing.start(), refreshBattery()]);
     set({ loaded: true });
     openIfNeeded();
     document.addEventListener('visibilitychange', () => {
@@ -126,10 +129,11 @@ export const setup = {
   /** Saves an answer (recording, reminders, battery). */
   answer: (patch: Pick<Partial<SetupProgress>, 'recording' | 'reminders' | 'battery'>) => save(patch),
   /** Moves past the current screen, answered or skipped. Past the last one, the pop-up closes. */
-  async next() {
+  async next(action: 'next' | 'skip' = 'next') {
     const wizard = state.wizard;
     if (!wizard) return;
     const step = wizard.steps[wizard.index];
+    track(step === 'done' ? { name: 'setup_complete' } : { name: 'setup_step', params: { step, action } });
     const seen = state.progress.seen.includes(step) ? state.progress.seen : [...state.progress.seen, step];
     const last = wizard.index >= wizard.steps.length - 1;
     set({ wizard: last ? null : { ...wizard, index: wizard.index + 1, direction: 'forward' } });
@@ -160,7 +164,7 @@ export const setup = {
   async preview() {
     await store.clear();
     const battery: SetupStep[] = itemApplies('battery', currentFacts()) ? ['battery'] : [];
-    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'places', 'times', 'recording', 'reminders', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
+    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
   },
   refreshBattery,
 };

@@ -7,6 +7,7 @@ import SetupWizard from "@/components/SetupWizard";
 import { DiagnosticsSync } from "@/lib/diagnostics";
 import { AutoTrackingSync } from "@/lib/auto";
 import { RemindersSync } from "@/lib/notifications";
+import { SharingSync } from "@/lib/sharing";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
 
 // Downloaded once at build time and bundled with the app, so text renders offline.
@@ -44,6 +45,7 @@ export default function RootLayout({
         <DiagnosticsSync />
         <RemindersSync />
         <AutoTrackingSync />
+        <SharingSync />
         <div className="mobile-container">
           <main className="content-area">
             {children}

@@ -4,27 +4,32 @@ Check each answer against the app before submitting: Google rejects listings who
 
 ## Data safety
 
-**Does your app collect or share any of the required user data types?** → **Yes** (changed in build 2: the address search sends typed text off the phone)
+**Does your app collect or share any of the required user data types?** → **Yes**
 
-What the app does with data now:
-- Precise location is used only on the phone, to measure trips. It is never sent to the developer.
-- Trips, Home and Office are stored only on the phone. There are no servers of ours, no accounts, no ads, no analytics and no crash-reporting SDK.
-- **Address search (new).** When the user types a Home or Office address and presses Search, the typed text is sent to Android's built-in geocoder (Google, on most phones) and, if that finds nothing, to OpenStreetMap's Nominatim service. Only the text is sent, only on that button press, with no user ID.
-- **Reminders (new).** Scheduled and worked out on the phone from the saved trips. Nothing is sent anywhere.
-- **Report a bug / Send feedback (new).** The app opens the user's own email app with a diagnostics file and any screenshots attached. The user reads it and presses Send. The app itself transmits nothing. The diagnostics file holds device model, Android version, permission and location-setting states and recent app events, never coordinates or addresses.
-- Pro ownership is checked through Google Play Billing on the phone (payment data handled by Google Play needs no declaration by the developer).
+What the app does with data now (rewritten 7 Oct 2026, after "Help improve MYCE" was added):
+- Precise location is used only on the phone, to measure trips. Exact positions are never sent to the developer.
+- Trips, Home and Office are stored on the phone. No accounts, no ads, no crash-reporting SDK.
+- **"Help improve MYCE" (optional, off until the user turns it on, asked in the setup and in Settings):**
+  - *Share how you use the app*: Firebase Analytics events (setup screens finished or skipped, recording choice, automatic start on/off, trip saved / edited / deleted without any times, distances or places, reminder switches, Pro button taps and purchase). Firebase adds an app-instance ID, device model, Android version, app version and country/region. Advertising ID collection is disabled and the AD_ID and ad-services permissions are removed from the manifest; Google data-sharing settings are off.
+  - *Share commute times*: per trip, date, start time rounded to 15 minutes, weekday, duration, distance (0.1 km), to work / to home / other, automatic or not, edited or not, and the start and end areas as ~5 km geohash cells. Sent with a random install ID (made on the phone, no account) over HTTPS to the developer's Cloud Function in Mumbai and stored in BigQuery. Each record is deleted automatically 24 months after it arrives. "Delete commute times I've shared" in Settings deletes them (hidden at once, removed within 48 hours).
+- **Address search.** The typed text goes to Android's geocoder (Google) and, if needed, OpenStreetMap Nominatim, only when the user presses Search.
+- **Report a bug / Send feedback.** Opens the user's own email app; the app itself transmits nothing.
+- Pro ownership is checked through Google Play Billing on the phone.
 
-**Proposed Data safety answers (confirm each against Play Console's current help text before submitting; I could not find an official Google statement for the user-initiated cases):**
-- **Location → Approximate location** or **Personal info → Address**: *Collected*, not *shared* with other companies for their own use, purpose **App functionality**, optional (the user can skip address search and use GPS or nothing). Reason: typed address text is sent to a geocoding service when the user presses Search. Treat the geocoder as a service provider acting on the app's behalf.
-- Nothing else is declared as collected. Email reports are user-initiated through their own email app, and Google's definition excludes data a user chooses to send themselves. If Play Console says otherwise, add **App info and performance → Diagnostics**, optional, purpose App functionality.
+**Proposed Data safety answers (confirm each against Play Console's current help text before submitting):**
 
-**Other points to confirm before submitting:**
-1. **Android backup.** The app allows Android's automatic backup, which can copy app data (trips, Home/Office) to the user's Google account. If Play Console's help text says this counts as "collected", declare **Location → Precise location: collected, not shared, purpose App functionality** as well.
-2. **Google's location engine.** On phones with Google Play services, location comes from the Fused Location Provider, and Google may receive location under the user's own "Google Location Accuracy" device setting. On phones without Play services (or where it fails) the app falls back to Android's own GPS. That's Google's collection under the user's control, not the app's, but if Play Console flags it, use the same fallback as point 1.
+| Data type | Collected / shared | Optional? | Purpose |
+|---|---|---|---|
+| Location → **Approximate location** | Collected, not shared | Yes | **Analytics** (shared commute times, ~5 km areas); **App functionality** (address search text) |
+| App activity → **App interactions** | Collected, not shared | Yes | **Analytics** |
+| App activity → **Other actions** (trip duration, distance, start time) | Collected, not shared | Yes | **Analytics** |
+| Device or other IDs | Collected, not shared | Yes | **Analytics** (Firebase app-instance ID; random install ID for shared commute times) |
 
-Extra answers that apply:
-- Is all of the user data collected by your app encrypted in transit? → Yes (address search uses HTTPS; Android backup and Google services use encrypted connections)
-- Do you provide a way for users to request that their data is deleted? → Yes: delete trips in the app, "Delete all trips" in Settings, or uninstall. Typed address text is not stored by the developer.
+- Google (Firebase, Google Cloud) and the geocoders process data on the developer's behalf, so this is **not "shared"** in Play's sense.
+- Nothing else is collected. Email reports are user-initiated through their own email app.
+- **Is all user data encrypted in transit?** → Yes (HTTPS everywhere).
+- **Can users request deletion?** → Yes: "Delete commute times I've shared" in Settings; turning off "Share how you use the app" stops collection and resets the analytics ID; trips on the phone are deleted in the app or by uninstalling. Shared records also expire after 24 months.
+- Still to confirm: whether Android backup of app data needs declaring (see Play Console's help text; if yes, add Location → Precise location, collected, App functionality).
 
 ## App access
 

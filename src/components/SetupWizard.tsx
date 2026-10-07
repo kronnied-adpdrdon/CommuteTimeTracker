@@ -6,6 +6,7 @@ import AddressPicker from '@/components/AddressPicker';
 import { CommuteTimePicker, DAYS } from '@/components/AutoTrackingCard';
 import BackgroundDisclosure from '@/components/BackgroundDisclosure';
 import RouteLine from '@/components/RouteLine';
+import { SharingChoice, SharingFootnote } from '@/components/SharingCard';
 import Switch from '@/components/Switch';
 import { autoTracking, useAutoTracking } from '@/lib/auto';
 import { toggleDay } from '@/lib/auto/settings';
@@ -13,6 +14,7 @@ import { commute, useCommute } from '@/lib/commute';
 import { notifications, useNotifications } from '@/lib/notifications';
 import { clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
 import { currentFacts, setup, useSetup } from '@/lib/setup';
+import { sharing, track } from '@/lib/sharing';
 import { SetupStep, batteryAdvice, checklist, leaveTimeFromWindow, windowFromLeaveTime } from '@/lib/setup/logic';
 
 /**
@@ -44,7 +46,7 @@ export default function SetupWizard() {
               ))}
             </div>
           )}
-          <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={() => (wizard.single ? setup.close() : setup.next())}>
+          <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={() => (wizard.single ? setup.close() : setup.next('skip'))}>
             {wizard.single ? 'Close' : 'Skip'}
           </button>
         </div>
@@ -95,6 +97,8 @@ function Step({ step }: { step: SetupStep }) {
   switch (step) {
     case 'welcome':
       return <Welcome />;
+    case 'sharing':
+      return <Sharing />;
     case 'places':
       return <Places />;
     case 'times':
@@ -121,7 +125,7 @@ function Welcome() {
       <div className={styles.setupFeatures}>
         <Feature icon="clock" title="Every trip, timed" text="How long each trip to work and home took, and how far you went." />
         <Feature icon="auto" title="Starts by itself" text="Can start and stop when you leave and arrive, so you don't have to remember." />
-        <Feature icon="lock" title="Stays on your phone" text="No account and no sign-in. Your trips never leave this phone." />
+        <Feature icon="lock" title="Stays on your phone" text="No account and no sign-in. Your trips stay on this phone unless you choose to share them." />
       </div>
       <div className={styles.setupActions}>
         <button className="btn-primary" onClick={() => setup.next()}>Set up (1 minute)</button>
@@ -149,6 +153,36 @@ function Feature({ icon, title, text }: { icon: keyof typeof ICONS; title: strin
         <div className={styles.cardText}>{text}</div>
       </div>
     </div>
+  );
+}
+
+/** "Help improve MYCE": both switches start off; Continue with both off is a full answer. */
+function Sharing() {
+  const { settings } = sharing.getState();
+  const [usage, setUsage] = useState(settings.usage === true);
+  const [commuteTimes, setCommuteTimes] = useState(settings.commute === true);
+
+  return (
+    <>
+      <h2 id="setup-title" className={styles.setupTitle}>Help improve MYCE</h2>
+      <p className={styles.cardText}>Two optional ways to help. Both stay off unless you turn them on, and you can change them or delete what you shared any time in Settings.</p>
+      <div className={styles.setupStack}>
+        <SharingChoice choice="usage" checked={usage} onChange={setUsage} />
+        <SharingChoice choice="commute" checked={commuteTimes} onChange={setCommuteTimes} />
+      </div>
+      <SharingFootnote />
+      <div className={styles.setupActions}>
+        <button
+          className="btn-primary"
+          onClick={async () => {
+            await sharing.answer({ usage, commute: commuteTimes });
+            await setup.next();
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -274,6 +308,7 @@ function Recording() {
   };
 
   const chosen = async (recording: 'auto' | 'manual') => {
+    track({ name: 'recording_choice', params: { choice: recording } });
     await setup.answer({ recording });
     await setup.next();
   };

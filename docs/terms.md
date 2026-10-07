@@ -8,6 +8,10 @@ These terms are the rules for using MYCE ("the app"), made by Kaustav Dutta ("we
 
 The app times your commutes, measures distance with your phone's location, keeps a history on your phone, and (with Pro) makes reports you can export. It is meant for personal use.
 
+## Who can use it
+
+You must be 18 or older to use the app.
+
 ## Stay safe
 
 - Do not use the app while driving or riding. Start and stop a trip before you set off or after you arrive, or use the widget or notification at a safe moment.
@@ -16,7 +20,7 @@ The app times your commutes, measures distance with your phone's location, keeps
 
 ## Your data
 
-Your trips stay on your phone. How the app handles your information is described in the Privacy Policy, which forms part of these terms. You are responsible for keeping your phone and any exported reports safe.
+Your trips stay on your phone unless you choose to share commute times. How the app handles your information is described in the Privacy Policy, which forms part of these terms. You are responsible for keeping your phone and any exported reports safe.
 
 ## Pro
 

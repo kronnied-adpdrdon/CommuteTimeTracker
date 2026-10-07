@@ -58,6 +58,11 @@ dependencies {
     implementation project(':capacitor-android')
     implementation "com.google.android.gms:play-services-location:21.4.0"
     implementation "com.android.billingclient:billing:9.1.0"
+    // Optional "Help improve MYCE" sharing: app-usage statistics (off until the user agrees) and App Check.
+    implementation platform("com.google.firebase:firebase-bom:35.0.0")
+    implementation "com.google.firebase:firebase-analytics"
+    implementation "com.google.firebase:firebase-appcheck-playintegrity"
+    debugImplementation "com.google.firebase:firebase-appcheck-debug"
     testImplementation "junit:junit:$junitVersion"
     // Real org.json for JVM unit tests (Android's copy is stubbed out there).
     testImplementation "org.json:json:20250517"

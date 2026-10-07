@@ -3,7 +3,7 @@ import { KeyValueStore } from '../storage/kv';
 export const SETUP_KEY = 'setup.v1';
 
 /** The first-time setup's screens, in order. "welcome" is for new users only; "done" closes the flow. */
-export type SetupStep = 'welcome' | 'places' | 'times' | 'recording' | 'reminders' | 'battery' | 'done';
+export type SetupStep = 'welcome' | 'sharing' | 'places' | 'times' | 'recording' | 'reminders' | 'battery' | 'done';
 
 /** What the "Finish setting up" card on Home lists. Commute times live inside the recording choice. */
 export type ChecklistItem = 'places' | 'recording' | 'reminders' | 'battery';
@@ -37,9 +37,11 @@ export interface SetupFacts {
   manufacturer: string;
   /** Android's "Unrestricted" battery setting for this app. Null when unknown. */
   batteryUnrestricted: boolean | null;
+  /** Both "Help improve MYCE" choices made (on or off). Optional, so it never appears on the Home card. */
+  sharingAnswered: boolean;
 }
 
-const STEPS: SetupStep[] = ['welcome', 'places', 'times', 'recording', 'reminders', 'battery', 'done'];
+const STEPS: SetupStep[] = ['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', 'battery', 'done'];
 
 export function sanitize(value: unknown): SetupProgress {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -140,11 +142,12 @@ export function checklist(progress: SetupProgress, facts: SetupFacts): { item: C
  * update shows existing users only what's new to them, and a setup closed halfway resumes where it stopped.
  */
 export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupStep[] {
-  if (progress.closed) return [];
   const seen = (step: SetupStep) => progress.seen.includes(step);
+  // Asked once, also of people who finished the setup before this screen existed.
+  const askSharing = !facts.sharingAnswered && !seen('sharing');
+  if (progress.closed) return askSharing ? ['sharing'] : [];
   const open = (item: ChecklistItem) => itemApplies(item, facts) && !itemDone(item, progress, facts);
   const steps: SetupStep[] = [];
-  if (facts.isNewUser && !seen('welcome')) steps.push('welcome');
   if (open('places') && !seen('places') && !facts.placesNeverAsk) steps.push('places');
   if (open('recording') && !seen('recording')) {
     if (!seen('times')) steps.push('times');
@@ -152,9 +155,11 @@ export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupSt
   }
   if (open('reminders') && !seen('reminders')) steps.push('reminders');
   if (open('battery') && !seen('battery')) steps.push('battery');
-  // Only the welcome left (e.g. reopened after the first screen) isn't worth a pop-up on its own.
-  if (steps.length === 0 || (steps.length === 1 && steps[0] === 'welcome')) return [];
-  return [...steps, 'done'];
+  // Nothing left to set up: the welcome isn't worth a pop-up on its own, nor is a summary after the sharing question.
+  if (steps.length === 0) return askSharing ? ['sharing'] : [];
+  // Sharing comes early, so the choice covers the setup itself ("where do people give up?").
+  const welcome: SetupStep[] = facts.isNewUser && !seen('welcome') ? ['welcome'] : [];
+  return [...welcome, ...(askSharing ? (['sharing'] as const) : []), ...steps, 'done'];
 }
 
 /** Commute hours from "when do you usually leave": an hour before to 90 minutes after (people run late more than early). */

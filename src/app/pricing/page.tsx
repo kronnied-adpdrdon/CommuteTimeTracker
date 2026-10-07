@@ -5,6 +5,7 @@ import styles from '../page.module.css';
 import PageHeader from '@/components/PageHeader';
 import PlanComparison from '@/components/PlanComparison';
 import { commute, useCommute } from '@/lib/commute';
+import { track } from '@/lib/sharing';
 
 export default function PricingPage() {
   const { isPro, proPrice, purchasing, notice } = useCommute();
@@ -29,7 +30,10 @@ export default function PricingPage() {
             </>
           ) : (
             <>
-              <button className="btn-primary btn-pro" disabled={purchasing} onClick={() => commute.upgrade()}>
+              <button className="btn-primary btn-pro" disabled={purchasing} onClick={() => {
+                track({ name: 'upgrade_tap', params: { from: 'plans' } });
+                void commute.upgrade();
+              }}>
                 {purchasing ? 'Opening Google Play…' : `Upgrade to Pro · ${price}`}
               </button>
               <button className={styles.linkButton} style={{ alignSelf: 'center' }} disabled={purchasing} onClick={() => commute.restorePurchases()}>
