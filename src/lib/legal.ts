@@ -53,15 +53,15 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: 'Help improve MYCE (optional)',
       paragraphs: [
-        'The app asks once during setup, and you can change your answer any time in Settings → Help improve MYCE. Both choices are off unless you turn them on, and the app works the same either way.',
+        'The app asks once during setup, and you can change your answer any time in Settings → Help improve MYCE. Both choices are off unless you turn them on, and the app works the same either way. Turning either on confirms you are 18 or older.',
       ],
       bullets: [
-        'Share how you use the app. The app records which features you use: setup screens finished or skipped, whether you chose automatic or manual recording, turning automatic start and stop on or off, that a trip was saved, edited or deleted (not its times, distance or places), reminder switches, and taps on the Pro button or a purchase. This uses Google Analytics for Firebase, which also records a random app-instance ID, your phone model, Android version, app version and country or region. The advertising ID is never collected, and nothing is used for advertising. Turning this off stops it and resets the app-instance ID. Google Analytics keeps this for 14 months; our copy is kept for up to 24 months.',
+        'Share how you use the app. The app records which features you use: setup screens finished or skipped, whether you chose automatic or manual recording, turning automatic start and stop on or off, that a trip was saved, edited or deleted (not its times, distance or places), reminder switches, and taps on the Pro button or a purchase. This uses Google Analytics for Firebase, a Google service, which also records a random app-instance ID, your phone model, Android version, app version, in-app purchase events, and an approximate location (country, region or city) worked out from a masked IP address. The advertising ID is never collected, and nothing is used for advertising. Turning this off stops it and resets the app-instance ID. Google Analytics keeps this for 14 months; our copy is kept for up to 24 months. How Google handles this data: https://www.google.com/policies/privacy/partners/',
         'Share commute times. For each trip that starts after you turn this on: the date and weekday, the start time rounded down to 15 minutes, how long it took, the distance to 0.1 km, whether it was to work, to home or neither, whether it started automatically, whether you edited it, and the areas it started and ended in, each about 5 km across. Never your exact Home, Office, addresses, route or GPS points. Each record carries a random ID made on your phone, which is not linked to your name, email, phone number or Google account. If you edit or delete a trip on your phone, the shared copy is updated or deleted too.',
         'Where it goes. Shared commute times are sent over an encrypted connection to our server in Mumbai, India (Google Cloud), and stored in Google BigQuery. Firebase App Check, using Google Play Integrity, confirms each upload comes from the genuine app. Google processes this data for us as a service provider.',
         'Why. To understand how long commutes take, by area, day and time of day, and to see which parts of the app work and which confuse people. If we ever publish figures, such as average commute times in a city, they will be totals for groups of at least 20 people, never individual trips.',
         'How long. Each shared commute record is deleted automatically 24 months after it arrives.',
-        'Deleting it. Settings → Help improve MYCE → "Delete commute times I\'ve shared" deletes everything shared from your phone: it is hidden from us at once and removed within 48 hours. This also turns commute sharing off and replaces the random ID. If you uninstall without deleting, the shared records can no longer be linked to your phone, and they are deleted after 24 months.',
+        'Deleting it. Turning off "Share commute times" deletes everything shared from your phone: it is hidden from us as soon as the request reaches us (straight away, or next time your phone is online) and removed within 48 hours. Turning it on again starts afresh with a new random ID. If you uninstall without turning it off, the shared records can no longer be linked to your phone, and they are deleted after 24 months.',
         'We never sell this data, never use it for advertising, and never give it to anyone else.',
       ],
     },
@@ -94,7 +94,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: 'Deleting your data',
       bullets: [
         'Delete a trip in History, or all trips at once in Settings → Your Data.',
-        'Delete commute times you shared in Settings → Help improve MYCE.',
+        'Delete commute times you shared by turning off "Share commute times" in Settings → Help improve MYCE.',
         'Clear Home or Office in Settings.',
         'Delete everything by clearing the app\'s storage (phone Settings → Apps → MYCE → Storage) or by uninstalling the app.',
         'Device backups kept by Google are managed in your Google account and phone backup settings.',
@@ -120,7 +120,10 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'Contact',
-      paragraphs: [`Questions about privacy, or about your data? Email ${PUBLISHER_NAME} at ${CONTACT_EMAIL}, or use Settings → Send feedback in the app.`],
+      paragraphs: [
+        `Questions about privacy, requests about your data (for example to know what was shared, correct it or delete it), or complaints: email ${PUBLISHER_NAME} at ${CONTACT_EMAIL}, or use Settings → Send feedback in the app. We reply as soon as we can, and within 90 days at the latest.`,
+        'If you are not satisfied with our answer, you can complain to the Data Protection Board of India.',
+      ],
     },
   ],
 };
@@ -208,11 +211,13 @@ export const TERMS: LegalDocument = {
 
 /** The document as Markdown, for hosting on a web page (the Play Store listing needs a public privacy URL). */
 export function toMarkdown(doc: LegalDocument): string {
-  const lines = [`# ${doc.title} — MYCE`, '', `Last updated: ${doc.updated}`, '', doc.intro, ''];
+  // Web addresses become links (<...> works in every Markdown renderer).
+  const md = (text: string) => text.replace(/(https:\/\/[^\s]+[^\s.,)])/g, '<$1>');
+  const lines = [`# ${doc.title} — MYCE`, '', `Last updated: ${doc.updated}`, '', md(doc.intro), ''];
   for (const section of doc.sections) {
     lines.push(`## ${section.heading}`, '');
-    for (const paragraph of section.paragraphs ?? []) lines.push(paragraph, '');
-    for (const bullet of section.bullets ?? []) lines.push(`- ${bullet}`);
+    for (const paragraph of section.paragraphs ?? []) lines.push(md(paragraph), '');
+    for (const bullet of section.bullets ?? []) lines.push(`- ${md(bullet)}`);
     if (section.bullets?.length) lines.push('');
   }
   return lines.join('\n');

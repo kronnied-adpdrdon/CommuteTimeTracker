@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import styles from '@/app/page.module.css';
 import Switch from '@/components/Switch';
@@ -21,7 +20,7 @@ export const SHARING_CHOICES = {
 export function SharingFootnote() {
   return (
     <p className={styles.cardText}>
-      No name, email or phone number. Not sold or given to anyone.{' '}
+      Turning these on confirms you&apos;re 18 or older. No name, email or phone number. Not sold or given to anyone.{' '}
       <Link href="/privacy" className={styles.linkButton} style={{ padding: 0 }}>Privacy policy</Link>
     </p>
   );
@@ -40,45 +39,18 @@ export function SharingChoice({ choice, checked, onChange }: { choice: keyof typ
   );
 }
 
-/** Settings → "Help improve MYCE": the two switches, and deleting what was shared. */
+/** Settings → "Help improve MYCE": the two switches. Turning commute sharing off deletes what was shared. */
 export default function SharingCard() {
-  const { settings, deleting, notice } = useSharing();
-  const [confirming, setConfirming] = useState(false);
+  const { settings } = useSharing();
 
   return (
     <div className={styles.card}>
       <div className={styles.cardTitle}>Help improve MYCE</div>
       <SharingChoice choice="usage" checked={settings.usage === true} onChange={(on) => void sharing.setUsage(on)} />
       <SharingChoice choice="commute" checked={settings.commute === true} onChange={(on) => void sharing.setCommute(on)} />
+      {settings.commute === true && <p className={styles.cardText}>Turning commute sharing off also deletes the commute times you&apos;ve shared.</p>}
+      {settings.pendingDelete && <p className={styles.cardText} role="status">Deleting what you shared. This finishes next time you&apos;re online.</p>}
       <SharingFootnote />
-      {settings.installId && !confirming && (
-        <button className={styles.secondaryButton} style={{ marginTop: 0, color: 'var(--danger-color)' }} disabled={deleting} onClick={() => setConfirming(true)}>
-          Delete commute times I&apos;ve shared
-        </button>
-      )}
-      {confirming && (
-        <div className={`${styles.banner} ${styles.bannerError}`}>
-          <span>Delete every commute time shared from this phone, and turn commute sharing off? Your trips on this phone stay.</span>
-          <div className={styles.bannerActions}>
-            <button
-              className={styles.linkButton}
-              style={{ color: 'var(--danger-color)' }}
-              disabled={deleting}
-              onClick={async () => {
-                if (await sharing.deleteShared()) setConfirming(false);
-              }}
-            >
-              {deleting ? 'Deleting…' : 'Delete'}
-            </button>
-            <button className={styles.linkButton} disabled={deleting} onClick={() => setConfirming(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-      {notice && (
-        <p className={styles.cardText} role="status">
-          {notice}
-        </p>
-      )}
     </div>
   );
 }

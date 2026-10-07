@@ -165,7 +165,7 @@ function Sharing() {
   return (
     <>
       <h2 id="setup-title" className={styles.setupTitle}>Help improve MYCE</h2>
-      <p className={styles.cardText}>Two optional ways to help. Both stay off unless you turn them on, and you can change them or delete what you shared any time in Settings.</p>
+      <p className={styles.cardText}>Two optional ways to help. Both stay off unless you turn them on. You can turn them off any time in Settings, which also deletes the commute times you shared.</p>
       <div className={styles.setupStack}>
         <SharingChoice choice="usage" checked={usage} onChange={setUsage} />
         <SharingChoice choice="commute" checked={commuteTimes} onChange={setCommuteTimes} />

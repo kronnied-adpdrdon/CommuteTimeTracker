@@ -26,7 +26,7 @@ export default function BackgroundDisclosure({ onEnabled, onCancel, page = false
     <>
       <strong>Location in the background</strong>
       <span>
-        MYCE collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone.
+        MYCE collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone, unless you turn on Share commute times, which shares only the rough area (about 5 km across) where each trip starts and ends.
       </span>
       <span>
         On the next screen, choose <strong>Allow all the time</strong>. You can turn this off in Settings at any time.

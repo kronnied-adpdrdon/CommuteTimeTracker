@@ -38,11 +38,12 @@ describe('sharing settings', () => {
   });
 
   it('drops anything malformed', () => {
-    expect(sanitize({ usage: 'yes', commute: true, commuteSince: 'x', installId: 'not-a-uuid', sent: { a: 'p', b: 3 } })).toEqual({
+    expect(sanitize({ usage: 'yes', commute: true, commuteSince: 'x', installId: 'not-a-uuid', pendingDelete: 7, sent: { a: 'p', b: 3 } })).toEqual({
       usage: null,
       commute: true,
       commuteSince: null,
       installId: null,
+      pendingDelete: null,
       sent: { a: 'p' },
     });
   });
@@ -50,7 +51,7 @@ describe('sharing settings', () => {
   it('round-trips through storage', async () => {
     const memory = createMemoryStore();
     const store = createSharingSettingsStore(memory);
-    const settings = { usage: false, commute: true, commuteSince: 5, installId: '0b8f7a52-6a0e-4d3e-9a51-2c1f6f0b7c11', sent: { a: 'p' } };
+    const settings = { usage: false, commute: true, commuteSince: 5, installId: '0b8f7a52-6a0e-4d3e-9a51-2c1f6f0b7c11', pendingDelete: '7d5e2a8c-1f3b-4c9d-8e6a-2b4c6d8e0f1a', sent: { a: 'p' } };
     await store.save(settings);
     expect(JSON.parse(memory.dump()[SHARING_KEY])).toEqual(settings);
     expect(await store.load()).toEqual(settings);

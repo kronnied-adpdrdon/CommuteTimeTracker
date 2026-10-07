@@ -38,13 +38,9 @@ const client = createSharingClient({
 export interface SharingState {
   settings: SharingSettings;
   loaded: boolean;
-  /** "Delete what I've shared" is running. */
-  deleting: boolean;
-  /** A one-off message for the Settings card. */
-  notice: string | null;
 }
 
-const INITIAL: SharingState = { settings: DEFAULT_SHARING_SETTINGS, loaded: false, deleting: false, notice: null };
+const INITIAL: SharingState = { settings: DEFAULT_SHARING_SETTINGS, loaded: false };
 
 let state = INITIAL;
 const listeners = new Set<() => void>();
@@ -95,11 +91,18 @@ async function version(): Promise<string> {
 let syncing = false;
 let syncAgain = false;
 
-/** Sends new, changed and deleted trips, a batch at a time. Anything that fails waits for the next try. */
+/**
+ * Finishes any deletion still waiting, then sends new, changed and deleted trips, a batch at a time. Nothing new
+ * goes up while a deletion is outstanding. Anything that fails waits for the next try.
+ */
 async function sync(): Promise<void> {
   if (syncing) {
     syncAgain = true;
     return;
+  }
+  if (state.settings.pendingDelete) {
+    await flushDeletion();
+    if (state.settings.pendingDelete) return;
   }
   const { commute: on, installId, commuteSince } = state.settings;
   if (on !== true || !installId || commuteSince === null || commute.getState().phase === 'loading' || !(await isNativeApp())) return;
@@ -109,7 +112,7 @@ async function sync(): Promise<void> {
       const plan = planSync(commute.getState().trips, state.settings.sent, commuteSince, Date.now());
       if (plan.upserts.length === 0 && plan.deletions.length === 0) break;
       await client.upload(installId, await version(), plan);
-      // Deleted meanwhile ("Delete what I've shared" or sharing turned off and on): don't log under a new ID.
+      // Sharing turned off (and the ID deleted) meanwhile: don't log under a new ID.
       if (state.settings.installId !== installId) break;
       await save({ sent: applySent(state.settings.sent, plan) });
     }
@@ -194,18 +197,37 @@ function start(): Promise<void> {
   return started;
 }
 
+/** Asks the server to delete everything shared under the pending ID. Quietly retried later if it fails. */
+async function flushDeletion(): Promise<void> {
+  const id = state.settings.pendingDelete;
+  if (!id || !(await isNativeApp())) return;
+  try {
+    await client.deleteAll(id);
+    if (state.settings.pendingDelete === id) await save({ pendingDelete: null });
+  } catch (error) {
+    void logToDiagnostics(`Sharing: deletion request failed (${error instanceof Error ? error.message : 'unknown'}), will retry`);
+  }
+}
+
+/**
+ * Turning commute sharing off withdraws consent, so everything shared is deleted too (India's DPDP Act requires
+ * erasure on withdrawal). Turning it on again starts afresh with a new random ID.
+ */
 async function setCommute(on: boolean): Promise<void> {
   if (on === (state.settings.commute === true)) {
     if (state.settings.commute === null) await save({ commute: on });
     return;
   }
   if (on) {
-    await save({ commute: true, commuteSince: Date.now(), installId: state.settings.installId ?? crypto.randomUUID() });
+    await save({ commute: true, commuteSince: Date.now(), installId: crypto.randomUUID(), sent: {} });
     track({ name: 'commute_sharing', params: { enabled: true } });
     void sync();
   } else {
     track({ name: 'commute_sharing', params: { enabled: false } });
-    await save({ commute: false, commuteSince: null });
+    // Nothing reached the server if nothing was ever confirmed sent.
+    const shared = Object.keys(state.settings.sent).length > 0 ? state.settings.installId : null;
+    await save({ commute: false, commuteSince: null, installId: null, sent: {}, pendingDelete: shared ?? state.settings.pendingDelete });
+    await flushDeletion();
   }
 }
 
@@ -229,25 +251,6 @@ export const sharing = {
     await setUsage(choices.usage);
     await setCommute(choices.commute);
   },
-  /**
-   * Deletes everything shared from this phone, turns commute sharing off and forgets the install ID, so anything
-   * shared later can't be linked to what came before.
-   */
-  async deleteShared(): Promise<boolean> {
-    const { installId } = state.settings;
-    if (!installId) return true;
-    set({ deleting: true, notice: null });
-    try {
-      await client.deleteAll(installId);
-      await save({ commute: false, commuteSince: null, installId: null, sent: {} });
-      set({ deleting: false, notice: 'Deleted. Commute sharing is off.' });
-      return true;
-    } catch {
-      set({ deleting: false, notice: "Couldn't reach the server. Check your connection and try again." });
-      return false;
-    }
-  },
-  dismissNotice: () => set({ notice: null }),
   sync,
 };
 

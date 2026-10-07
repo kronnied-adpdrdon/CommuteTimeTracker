@@ -14,15 +14,21 @@ export interface SharingSettings {
   commute: boolean | null;
   /** When commute sharing was last turned on. Only trips that started after this are shared. */
   commuteSince: number | null;
-  /** Random, made on the phone, not linked to any account. Replaced after "Delete what I've shared". */
+  /** Random, made on the phone, not linked to any account. A new one each time commute sharing is turned on. */
   installId: string | null;
+  /**
+   * Commute sharing was turned off, so everything shared under this ID must be deleted; kept until the server
+   * confirms (retried when the app opens or comes back online).
+   */
+  pendingDelete: string | null;
   /** What has been sent, so edits and deletions follow and nothing is sent twice. */
   sent: SentLog;
 }
 
-export const DEFAULT_SHARING_SETTINGS: SharingSettings = { usage: null, commute: null, commuteSince: null, installId: null, sent: {} };
+export const DEFAULT_SHARING_SETTINGS: SharingSettings = { usage: null, commute: null, commuteSince: null, installId: null, pendingDelete: null, sent: {} };
 
 const choice = (value: unknown) => (typeof value === 'boolean' ? value : null);
+const uuidOrNull = (value: unknown) => (typeof value === 'string' && /^[0-9a-f-]{36}$/.test(value) ? value : null);
 
 export function sanitize(value: unknown): SharingSettings {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -34,7 +40,8 @@ export function sanitize(value: unknown): SharingSettings {
     usage: choice(input.usage),
     commute: choice(input.commute),
     commuteSince: typeof input.commuteSince === 'number' && Number.isFinite(input.commuteSince) ? input.commuteSince : null,
-    installId: typeof input.installId === 'string' && /^[0-9a-f-]{36}$/.test(input.installId) ? input.installId : null,
+    installId: uuidOrNull(input.installId),
+    pendingDelete: uuidOrNull(input.pendingDelete),
     sent,
   };
 }
