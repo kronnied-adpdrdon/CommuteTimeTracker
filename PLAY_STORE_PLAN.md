@@ -1,10 +1,12 @@
-# Commute Time Tracker → Google Play, target live Nov 1, 2026
+# MYCE (formerly Commute Time Tracker) → Google Play
 
 ## Context
 
 The repo is a **UI prototype only**: every screen is built, but the timer, distance, history and weekly stats are hardcoded. There is no GPS code, persistence, auth, payments or report generation. It has never been built (`node_modules/` missing, not a git repo).
 
 Decisions: **Personal Play account** · **manual start/stop tracking** (no `ACCESS_BACKGROUND_LOCATION`) · **no app accounts, no Firebase in v1** (decided 30 Sep 2026) · **Free vs Pro (₹49 one-time) through Google Play**.
+
+**Renamed 7 Oct 2026:** the app is now **MYCE** (always just "MYCE" in the app and listing, never spelled out). Launcher name "MYCE"; Play listing title "MYCE – Commute Time Tracker" (keeps the search words). New icon "Stopwatch Pin" (`store/icon.svg`, launcher vectors and PNGs regenerated; the launcher background was still the old blue and is now asphalt). App ID changed to **`com.provibsol.myce`** (was `com.commute.tracker`; checked free on Play). It can never change after the first upload. Phones with the old test build see MYCE as a new app: trips in the old build don't carry over.
 
 **Free vs Pro (decided 1 Oct 2026):**
 
@@ -141,7 +143,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play" (4 Oct: "Pro isn't available to buy yet. Everything in Free keeps working.")
 - [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
 - [ ] Check the new icon and splash screen on a phone
-- [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
+- [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (from 7 Oct: `dist/MYCE-<version>-demo.apk`) (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
 - [ ] Icon 512×512 (done: `store/play-icon-512.png`), feature graphic 1024×500, ≥2 phone screenshots, short + full description (**drafted**: `store/listing.md`)
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video** of tapping Start and the notification appearing
@@ -191,33 +193,48 @@ Working backwards from the fixed constraints: production review after applying t
 
 ---
 
-## Phase 7 — Anonymous commute analytics (v1.1 or later, added 3 Oct 2026)
+## Phase 7 — Analytics: app adoption + shared commute data (**moved into v1, before the first upload**, decided 4 Oct 2026)
 
-**Goal:** aggregate data on travel time, commute time and cost (city benchmarks, content, maybe "your commute vs the city average" later). Play Console can't provide this: it only sees installs, retention, crashes and Pro sales. **Not part of v1.** It reverses the "no Firebase" decision for this feature only, so start it once there are enough real users for the numbers to mean something. Needs trip cost first, which is already on the v2 backlog.
+**Goal:** a Data Store (BigQuery) holding two kinds of data, for the owner's own analysis: (1) **app adoption** (installs, setup completion, automatic vs manual, retention, Pro) and (2) **commute data customers choose to share** (corridor-level travel times by hour and day). Play Console alone can't give either.
 
-**Principles:** opt-in, off by default · no accounts (anonymous install ID only) · summary numbers only, never addresses or GPS points · coarse area (city) · publish no group smaller than ~20 users.
+**Decided 4 Oct 2026**
+- **Purpose: the owner's own insight only.** No sharing or selling to third parties (would need new consent and policy first).
+- **Consent: a clear, not pre-ticked choice in the first-time setup, and two switches in Settings** (app usage; commute stats). Off until the user says yes. Turning off is as easy as turning on.
+- **Timing: built before the first Play upload**, so the closed test starts with it (the 14-day clock starts about a week later than it otherwise would).
+- Reverses "no Firebase in v1" for analytics only. Still no accounts or sign-in.
 
-**Open question:** is the data for the owner's own insight and content (simple opt-in upload plus a spreadsheet), or shown back to users in the app (needs live aggregation and a read-only endpoint for precomputed aggregates)?
+**Architecture**
+- Adoption: Firebase Analytics (advertising ID collection off, no AD_ID permission), ~10 events (setup steps, automatic on/off, trip saved/discarded, Not a commute, upgrade tapped, Pro bought, reminders on), daily export to BigQuery.
+- Commute data: random install ID (no account) → on-phone queue (batched, sent when online, retried, no duplicates) → Cloud Function (App Check / Play Integrity, range checks, rate limit) → BigQuery table. Firestore not needed.
+- Region: asia-south1 (Mumbai). Dashboards: Looker Studio on BigQuery. Groups under ~20 users hidden.
 
-**Build list**
+**Commute fields (per trip):** install ID, date, start time rounded to 15 min, day of week, duration, distance (0.1 km), to work / to home / other, automatic or manual, edited or not, origin and destination as ~5 km grid cells (geohash 5), app version. **Never:** exact Home/Office, addresses, GPS points or routes, names, emails. Later: transport mode and cost (v2 items).
 
-- [ ] Define the upload fields: duration, distance, cost, mode, time of day, day of week, coarse area (check what a `Trip` stores today)
-- [ ] Trip cost and transport mode captured in the app (v2 items, prerequisites)
-- [ ] Settings toggle "Share anonymous commute stats", off by default, with a plain-language consent screen
-- [ ] Anonymous install ID (random UUID stored locally; reinstalling makes a new one)
-- [ ] Upload job: batched, sent when online, retried on failure, no duplicates
-- [ ] "Delete my shared data" button (sends the install ID to a delete endpoint, clears the flag)
-- [ ] Backend (Firebase): Anonymous Auth + App Check (Play Integrity); one Cloud Function that validates ranges and rate-limits per install; Firestore write-only from the app (rules block reads); delete function
-- [ ] Aggregation: scheduled medians/averages/percentiles by city, mode and time of day; minimum group size ~20; outlier filtering
-- [ ] Viewing: BigQuery + Looker Studio (free) or a Google Sheet
-- [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated): what is collected, why, retention, how to opt out or delete
-- [ ] Update the Play Data safety form to match (coarse location-linked data counts as sensitive; keep it coarse)
-- [ ] Decide a retention period for raw records (suggested: delete after 12 months)
-- [ ] Set a Google Cloud budget alert (e.g. ₹500) before enabling Blaze
+**Parked 4 Oct 2026 (night), pick up here:**
+- **Open question:** keep app-adoption tracking (Firebase Analytics) or collect **only the commute data**? The user said "just the commute data, no phone number, email or any PII". Commute-only means one consent switch instead of two; adoption then comes from Play Console and the number of install IDs sending trips.
+- No PII is the design already (no name, phone, email, account, exact places or routes). Consent, the policy update and the Data safety form are still required (Play checks them; DPDP can treat location patterns + a device ID as personal data). A lawyer is optional, not a launch step.
 
-**Cost (verify current Firebase pricing):** about ₹0 a month up to a few thousand opted-in users, because Auth, App Check, Functions (~2M calls/month), Firestore (~20k writes/day, 1 GB) and BigQuery (10 GB, 1 TB queries) all have free tiers. Cloud Functions needs the pay-as-you-go **Blaze** plan, so a billing card must be attached. Around 100,000 users: a few dollars to tens of dollars a month (Firestore writes ~$0.18 per 100k). Costs grow mainly from one-write-per-trip uploads, abuse, or keeping raw data for years. Other costs: legal review of the updated policy (optional, a few thousand rupees or more), and about 1–2 days of build time.
+**Owner to do**
+- [ ] Create the Firebase project with **provibsol@gmail.com**, region asia-south1
+- [ ] Blaze (pay-as-you-go) plan + card; **budget alert ₹500** immediately
+- [ ] Install the Firebase CLI on this Mac and run `firebase login` yourself (so Claude can deploy without sharing passwords)
+- [ ] Register the Android app (`com.provibsol.myce`), download `google-services.json` into `android/app/`
+- [ ] Decide raw-data retention (suggested: 12 months raw, aggregates kept)
+- [ ] Optional, later: lawyer review of the Privacy Policy once there are many users (not needed to launch; DPDP rules are being phased in, check current status)
 
-**Suggested order:** define fields → backend with fake data → app toggle and upload → legal text and Data safety form → aggregation once real data arrives.
+**Build list (Claude)**
+- [ ] Consent screen in the first-time setup ("Help map commutes in your city", plain language, not pre-ticked) + Settings switches
+- [ ] Firebase Analytics wiring and events; nothing sent until the usage switch is on
+- [ ] Install ID, upload queue, "Delete my shared data" button (deletes rows by install ID)
+- [ ] Cloud Function + App Check + BigQuery schema; tests with fake data first
+- [ ] Looker Studio starter dashboards (adoption funnel, retention; corridor medians by hour/day)
+- [ ] Privacy Policy and Terms: what is shared, why, how to stop and delete; **18+ only** (DPDP treats under-18s as children); welcome page "Your trips never leave this phone" → "…unless you choose to share"
+- [ ] Data safety form answers redrafted (approximate location, app activity, device or other IDs; optional; not shared; encrypted in transit; deletable)
+- [ ] Play Console target audience 18+
+
+**Cost (verify current pricing):** about ₹0 a month up to a few thousand users (Analytics free; Functions, BigQuery free tiers); a few dollars to tens of dollars a month around 100,000 users. Build time about 3 to 5 days.
+
+**Suggested order:** Firebase project (owner) → consent UI and events behind the switches → backend with fake data → upload pipeline → policy and Data safety → dashboards once tester data arrives.
 
 ---
 
@@ -358,7 +375,7 @@ Working backwards from the fixed constraints: production review after applying t
 - Unit: `npx vitest run`
 - Build: `npm run build:android`, `npm run lint`, release `bundleRelease`
 - Device: ≥2 physical phones; compare a known route against Google Maps; lock screen mid-trip; force-stop mid-trip
-- Backup: `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `bmgr backupnow com.commute.tracker`, uninstall, reinstall; trips come back. Switch the transport back afterwards
+- Backup: `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `bmgr backupnow com.provibsol.myce`, uninstall, reinstall; trips come back. Switch the transport back afterwards
 - Developer tools (Settings): a Free / Pro switch, **Load sample trips and addresses** (100 trips over ~10 weeks, slow Tuesdays, last month, 2 unlabelled errands, none for today), **Clear Home and Office and show the pop-up again**, and **Fire a reminder now** for each of the 6 reminders. Shown in **debug builds** (`./gradlew assembleDebug`, detected from Android's debuggable flag; Google Play is bypassed there) and in **demo builds** (`npm run build:android:demo`). Play release builds never show it (checked on the emulator). **Never upload a demo build**; release builds use `npm run build:android`
 - Emulator caution: it boots from a saved quick-boot snapshot. Launched with `-no-snapshot-save`, **everything done in that session is discarded on exit** (this is what "lost" the 30 Sep test trip; the app itself keeps data through force-stop and reboot)
 - Billing: licence-tester account for purchase, cancel, refund, restore on reinstall

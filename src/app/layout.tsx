@@ -15,8 +15,8 @@ const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], weight: ["500", "
 const barlow = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-barlow", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Commute Time Tracker",
-  description: "Track your commute time and distance",
+  title: "MYCE",
+  description: "MYCE: track your commute time and distance",
 };
 
 export const viewport: Viewport = {

@@ -4,7 +4,7 @@ Paste into Play Console → Grow → Store presence → Main store listing.
 
 ## App name (30 characters max)
 
-Commute Time Tracker
+MYCE – Commute Time Tracker
 
 ## Short description (80 characters max)
 
@@ -12,7 +12,7 @@ Times your commute by itself: starts when you leave, stops when you arrive.
 
 ## Full description (4,000 characters max)
 
-How long does your commute really take? Commute Time Tracker shows you, one trip at a time.
+How long does your commute really take? MYCE shows you, one trip at a time.
 
 Let it start and stop by itself, or tap Start when you leave and Stop when you arrive. The app times the journey and measures the distance with your phone's GPS, even with the screen off. Over a week it builds a clear picture of where your time goes.
 
@@ -63,7 +63,7 @@ ALSO
 • Premium light and dark themes
 • Android's own backup can bring your trips back on a new phone
 
-Commute Time Tracker is built for people who travel to work: by car, bike, bus, metro or on foot.
+MYCE is built for people who travel to work: by car, bike, bus, metro or on foot.
 
 ## Category and contact
 

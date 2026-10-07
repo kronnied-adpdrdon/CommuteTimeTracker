@@ -60,8 +60,8 @@ export default function ComposeForm({ mode }: { mode: Mode }) {
     setError(null);
     try {
       await composeEmail({
-        subject: mode === 'bug' ? 'Commute Time Tracker: bug report' : `Commute Time Tracker: feedback (${category})`,
-        body: `${message.trim()}\n\n-- Sent from Commute Time Tracker`,
+        subject: mode === 'bug' ? 'MYCE: bug report' : `MYCE: feedback (${category})`,
+        body: `${message.trim()}\n\n-- Sent from MYCE`,
         attachLog: mode === 'bug',
         images: images.map(({ name, data }) => ({ name, data })),
       });

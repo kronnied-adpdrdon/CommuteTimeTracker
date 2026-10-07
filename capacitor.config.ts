@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.commute.tracker',
-  appName: 'Commute Time Tracker',
+  appId: 'com.provibsol.myce',
+  appName: 'MYCE',
   webDir: 'out',
 };
 

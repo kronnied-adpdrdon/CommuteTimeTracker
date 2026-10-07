@@ -73,7 +73,7 @@ Expected rating: Everyone / 3+.
 > The commute starts when the user walks out of the door, when the app is not open. Without background location the user has to remember to open the app and tap Start, which is the problem the feature solves. The app only receives the geofence crossings for the two saved places and records location only during a trip, with the ongoing notification showing.
 
 **Prominent disclosure (in the app, before the system prompt):**
-> Location in the background. Commute Time Tracker collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone. On the next screen, choose Allow all the time. You can turn this off in Settings at any time.
+> Location in the background. MYCE collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone. On the next screen, choose Allow all the time. You can turn this off in Settings at any time.
 
 **Data use:** on the phone only. Not sent to the developer or third parties (see Data safety).
 

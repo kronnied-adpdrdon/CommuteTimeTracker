@@ -10,7 +10,7 @@ export default function LicensesPage() {
       <PageHeader title="Open-source licences" />
       <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div className={styles.card}>
-          <p className={styles.legalText}>Commute Time Tracker is built with these fonts and open-source libraries. Thank you to the people who make them.</p>
+          <p className={styles.legalText}>MYCE is built with these fonts and open-source libraries. Thank you to the people who make them.</p>
         </div>
 
         <section className={styles.card}>

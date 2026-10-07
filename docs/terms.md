@@ -1,8 +1,8 @@
-# Terms and Conditions — Commute Time Tracker
+# Terms and Conditions — MYCE
 
-Last updated: 4 October 2026
+Last updated: 7 October 2026
 
-These terms are the rules for using Commute Time Tracker ("the app"), made by Kaustav Dutta ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.
+These terms are the rules for using MYCE ("the app"), made by Kaustav Dutta ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.
 
 ## What the app does
 

@@ -114,7 +114,7 @@ function Welcome() {
   return (
     <>
       <div className={`${styles.trackingCard} ${styles.setupHero}`}>
-        <div className={styles.trackingPill}>Commute Time Tracker</div>
+        <div className={styles.trackingPill}>MYCE</div>
         <h2 id="setup-title" className={styles.setupHeroTitle}>Know where your commute time goes</h2>
         <RouteLine active />
       </div>

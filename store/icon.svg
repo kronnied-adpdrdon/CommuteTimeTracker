@@ -10,7 +10,16 @@
     </linearGradient>
   </defs>
   <rect width="108" height="108" fill="url(#g)"/>
-  <path d="M54,24c-13.25,0 -24,10.75 -24,24c0,18 24,38 24,38s24,-20 24,-38c0,-13.25 -10.75,-24 -24,-24z" fill="url(#amber)"/>
-  <circle cx="54" cy="48" r="13" fill="#14171C"/>
-  <path d="M54,48V39.5M54,48l6.5,3.8" stroke="#F4F2EC" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <!-- MYCE "Stopwatch Pin": same drawing as android/app/src/main/res/drawable/ic_launcher_foreground.xml -->
+  <g transform="translate(54 54) scale(0.92) translate(-54 -51.5)">
+    <rect x="49" y="17" width="10" height="5" rx="2" fill="#FFC933"/>
+    <rect x="52" y="21" width="4" height="7" fill="#FFC933"/>
+    <g transform="rotate(45 54 50)">
+      <rect x="50" y="21" width="8" height="5" rx="1.5" fill="#FFB400"/>
+      <rect x="52.5" y="24" width="3" height="5" fill="#FFB400"/>
+    </g>
+    <path d="M54,27c-12.7,0 -23,10.3 -23,23c0,17 23,36 23,36s23,-19 23,-36c0,-12.7 -10.3,-23 -23,-23z" fill="url(#amber)"/>
+    <circle cx="54" cy="50" r="12.5" fill="#14171C"/>
+    <path d="M54,50V41M54,50l6,3.5" stroke="#F4F2EC" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
 </svg>

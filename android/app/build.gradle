@@ -8,10 +8,10 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.commute.tracker"
+    namespace = "com.provibsol.myce"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.commute.tracker"
+        applicationId "com.provibsol.myce"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3

@@ -17,7 +17,7 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-export const LEGAL_UPDATED = '4 October 2026';
+export const LEGAL_UPDATED = '7 October 2026';
 
 /** Who publishes the app. Shown publicly in both documents, as Google Play requires a privacy contact. */
 export const PUBLISHER_NAME = 'Kaustav Dutta';
@@ -27,7 +27,7 @@ export const PRIVACY_POLICY: LegalDocument = {
   title: 'Privacy Policy',
   updated: LEGAL_UPDATED,
   intro:
-    `Commute Time Tracker is made by ${PUBLISHER_NAME} ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.`,
+    `MYCE is made by ${PUBLISHER_NAME} ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.`,
   sections: [
     {
       heading: 'What the app uses',
@@ -80,7 +80,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       bullets: [
         'Delete a trip in History, or all trips at once in Settings → Your Data.',
         'Clear Home or Office in Settings.',
-        'Delete everything by clearing the app\'s storage (phone Settings → Apps → Commute Time Tracker → Storage) or by uninstalling the app.',
+        'Delete everything by clearing the app\'s storage (phone Settings → Apps → MYCE → Storage) or by uninstalling the app.',
         'Device backups kept by Google are managed in your Google account and phone backup settings.',
       ],
     },
@@ -112,7 +112,7 @@ export const TERMS: LegalDocument = {
   title: 'Terms and Conditions',
   updated: LEGAL_UPDATED,
   intro:
-    `These terms are the rules for using Commute Time Tracker ("the app"), made by ${PUBLISHER_NAME} ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.`,
+    `These terms are the rules for using MYCE ("the app"), made by ${PUBLISHER_NAME} ("we", "us"). By installing and using the app you agree to them. If you do not agree, please do not use the app.`,
   sections: [
     {
       heading: 'What the app does',
@@ -187,7 +187,7 @@ export const TERMS: LegalDocument = {
 
 /** The document as Markdown, for hosting on a web page (the Play Store listing needs a public privacy URL). */
 export function toMarkdown(doc: LegalDocument): string {
-  const lines = [`# ${doc.title} — Commute Time Tracker`, '', `Last updated: ${doc.updated}`, '', doc.intro, ''];
+  const lines = [`# ${doc.title} — MYCE`, '', `Last updated: ${doc.updated}`, '', doc.intro, ''];
   for (const section of doc.sections) {
     lines.push(`## ${section.heading}`, '');
     for (const paragraph of section.paragraphs ?? []) lines.push(paragraph, '');

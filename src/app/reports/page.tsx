@@ -113,7 +113,7 @@ function ProReports() {
   const inPeriod = period ? tripsInPeriod(trips, period) : [];
   const summary = summarize(inPeriod);
   const label = period ? formatPeriod(period) : '';
-  const fileBase = period ? `commute-report-${toDayInput(period.from)}` : 'commute-report';
+  const fileBase = period ? `myce-commute-report-${toDayInput(period.from)}` : 'myce-commute-report';
 
   async function exportAs(kind: 'pdf' | 'csv') {
     if (!period) return;

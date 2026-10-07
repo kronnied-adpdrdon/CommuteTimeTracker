@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- App icon background: the app's blue, slightly lighter at the top. -->
+<!-- App icon background: the app's asphalt, lighter at the top left (matches store/icon.svg). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <gradient
-        android:angle="270"
-        android:endColor="#0062E0"
-        android:startColor="#2E8BFF" />
+        android:angle="315"
+        android:endColor="#0E1014"
+        android:startColor="#232832" />
 </shape>

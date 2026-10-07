@@ -1,8 +1,8 @@
-# Privacy Policy — Commute Time Tracker
+# Privacy Policy — MYCE
 
-Last updated: 4 October 2026
+Last updated: 7 October 2026
 
-Commute Time Tracker is made by Kaustav Dutta ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.
+MYCE is made by Kaustav Dutta ("we"). It has no accounts and no servers of ours. Your trips stay on your phone. This page explains what the app uses, what leaves your phone and when, and the choices you have.
 
 ## What the app uses
 
@@ -43,7 +43,7 @@ Trips stay on your phone until you delete them or uninstall the app. History sho
 
 - Delete a trip in History, or all trips at once in Settings → Your Data.
 - Clear Home or Office in Settings.
-- Delete everything by clearing the app's storage (phone Settings → Apps → Commute Time Tracker → Storage) or by uninstalling the app.
+- Delete everything by clearing the app's storage (phone Settings → Apps → MYCE → Storage) or by uninstalling the app.
 - Device backups kept by Google are managed in your Google account and phone backup settings.
 
 ## Your choices

@@ -1,19 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- App icon: a location pin with a clock face, i.e. "where" and "how long". Kept inside the 66dp safe zone. -->
+<!-- App icon "Stopwatch Pin": a location pin with a clock face and stopwatch buttons, i.e. "where" and "how long".
+     Same drawing as store/icon.svg; the group shrinks it to stay inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFB400"
-        android:pathData="M54,24c-13.25,0 -24,10.75 -24,24c0,18 24,38 24,38s24,-20 24,-38c0,-13.25 -10.75,-24 -24,-24z" />
-    <path
-        android:fillColor="#FF14171C"
-        android:pathData="M41,48a13,13 0,1 0,26 0a13,13 0,1 0,-26 0z" />
-    <path
-        android:pathData="M54,48V39.5M54,48l6.5,3.8"
-        android:strokeWidth="3.2"
-        android:strokeColor="#FFF4F2EC"
-        android:strokeLineCap="round" />
+    <group
+        android:pivotX="54"
+        android:pivotY="51.5"
+        android:scaleX="0.92"
+        android:scaleY="0.92"
+        android:translateY="2.5">
+        <path
+            android:fillColor="#FFFFC933"
+            android:pathData="M51,17h6a2,2 0,0 1,2 2v1a2,2 0,0 1,-2 2h-6a2,2 0,0 1,-2 -2v-1a2,2 0,0 1,2 -2zM52,21h4v7h-4z" />
+        <group
+            android:pivotX="54"
+            android:pivotY="50"
+            android:rotation="45">
+            <path
+                android:fillColor="#FFFFB400"
+                android:pathData="M51.5,21h5a1.5,1.5 0,0 1,1.5 1.5v2a1.5,1.5 0,0 1,-1.5 1.5h-5a1.5,1.5 0,0 1,-1.5 -1.5v-2a1.5,1.5 0,0 1,1.5 -1.5zM52.5,24h3v5h-3z" />
+        </group>
+        <path
+            android:fillColor="#FFFFB400"
+            android:pathData="M54,27c-12.7,0 -23,10.3 -23,23c0,17 23,36 23,36s23,-19 23,-36c0,-12.7 -10.3,-23 -23,-23z" />
+        <path
+            android:fillColor="#FF14171C"
+            android:pathData="M41.5,50a12.5,12.5 0,1 0,25 0a12.5,12.5 0,1 0,-25 0z" />
+        <path
+            android:pathData="M54,50V41M54,50l6,3.5"
+            android:strokeWidth="3"
+            android:strokeColor="#FFF4F2EC"
+            android:strokeLineCap="round" />
+    </group>
 </vector>

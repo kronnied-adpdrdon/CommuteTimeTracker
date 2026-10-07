@@ -1,4 +1,4 @@
-# Commute Time Tracker
+# MYCE
 
 A privacy-first, ultra-minimalist mobile application for tracking your daily commute times and distances.
 
