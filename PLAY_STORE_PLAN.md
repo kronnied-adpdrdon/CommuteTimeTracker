@@ -66,7 +66,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] **Recruit 12 testers** (user confirmed 30 Sep 2026; Gmail accounts; each must opt in and stay in 14 days). Still to do later: they must actually opt in to the closed test
 - [x] Get SHA-1/SHA-256 for debug and upload keys (`./gradlew signingReport` with Android Studio's Java)
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
-- [x] Generate upload keystore — created at `~/.commute-tracker-keys/upload-keystore.jks` (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
+- [x] Generate upload keystore — created at `~/.myce-keys/upload-keystore.jks` (copied from `~/.commute-tracker-keys` on 7 Oct; the old folder is now only a backup) (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
 - [x] **Back up the keystore AND its password off this Mac**: keystore in Google Drive, password saved separately (user confirmed 1 Oct 2026)
 - [ ] Host privacy policy at a public URL — generated from `src/lib/legal.ts` into `docs/privacy-policy.md` (no placeholders left); host it (GitHub Pages or Google Sites are free). **Needs the publisher name and contact email first** (see Legal and compliance below)
 - ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
@@ -210,16 +210,18 @@ Working backwards from the fixed constraints: production review after applying t
 
 **Commute fields (per trip):** install ID, date, start time rounded to 15 min, day of week, duration, distance (0.1 km), to work / to home / other, automatic or manual, edited or not, origin and destination as ~5 km grid cells (geohash 5), app version. **Never:** exact Home/Office, addresses, GPS points or routes, names, emails. Later: transport mode and cost (v2 items).
 
-**Parked 4 Oct 2026 (night), pick up here:**
-- **Open question:** keep app-adoption tracking (Firebase Analytics) or collect **only the commute data**? The user said "just the commute data, no phone number, email or any PII". Commute-only means one consent switch instead of two; adoption then comes from Play Console and the number of install IDs sending trips.
+**Decided 7 Oct 2026:** collect **both** app adoption (Firebase Analytics) and shared commute data, with two separate switches. Raw shared trips kept **24 months**, aggregates kept.
+
+**Background from 4 Oct 2026 (night):**
+- ~~Open question~~ (answered 7 Oct: both): keep app-adoption tracking (Firebase Analytics) or collect **only the commute data**? The user said "just the commute data, no phone number, email or any PII". Commute-only means one consent switch instead of two; adoption then comes from Play Console and the number of install IDs sending trips.
 - No PII is the design already (no name, phone, email, account, exact places or routes). Consent, the policy update and the Data safety form are still required (Play checks them; DPDP can treat location patterns + a device ID as personal data). A lawyer is optional, not a launch step.
 
 **Owner to do**
-- [ ] Create the Firebase project with **provibsol@gmail.com**, region asia-south1
+- [ ] Create the Firebase project **MYCE** with **provibsol@gmail.com**, region asia-south1
 - [ ] Blaze (pay-as-you-go) plan + card; **budget alert ₹500** immediately
 - [ ] Install the Firebase CLI on this Mac and run `firebase login` yourself (so Claude can deploy without sharing passwords)
 - [ ] Register the Android app (`com.provibsol.myce`), download `google-services.json` into `android/app/`
-- [ ] Decide raw-data retention (suggested: 12 months raw, aggregates kept)
+- [x] Decide raw-data retention: **24 months raw**, aggregates kept (7 Oct)
 - [ ] Optional, later: lawyer review of the Privacy Policy once there are many users (not needed to launch; DPDP rules are being phased in, check current status)
 
 **Build list (Claude)**

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { commute } from '@/lib/commute';
 import { widgetAction } from '@/lib/commute/widget';
 
-/** Handles the widget's Start / Stop / open taps, which arrive as commutetracker:// links. */
+/** Handles the widget's Start / Stop / open taps, which arrive as myce:// links. */
 export default function AppLinks() {
   const router = useRouter();
 

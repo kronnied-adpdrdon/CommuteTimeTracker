@@ -21,7 +21,7 @@ import java.util.Locale;
 public class CommuteWidgetProvider extends AppWidgetProvider {
 
     /** Opens the app to ask for location permission: the one case a widget can't handle itself. */
-    static final String START_URL = "commutetracker://start";
+    static final String START_URL = "myce://start";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] widgetIds) {
