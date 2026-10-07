@@ -1002,8 +1002,32 @@
   cursor: not-allowed;
 }
 
-.choiceCardRecommended {
+/* The picked option: an accent outline and tint, and a filled radio dot. */
+.choiceCardSelected {
   border: 2px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.choiceRadio {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: grid;
+  place-items: center;
+}
+
+.choiceCardSelected .choiceRadio {
+  border-color: var(--accent);
+}
+
+.choiceCardSelected .choiceRadio::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 .choiceTitle {

@@ -29,11 +29,11 @@ const progress = (patch: Partial<SetupProgress> = {}): SetupProgress => ({ ...IN
 
 describe('first-time setup: which screens to show', () => {
   it('walks a new user through everything, without a battery screen on a Pixel', () => {
-    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', 'done']);
+    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'done']);
   });
 
   it('adds the battery screen on phones that stop background apps', () => {
-    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', 'battery', 'done']);
+    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'battery', 'done']);
   });
 
   it('shows an existing user only what they have not set up, with no welcome', () => {
@@ -48,7 +48,7 @@ describe('first-time setup: which screens to show', () => {
 
   it('resumes where the user stopped', () => {
     const halfway = progress({ seen: ['welcome', 'places', 'times'] });
-    expect(wizardSteps(halfway, NEW_USER)).toEqual(['sharing', 'recording', 'reminders', 'done']);
+    expect(wizardSteps(halfway, NEW_USER)).toEqual(['recording', 'reminders', 'sharing', 'done']);
   });
 
   it("doesn't reopen for the welcome screen alone", () => {

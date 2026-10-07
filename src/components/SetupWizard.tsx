@@ -290,9 +290,12 @@ function DayPicker({ days, onChange }: { days: number[]; onChange: (days: number
   );
 }
 
+/** Pick one, then Continue, like every other screen. Nothing is preselected: both are real choices. */
 function Recording() {
   const { places } = useCommute();
-  const { background, supported } = useAutoTracking();
+  const { background, supported, settings } = useAutoTracking();
+  const { progress } = useSetup();
+  const [choice, setChoice] = useState<'auto' | 'manual' | null>(settings.enabled ? 'auto' : progress.recording === 'manual' ? 'manual' : null);
   const [disclosing, setDisclosing] = useState(false);
   const placesSet = Boolean(places.home && places.office);
 
@@ -313,31 +316,49 @@ function Recording() {
     await setup.next();
   };
 
+  const option = (value: 'auto' | 'manual') => ({
+    role: 'radio' as const,
+    'aria-checked': choice === value,
+    className: `${styles.choiceCard} ${choice === value ? styles.choiceCardSelected : ''}`,
+    onClick: () => setChoice(value),
+  });
+
   return (
     <>
       <h2 id="setup-title" className={styles.setupTitle}>How should trips be recorded?</h2>
       {disclosing ? (
         <BackgroundDisclosure page onEnabled={() => void chosen('auto')} onCancel={() => setDisclosing(false)} />
       ) : (
-        <div className={styles.setupStack}>
-          <button className={`${styles.choiceCard} ${styles.choiceCardRecommended}`} disabled={supported === false} onClick={chooseAuto}>
-            <span className={styles.choiceTitle}>
-              Automatically <span className={styles.recommendedBadge}>Recommended</span>
-            </span>
-            <span className={styles.cardText}>
-              Starts when you leave Home or the Office during your commute hours, and saves when you arrive at the other. Errands are ignored.
-            </span>
-            {supported === false ? (
-              <span className={styles.fieldError}>This phone doesn&apos;t have Google Play services, which this needs.</span>
-            ) : (
-              !placesSet && <span className={styles.choiceNote}>Needs Home and Office first. Tap to add them.</span>
-            )}
-          </button>
-          <button className={styles.choiceCard} onClick={() => chosen('manual')}>
-            <span className={styles.choiceTitle}>I&apos;ll tap Start and Stop</span>
-            <span className={styles.cardText}>Location is used only while a trip is running. You can switch to automatic later in Settings.</span>
-          </button>
-        </div>
+        <>
+          <div className={styles.setupStack} role="radiogroup" aria-labelledby="setup-title">
+            <button {...option('auto')} disabled={supported === false}>
+              <span className={styles.choiceTitle}>
+                <span className={styles.choiceRadio} aria-hidden />
+                Automatically <span className={styles.recommendedBadge}>Recommended</span>
+              </span>
+              <span className={styles.cardText}>
+                Starts when you leave Home or the Office during your commute hours, and saves when you arrive at the other. Errands are ignored.
+              </span>
+              {supported === false ? (
+                <span className={styles.fieldError}>This phone doesn&apos;t have Google Play services, which this needs.</span>
+              ) : (
+                !placesSet && <span className={styles.choiceNote}>Needs Home and Office first. Continue takes you there.</span>
+              )}
+            </button>
+            <button {...option('manual')}>
+              <span className={styles.choiceTitle}>
+                <span className={styles.choiceRadio} aria-hidden />
+                I&apos;ll tap Start and Stop
+              </span>
+              <span className={styles.cardText}>Location is used only while a trip is running. You can switch to automatic later in Settings.</span>
+            </button>
+          </div>
+          <div className={styles.setupActions}>
+            <button className="btn-primary" disabled={choice === null} onClick={() => (choice === 'auto' ? chooseAuto() : chosen('manual'))}>
+              Continue
+            </button>
+          </div>
+        </>
       )}
     </>
   );

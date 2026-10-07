@@ -164,7 +164,7 @@ export const setup = {
   async preview() {
     await store.clear();
     const battery: SetupStep[] = itemApplies('battery', currentFacts()) ? ['battery'] : [];
-    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
+    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
   },
   refreshBattery,
 };

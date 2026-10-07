@@ -3,7 +3,7 @@ import { KeyValueStore } from '../storage/kv';
 export const SETUP_KEY = 'setup.v1';
 
 /** The first-time setup's screens, in order. "welcome" is for new users only; "done" closes the flow. */
-export type SetupStep = 'welcome' | 'sharing' | 'places' | 'times' | 'recording' | 'reminders' | 'battery' | 'done';
+export type SetupStep = 'welcome' | 'places' | 'times' | 'recording' | 'reminders' | 'sharing' | 'battery' | 'done';
 
 /** What the "Finish setting up" card on Home lists. Commute times live inside the recording choice. */
 export type ChecklistItem = 'places' | 'recording' | 'reminders' | 'battery';
@@ -41,7 +41,7 @@ export interface SetupFacts {
   sharingAnswered: boolean;
 }
 
-const STEPS: SetupStep[] = ['welcome', 'sharing', 'places', 'times', 'recording', 'reminders', 'battery', 'done'];
+const STEPS: SetupStep[] = ['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'battery', 'done'];
 
 export function sanitize(value: unknown): SetupProgress {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -154,12 +154,13 @@ export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupSt
     steps.push('recording');
   }
   if (open('reminders') && !seen('reminders')) steps.push('reminders');
+  // Step 5 for a new user: asked once they've seen what the app does.
+  if (askSharing) steps.push('sharing');
   if (open('battery') && !seen('battery')) steps.push('battery');
   // Nothing left to set up: the welcome isn't worth a pop-up on its own, nor is a summary after the sharing question.
-  if (steps.length === 0) return askSharing ? ['sharing'] : [];
-  // Sharing comes early, so the choice covers the setup itself ("where do people give up?").
+  if (steps.length === 0 || (steps.length === 1 && steps[0] === 'sharing')) return steps;
   const welcome: SetupStep[] = facts.isNewUser && !seen('welcome') ? ['welcome'] : [];
-  return [...welcome, ...(askSharing ? (['sharing'] as const) : []), ...steps, 'done'];
+  return [...welcome, ...steps, 'done'];
 }
 
 /** Commute hours from "when do you usually leave": an hour before to 90 minutes after (people run late more than early). */
