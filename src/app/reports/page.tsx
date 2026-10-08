@@ -6,6 +6,8 @@ import styles from '../page.module.css';
 import ProFeatureList, { PRO_FEATURES } from '@/components/ProFeatureList';
 import TripRow from '@/components/TripRow';
 import { useCommute } from '@/lib/commute';
+import { PRO_PRICE_FALLBACK, inTrial, proUnlocked, trialDaysLeft } from '@/lib/commute/trial';
+import { useNow } from '@/lib/useNow';
 import { buildReportPdf } from '@/lib/reports/reportPdf';
 import { shareFile } from '@/lib/reports/share';
 import {
@@ -19,7 +21,7 @@ import {
   toDayInput,
   tripsInPeriod,
 } from '@/lib/reports/summary';
-import { formatDistanceKm, formatDuration } from '@/lib/trips/format';
+import { formatDayLabel, formatDistanceKm, formatDuration } from '@/lib/trips/format';
 import { Trip } from '@/lib/trips/types';
 
 const PRESETS: { id: PeriodPreset; label: string }[] = [
@@ -61,8 +63,28 @@ function Stats({ values }: { values: { label: string; value: string }[] }) {
   );
 }
 
-/** What a Free user sees: what reports contain, a blurred sample, and the way to unlock. */
+/** During the free month: how long is left, and buying now to keep everything. */
+export function TrialBanner() {
+  const state = useCommute();
+  const now = useNow();
+  if (!inTrial(state, now) || state.trialEndsAt === null) return null;
+  const days = trialDaysLeft(state.trialEndsAt, now);
+  return (
+    <div className={styles.banner} role="status">
+      <span>
+        Free month: {days === 1 ? '1 day' : `${days} days`} left. Everything in Pro is open until {formatDayLabel(state.trialEndsAt)}. Keep it for{' '}
+        {state.proPrice ?? PRO_PRICE_FALLBACK}, once.
+      </span>
+      <div className={styles.bannerActions}>
+        <Link href="/pricing" className={styles.linkButton} style={{ textDecoration: 'none' }}>Buy now</Link>
+      </div>
+    </div>
+  );
+}
+
+/** After the free month, without Pro: what reports contain, a blurred sample, and the way to unlock. */
 function LockedReports() {
+  const { proPrice, trialEndsAt } = useCommute();
   return (
     <>
       <div className={styles.card} style={{ borderColor: 'var(--pro)' }}>
@@ -71,9 +93,10 @@ function LockedReports() {
           <span className={styles.proBadge}>PRO</span>
         </div>
         <div className={styles.cardTitle}>Commute reports</div>
+        {trialEndsAt !== null && <p className={styles.cardText}>Your free month ended on {formatDayLabel(trialEndsAt)}. Unlock Pro once to keep using reports.</p>}
         <ProFeatureList features={PRO_FEATURES} color="var(--pro)" />
         <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          <strong style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>₹49</strong> one-time · no subscription
+          <strong style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}>{proPrice ?? PRO_PRICE_FALLBACK}</strong> one-time · no subscription
         </div>
         <Link href="/pricing" className="btn-primary" style={{ textDecoration: 'none' }}>
           Unlock with Pro
@@ -228,7 +251,9 @@ function ProReports() {
 }
 
 export default function ReportsPage() {
-  const { isPro, phase } = useCommute();
+  const state = useCommute();
+  const now = useNow();
+  const { isPro, phase } = state;
   return (
     <>
       <header className="page-header">
@@ -236,7 +261,8 @@ export default function ReportsPage() {
         {isPro && <span className={styles.proBadge}>PRO</span>}
       </header>
       <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {phase === 'loading' ? null : isPro ? <ProReports /> : <LockedReports />}
+        <TrialBanner />
+        {phase === 'loading' ? null : proUnlocked(state, now) ? <ProReports /> : <LockedReports />}
       </div>
     </>
   );

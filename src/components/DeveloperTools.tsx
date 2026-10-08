@@ -8,6 +8,7 @@ import { commute, useCommute } from '@/lib/commute';
 import { ReminderKind, notifications } from '@/lib/notifications';
 import { setup } from '@/lib/setup';
 import { formatTimeOfDay } from '@/lib/trips/format';
+import { useNow } from '@/lib/useNow';
 import { generateSampleTrips, isSampleTrip } from '@/lib/trips/sample';
 
 const REMINDERS: { kind: ReminderKind; label: string; pro?: boolean }[] = [
@@ -38,6 +39,7 @@ function describeDecision(d: AutoDecision): string {
  */
 export default function DeveloperTools() {
   const state = useCommute();
+  const now = useNow();
   const [message, setMessage] = useState<string | null>(null);
   const sampleCount = state.trips.filter(isSampleTrip).length;
 
@@ -83,6 +85,18 @@ export default function DeveloperTools() {
             {pro ? 'Pro' : 'Free'}
           </button>
         ))}
+      </div>
+
+      <div className="eyebrow" style={{ marginTop: '6px' }}>Free month</div>
+      <div className={styles.segmented} role="radiogroup" aria-label="Free month preview">
+        {[false, true].map((ended) => {
+          const active = (state.trialEndsAt !== null && state.trialEndsAt <= now) === ended;
+          return (
+            <button key={String(ended)} role="radio" aria-checked={active} className={`${styles.segment} ${active ? styles.segmentActive : ''}`} onClick={() => commute.setTrialEnded(ended)}>
+              {ended ? 'Ended' : 'Restart (30 days)'}
+            </button>
+          );
+        })}
       </div>
 
       <div className="eyebrow" style={{ marginTop: '6px' }}>Sample data</div>

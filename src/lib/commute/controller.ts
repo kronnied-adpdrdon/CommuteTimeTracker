@@ -15,6 +15,7 @@ import { isSampleTrip } from '../trips/sample';
 import { Trip } from '../trips/types';
 import { ProBilling } from './billing';
 import { ProStore } from './pro';
+import { TRIAL_DAYS, TrialStore, trialEnd, trialStart } from './trial';
 
 /** A trip shorter than this AND under `MIN_TRIP_METERS` is treated as an accidental tap and not saved. */
 export const MIN_TRIP_SECONDS = 60;
@@ -50,6 +51,8 @@ export interface CommuteState {
   /** Which place is being set from the current location, if any. */
   locating: PlaceKind | null;
   isPro: boolean;
+  /** When the free month ends (everything in Pro is open until then). Null until loaded. */
+  trialEndsAt: number | null;
   /** Google Play's localised Pro price, once known. */
   proPrice: string | null;
   /** True while Google Play's purchase sheet is open or a restore is running. */
@@ -61,6 +64,8 @@ export interface CommuteDeps {
   trips: TripRepository;
   places: PlacesStore;
   pro: ProStore;
+  /** The free month's start. Optional so tests that don't care can leave it out. */
+  trial?: TrialStore;
   /** Google Play Billing. Null in demo builds, where the Pro switch in Settings is used instead. */
   billing: ProBilling | null;
   now?: () => number;
@@ -103,6 +108,8 @@ export interface CommuteController {
   resetPlacesPrompt(): Promise<void>;
   /** Demo builds only: flip Pro without buying. */
   setPro(isPro: boolean): Promise<void>;
+  /** Developer tools: end the free month now, or start it again from today. */
+  setTrialEnded(ended: boolean): Promise<void>;
   /** Opens Google Play's purchase sheet for Pro. */
   upgrade(): Promise<void>;
   /** Re-checks what this Google account owns, e.g. on a new phone. */
@@ -121,6 +128,7 @@ export const INITIAL_COMMUTE_STATE: CommuteState = {
   placesPromptNeverAsk: false,
   locating: null,
   isPro: false,
+  trialEndsAt: null,
   proPrice: null,
   purchasing: false,
 };
@@ -237,6 +245,12 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
           deps.pro.load(),
         ]);
         set({ trips, places, placesPromptNeverAsk, isPro });
+        if (deps.trial) {
+          const stored = await deps.trial.load();
+          const start = trialStart(stored, trips, now());
+          if (start !== stored) await deps.trial.save(start);
+          set({ trialEndsAt: trialEnd(start) });
+        }
         await fileFinished();
         applySnapshot(await deps.tracker.getState());
         void syncPro();
@@ -393,6 +407,11 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
       set({ placesPromptNeverAsk: false });
     },
 
+    async setTrialEnded(ended) {
+      const start = ended ? now() - (TRIAL_DAYS + 1) * 24 * 60 * 60 * 1000 : now();
+      await deps.trial?.save(start);
+      set({ trialEndsAt: trialEnd(start) });
+    },
     async setPro(isPro) {
       await deps.pro.save(isPro);
       set({ isPro });

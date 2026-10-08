@@ -5,11 +5,17 @@ import styles from '../page.module.css';
 import PageHeader from '@/components/PageHeader';
 import PlanComparison from '@/components/PlanComparison';
 import { commute, useCommute } from '@/lib/commute';
+import { PRO_PRICE_FALLBACK, TRIAL_DAYS, inTrial, trialDaysLeft } from '@/lib/commute/trial';
+import { formatDayLabel } from '@/lib/trips/format';
+import { useNow } from '@/lib/useNow';
 import { track } from '@/lib/sharing';
 
 export default function PricingPage() {
-  const { isPro, proPrice, purchasing, notice } = useCommute();
-  const price = proPrice ?? '₹49';
+  const state = useCommute();
+  const { isPro, proPrice, purchasing, notice, trialEndsAt } = state;
+  const price = proPrice ?? PRO_PRICE_FALLBACK;
+  const now = useNow();
+  const trial = inTrial(state, now);
 
   return (
     <>
@@ -17,7 +23,8 @@ export default function PricingPage() {
 
       <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <p className={styles.cardText} style={{ padding: '0 4px' }}>
-          Pro keeps everything in Free and adds more. Pay once, no subscription.
+          Everyone gets everything in Pro free for their first {TRIAL_DAYS} days. After that, Free keeps tracking and the last 2 weeks of history; Pro is a single payment, no subscription.
+          {trial && trialEndsAt !== null && ` Your free month has ${trialDaysLeft(trialEndsAt, now)} days left (until ${formatDayLabel(trialEndsAt)}). Buying now keeps Pro after that.`}
         </p>
 
         <PlanComparison price={price} />

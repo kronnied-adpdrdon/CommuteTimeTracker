@@ -10,7 +10,7 @@ Decisions: **Personal Play account** · **manual start/stop tracking** (no `ACCE
 
 **Free vs Pro (decided 1 Oct 2026):**
 
-| Everyone (Free) | Pro (₹49, one-time) |
+| Everyone (Free) | Pro (₹100, one-time; **everything in Pro free for every user's first 30 days**, decided 8 Oct 2026) |
 |---|---|
 | Unlimited tracking, edit/delete trips, Home/Office tagging | **Reports**, for any date range, including trips older than 2 weeks |
 | Home: This Week stats + the **last 3 commutes** | |
@@ -165,15 +165,15 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Free vs Pro shown side by side, Pro including everything in Free
 - [ ] Test on an older emulator image (Android 7 to 9) and on a phone without Google Play services
 
-## Phase 5 — Pro (₹49) and reports (Oct 8–20; **first thing cut if behind**)
+## Phase 5 — Pro (₹100, first 30 days free) and reports (Oct 8–20; **first thing cut if behind**)
 
 - [x] Decide what Pro unlocks: **reports only** (any date range). No free preview; no ₹/km reimbursement line in v1
 - [ ] Payments profile + India tax details (GST/PAN) in Play Console
-- [ ] One in-app product: **Pro, ₹49, one-time (non-consumable)**
+- [ ] One in-app product: **Pro, ₹100, one-time (non-consumable)**. Free month is in-app (Play's free trials are for subscriptions only): starts on first launch or the oldest trip, whichever is earlier; `src/lib/commute/trial.ts`
 - [x] Billing decided (1 Oct 2026): **checked on the phone**, no RevenueCat. `ProBillingPlugin` (Play Billing 9.1.0): status at launch, purchase, acknowledge, restore; cached for offline
-- [ ] Create the one-time product in Play Console with product ID **`pro`** at ₹49 (needs the payments profile and an uploaded AAB first)
+- [ ] Create the one-time product in Play Console with product ID **`pro`** at ₹100 (needs the payments profile and an uploaded AAB first)
 - [ ] Add licence testers in Play Console so testers can buy without being charged
-- [x] Plans screen: Free (₹0) vs Pro (₹49 one-time) comparison, reached from Reports and Settings
+- [x] Plans screen: Free (₹0) vs Pro (₹100 one-time) comparison, reached from Reports and Settings
 - [x] Upgrade → Google Play purchase sheet; Restore purchase (Plans and Settings); pending, cancelled, refunded and offline handled (unit-tested); localised price from Play when available
 - [ ] Test a real purchase end to end once the product exists (licence tester)
 - [x] Plans reachable from Reports (Unlock with Pro) and Settings (Your Plan)
@@ -346,7 +346,7 @@ Working backwards from the fixed constraints: production review after applying t
 | Form consents | Mostly no | Feedback and bug reports go through the user's own email app; address search sends only the typed text (in the policy); background location has the prominent disclosure before Android's prompt |
 | No unnecessary data | Yes | Done: merged manifest has only location, background location, foreground service (location), notifications, boot, internet, network state, billing. No advertising ID |
 | No dark patterns | Yes | Done: no countdowns or fake offers; price from Google Play; manual recording is a full-size choice next to "Recommended" automatic; every setup step can be skipped |
-| No hidden fees | Yes | Done: one-time ₹49, no subscription, stated in Terms |
+| No hidden fees | Yes | Done: one-time ₹100 after a free first month, no subscription, stated in Terms |
 | Age consent | Play form only | No in-app age gate. Target audience in Play Console: 18 and over (suggested). Policy says not directed at under-13s |
 | Unsubscribe links | No | The app sends no emails |
 | Font and image licences | Yes | Barlow / Barlow Condensed are SIL Open Font License (bundling allowed; licence text should ship with them). Icon is our own. Five unused Next.js starter images are still bundled |

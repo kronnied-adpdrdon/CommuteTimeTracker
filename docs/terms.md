@@ -24,7 +24,8 @@ Your trips stay on your phone unless you choose to share commute times. How the 
 
 ## Pro
 
-- Pro is a one-time purchase made through Google Play, with no subscription. The price shown in the app is the price you pay.
+- Everyone gets everything in Pro free for their first 30 days after installing the app. After that, they need the one-time Pro purchase.
+- Pro is a one-time purchase made through Google Play, with no subscription. The price shown in the app is the price you pay. You can buy it at any time, including during the free month.
 - Refunds are handled under Google Play's refund policy.
 - Pro is linked to your Google account and restores on any phone signed in to it. Use "Restore purchase" in Settings if it does not appear.
 - The features included in Free and Pro may change over time. We will not remove a feature you have already paid for without good reason.

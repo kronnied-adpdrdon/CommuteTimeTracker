@@ -45,12 +45,13 @@ HISTORY YOU CAN TRUST
 • Fix a trip's times, distance or direction, or delete it
 • GPS glitches are filtered out, so a phone waiting at a traffic signal doesn't invent kilometres
 
-REPORTS WITH PRO (ONE-TIME UPGRADE)
+PRO: FREE FOR YOUR FIRST MONTH, THEN A ONE-TIME UPGRADE
 • Reports for any date range, including trips older than two weeks
 • Totals, averages, and to-work vs to-home breakdowns
 • Export as PDF or CSV to share, keep for your records, or attach to a travel claim
 • A monthly commute recap and a heads-up before your slower weekdays
-• A single one-time purchase through Google Play, no subscription. It restores automatically on any phone with the same Google account
+• Everything in Pro is free for your first 30 days
+• Then a single one-time purchase through Google Play, no subscription. It restores automatically on any phone with the same Google account
 
 PRIVATE BY DESIGN
 • No account, no sign-up, no login

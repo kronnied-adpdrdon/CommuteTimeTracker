@@ -6,6 +6,8 @@ import styles from '../page.module.css';
 import PageHeader from '@/components/PageHeader';
 import Switch from '@/components/Switch';
 import { commute, useCommute } from '@/lib/commute';
+import { proUnlocked } from '@/lib/commute/trial';
+import { useNow } from '@/lib/useNow';
 import { notifications, useNotifications } from '@/lib/notifications';
 import { NotificationSettings, clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
 
@@ -25,7 +27,7 @@ const ROWS: Row[] = [
 ];
 
 export default function NotificationsPage() {
-  const { isPro } = useCommute();
+  const unlocked = proUnlocked(useCommute(), useNow());
   const { settings, allowed } = useNotifications();
   const [testError, setTestError] = useState(false);
 
@@ -45,7 +47,7 @@ export default function NotificationsPage() {
 
         <div className={styles.card} style={{ gap: 0 }}>
           {ROWS.map((row, i) => {
-            const locked = row.pro && !isPro;
+            const locked = row.pro && !unlocked;
             return (
               <div key={row.key}>
                 {i > 0 && <div className={styles.rowDivider} />}

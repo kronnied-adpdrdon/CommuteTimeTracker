@@ -69,6 +69,12 @@ public final class ReminderLogic {
         public boolean slowDay = true;
         public boolean setup = false;
         public boolean isPro = false;
+        /** End of the free month (epoch ms): Pro reminders run until then even without a purchase. */
+        public long trialEndsAt = 0;
+
+        private boolean proUnlocked() {
+            return isPro || System.currentTimeMillis() < trialEndsAt;
+        }
 
         public boolean enabled(int type) {
             switch (type) {
@@ -79,9 +85,9 @@ public final class ReminderLogic {
                 case WEEKLY:
                     return weekly;
                 case MONTHLY:
-                    return monthly && isPro;
+                    return monthly && proUnlocked();
                 case SLOW_DAY:
-                    return slowDay && isPro;
+                    return slowDay && proUnlocked();
                 case SETUP:
                     return setup;
                 default:
@@ -102,6 +108,7 @@ public final class ReminderLogic {
                 c.slowDay = o.optBoolean("slowDay", true);
                 c.setup = o.optBoolean("setup", false);
                 c.isPro = o.optBoolean("isPro", false);
+                c.trialEndsAt = o.optLong("trialEndsAt", 0);
             } catch (JSONException ignored) {
                 // Fall back to defaults.
             }

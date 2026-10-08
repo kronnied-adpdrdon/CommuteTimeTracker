@@ -54,6 +54,8 @@ async function push(): Promise<void> {
   const config = {
     ...state.settings,
     isPro: app.isPro,
+    // Monthly recap and slow-day heads-up run during the free month too; Android checks the date itself.
+    trialEndsAt: app.trialEndsAt ?? 0,
     // The "set your addresses" reminder only runs while Home or Office is missing.
     setup: !(app.places.home && app.places.office),
   };

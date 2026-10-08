@@ -160,4 +160,15 @@ public class ReminderLogicTest {
         config.isPro = true;
         assertEquals(true, config.enabled(ReminderLogic.MONTHLY));
     }
+
+    @Test
+    public void proRemindersRunDuringTheFreeMonthOnly() {
+        long day = 24L * 60 * 60 * 1000;
+        ReminderLogic.Config during = ReminderLogic.Config.fromJson("{\"trialEndsAt\": " + (System.currentTimeMillis() + day) + "}");
+        assertEquals(true, during.enabled(ReminderLogic.MONTHLY));
+        assertEquals(true, during.enabled(ReminderLogic.SLOW_DAY));
+        ReminderLogic.Config after = ReminderLogic.Config.fromJson("{\"trialEndsAt\": " + (System.currentTimeMillis() - day) + "}");
+        assertEquals(false, after.enabled(ReminderLogic.MONTHLY));
+        assertEquals(false, after.enabled(ReminderLogic.SLOW_DAY));
+    }
 }

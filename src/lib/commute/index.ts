@@ -9,6 +9,7 @@ import { CommuteState, INITIAL_COMMUTE_STATE, createCommuteController } from './
 import { DEV_TOOLS, isDevBuild } from '../devtools';
 import { ProBilling, nativeBilling } from './billing';
 import { createProStore } from './pro';
+import { createTrialStore } from './trial';
 
 /** Capacitor Preferences, imported lazily so the static build never loads native code. */
 const preferences: KeyValueStore = {
@@ -38,6 +39,7 @@ export const commute = createCommuteController({
   trips: createTripRepository(preferences),
   places: createPlacesStore(preferences),
   pro: createProStore(preferences),
+  trial: createTrialStore(preferences),
   // Demo builds use the Developer Preview switch instead of real purchases. Debug builds do the same:
   // they are checked at run time, so the real billing client is wrapped and stands down there.
   billing: DEV_TOOLS ? null : withDevBypass(nativeBilling),

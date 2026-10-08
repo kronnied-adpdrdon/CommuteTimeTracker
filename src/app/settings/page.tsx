@@ -5,6 +5,9 @@ import Link from 'next/link';
 import styles from '../page.module.css';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
+import { PRO_PRICE_FALLBACK, inTrial, trialDaysLeft } from '@/lib/commute/trial';
+import { formatDayLabel } from '@/lib/trips/format';
+import { useNow } from '@/lib/useNow';
 import AddressPicker from '@/components/AddressPicker';
 import AutoTrackingCard from '@/components/AutoTrackingCard';
 import DeveloperTools from '@/components/DeveloperTools';
@@ -41,6 +44,9 @@ export default function SettingsPage() {
   const [theme, setTheme] = useTheme();
   const devTools = useDevTools();
   const tripCount = state.trips.length;
+  const now = useNow();
+  const trial = inTrial(state, now);
+  const price = state.proPrice ?? PRO_PRICE_FALLBACK;
 
   return (
     <>
@@ -64,12 +70,20 @@ export default function SettingsPage() {
         <div className={styles.card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className={styles.cardTitle}>Your Plan</div>
-            {state.isPro ? <span className={styles.proBadge}>PRO</span> : <span className={styles.cardText}>Free</span>}
+            {state.isPro ? (
+              <span className={styles.proBadge}>PRO</span>
+            ) : trial ? (
+              <span className={styles.cardText}>Free month · {trialDaysLeft(state.trialEndsAt ?? 0, now)} days left</span>
+            ) : (
+              <span className={styles.cardText}>Free</span>
+            )}
           </div>
           <p className={styles.cardText}>
             {state.isPro
               ? 'Reports and exports are unlocked. Thanks for supporting the app.'
-              : 'Unlock reports for any date range, PDF and CSV export, plus the monthly recap and slow-day alerts. ₹49, one-time.'}
+              : trial
+                ? `Everything in Pro is open until ${formatDayLabel(state.trialEndsAt ?? 0)}: reports for any date range, PDF and CSV export, the monthly recap and slow-day alerts. Keep it for ${price}, one-time.`
+                : `Unlock reports for any date range, PDF and CSV export, plus the monthly recap and slow-day alerts. ${price}, one-time.`}
           </p>
           <div className={styles.bannerActions} style={{ flexWrap: 'wrap', rowGap: '6px' }}>
             {!state.isPro && (
