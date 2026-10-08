@@ -366,6 +366,8 @@ Working backwards from the fixed constraints: production review after applying t
 
 ## Version 2 backlog (agreed to defer, 30 Sep 2026)
 
+- **Pricing model (decided 8 Oct 2026):** one-time ₹100 Pro for launch, not a subscription (near-zero running costs, occasional need, Indian buyers prefer paying once). Revisit after a few months of conversion data: raise the price for new buyers, and consider an optional "Plus" subscription only for features with ongoing value or cost (city comparisons from shared data, cloud backup, insights). Existing Pro buyers keep what they paid for.
+
 - Forgot to start / stop: "Arrived? Tap to stop" prompt when still for a while or near Office/Home
 - Mode of transport (car / bike / metro / bus / walk), tapped after Stop
 - Insights: best departure time, worst weekday, hours per year commuting
