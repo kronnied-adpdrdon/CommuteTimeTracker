@@ -127,3 +127,16 @@ export function placesTooClose(places: SavedPlaces, settings: AutoSettings): boo
   if (!places.home || !places.office) return false;
   return haversineMeters(places.home, places.office) <= settings.homeRadius + settings.officeRadius;
 }
+
+const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** "Mon–Fri", "Mon–Sat", "Every day", or a list like "Mon, Wed, Fri" (Monday first). */
+export function daysSummary(days: number[]): string {
+  const set = new Set(days);
+  const same = (list: number[]) => list.length === set.size && list.every((d) => set.has(d));
+  if (same([0, 1, 2, 3, 4, 5, 6])) return 'Every day';
+  if (same([1, 2, 3, 4, 5])) return 'Mon–Fri';
+  if (same([1, 2, 3, 4, 5, 6])) return 'Mon–Sat';
+  if (set.size === 0) return 'No days';
+  return [1, 2, 3, 4, 5, 6, 0].filter((d) => set.has(d)).map((d) => SHORT_DAYS[d]).join(', ');
+}

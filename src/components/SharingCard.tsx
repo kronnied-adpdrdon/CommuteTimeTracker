@@ -43,12 +43,12 @@ export function SharingChoice({ choice, checked, onChange }: { choice: keyof typ
 }
 
 /** Settings → "Help improve MYCE": the two switches. Turning commute sharing off deletes what was shared. */
-export default function SharingCard() {
+export default function SharingCard({ showTitle = true }: { showTitle?: boolean }) {
   const { settings } = useSharing();
 
   return (
     <div className={styles.card}>
-      <div className={styles.cardTitle}>Help improve MYCE</div>
+      {showTitle && <div className={styles.cardTitle}>Help improve MYCE</div>}
       <SharingChoice choice="usage" checked={settings.usage === true} onChange={(on) => void sharing.setUsage(on)} />
       <SharingChoice choice="commute" checked={settings.commute === true} onChange={(on) => void sharing.setCommute(on)} />
       {settings.commute === true && <p className={styles.cardText}>Turning commute sharing off also deletes the commute times you&apos;ve shared.</p>}

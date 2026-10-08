@@ -48,7 +48,9 @@ export default function BottomNav() {
   return (
     <nav className="bottom-nav">
       {tabs.map((tab) => {
-        const isActive = pathname === tab.path;
+        // Screens opened from Settings keep the Settings tab lit.
+        const fromSettings = tab.path === '/settings' && /^\/(settings|notifications|feedback|report-bug|privacy|terms|licenses)(\/|$)/.test(pathname);
+        const isActive = pathname === tab.path || fromSettings;
         return (
           <Link 
             href={tab.path} 

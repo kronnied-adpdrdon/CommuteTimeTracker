@@ -1429,6 +1429,51 @@
   color: var(--text-secondary);
 }
 
+/* Settings: grouped lists, each with a small heading above it. */
+.settingsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settingsGroupTitle {
+  margin: 0;
+  padding: 0 4px;
+}
+
+.settingsList {
+  gap: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  /* No soft shadow: a column of shadowed cards this tall left an unpainted strip in the Android WebView. */
+  box-shadow: none;
+}
+
+.settingsList > * + * {
+  border-top: 1.5px dashed var(--divider-muted);
+}
+
+.settingsIcon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--link);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The plan card at the top of Settings: the whole card opens Free vs Pro. */
+.planCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
 /* Free vs Pro comparison */
 .compare {
   padding: 0;

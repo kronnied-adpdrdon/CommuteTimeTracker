@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore } from '../storage/kv';
-import { DEFAULT_AUTO_SETTINGS, clampCommute, clampRadius, createAutoSettingsStore, formatMinutesLong, placesTooClose, sanitize, toggleDay, waitMinutes } from './settings';
+import { DEFAULT_AUTO_SETTINGS, clampCommute, clampRadius, createAutoSettingsStore, formatMinutesLong, placesTooClose, sanitize, toggleDay, waitMinutes, daysSummary } from './settings';
 
 describe('auto settings', () => {
   it('starts off, with Mon-Fri 7-10am and 4-8pm and 150 m circles', async () => {
@@ -66,5 +66,15 @@ describe('auto settings', () => {
     expect(formatMinutesLong(45)).toBe('45 min');
     expect(formatMinutesLong(60)).toBe('1 h');
     expect(formatMinutesLong(112)).toBe('1 h 52 min');
+  });
+});
+
+describe('daysSummary', () => {
+  it('names the usual patterns and lists the rest, Monday first', () => {
+    expect(daysSummary([1, 2, 3, 4, 5])).toBe('Mon–Fri');
+    expect(daysSummary([6, 1, 2, 3, 4, 5])).toBe('Mon–Sat');
+    expect(daysSummary([0, 1, 2, 3, 4, 5, 6])).toBe('Every day');
+    expect(daysSummary([5, 0, 1, 3])).toBe('Mon, Wed, Fri, Sun');
+    expect(daysSummary([])).toBe('No days');
   });
 });
