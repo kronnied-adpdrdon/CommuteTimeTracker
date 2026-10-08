@@ -44,6 +44,25 @@ describe('buildReportPdf', () => {
     expect(out).toContain('(1 - 30 Sep 2026)');
   });
 
+  it('names who it was prepared for, splits out other trips, and marks edited trips', () => {
+    const original = { startedAt: 0, endedAt: 0, durationSeconds: 0, distanceMeters: 0, direction: 'work' as const };
+    const mixed: Trip[] = [{ ...trips[0], original }, trips[1], { ...trips[2], id: 'x', direction: 'unknown' }];
+    const out = decode(buildReportPdf({ periodLabel: 'Sep 2026', generatedAt: Date.now(), summary: summarize(mixed), trips: mixed, preparedFor: '  Asha Rao ' }));
+    expect(out).toContain('(Prepared for: Asha Rao)');
+    expect(out).toContain('(Other: 1 trip, avg 45 min)');
+    // Brackets inside PDF text are escaped: (1 Sep 2026 \(Tue\) *)
+    expect(out).toMatch(/\(\d+ Sep 2026 \\\(\w+\\\) \*\)/);
+    expect(out).toContain('(* Changed by hand after it was recorded.)');
+    expect(out).toContain('(45 min)');
+  });
+
+  it('leaves out the optional lines when they do not apply', () => {
+    const out = decode(buildReportPdf({ periodLabel: 'Sep 2026', generatedAt: Date.now(), summary: summarize(trips), trips }));
+    expect(out).not.toContain('Prepared for');
+    expect(out).not.toContain('Other:');
+    expect(out).not.toContain('Changed by hand');
+  });
+
   it('an empty period still makes a one-page report', () => {
     const out = decode(buildReportPdf({ periodLabel: '1 Oct 2026', generatedAt: Date.now(), summary: summarize([]), trips: [] }));
     expect(out).toContain('/Count 1');

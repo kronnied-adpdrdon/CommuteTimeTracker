@@ -33,9 +33,9 @@ const PRESETS: { id: PeriodPreset; label: string }[] = [
 const PREVIEW_TRIPS = 5;
 
 /** Builds the file and opens the share menu. Outside the component: it runs on a tap, not while rendering. */
-async function exportReport(kind: 'pdf' | 'csv', fileBase: string, periodLabel: string, trips: Trip[]) {
+async function exportReport(kind: 'pdf' | 'csv', fileBase: string, periodLabel: string, trips: Trip[], preparedFor: string) {
   if (kind === 'pdf') {
-    const pdf = buildReportPdf({ periodLabel, generatedAt: Date.now(), summary: summarize(trips), trips });
+    const pdf = buildReportPdf({ periodLabel, generatedAt: Date.now(), summary: summarize(trips), trips, preparedFor });
     await shareFile(`${fileBase}.pdf`, pdf, 'application/pdf');
   } else {
     await shareFile(`${fileBase}.csv`, toCsv(trips), 'text/csv');
@@ -108,6 +108,8 @@ function ProReports() {
   const [customTo, setCustomTo] = useState(() => toDayInput(now));
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  // Only for the PDF being made now: never saved.
+  const [preparedFor, setPreparedFor] = useState('');
 
   const period: ReportPeriod | null = preset === 'custom' ? customPeriod(customFrom, customTo) : presetPeriod(preset, now);
   const inPeriod = period ? tripsInPeriod(trips, period) : [];
@@ -120,7 +122,7 @@ function ProReports() {
     setExporting(kind);
     setExportError(null);
     try {
-      await exportReport(kind, fileBase, label, inPeriod);
+      await exportReport(kind, fileBase, label, inPeriod, preparedFor);
     } catch (error) {
       setExportError(`Couldn't export the report: ${String((error as Error)?.message ?? error)}`);
     } finally {
@@ -128,7 +130,7 @@ function ProReports() {
     }
   }
 
-  const { work, home } = summary.byDirection;
+  const { work, home, unknown } = summary.byDirection;
   const avg = (t: { count: number; totalSeconds: number }) => formatDuration(t.count ? t.totalSeconds / t.count : 0);
 
   return (
@@ -177,6 +179,7 @@ function ProReports() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <span>To work: {work.count} · avg {avg(work)}</span>
               <span>To home: {home.count} · avg {avg(home)}</span>
+              {unknown.count > 0 && <span>Other: {unknown.count}</span>}
             </div>
           </div>
 
@@ -196,6 +199,19 @@ function ProReports() {
 
           <div className={styles.card}>
             <div className={styles.cardTitle}>Export</div>
+            <label className={styles.cardText}>
+              Prepared for (optional, PDF only)
+              <input
+                id="prepared-for"
+                className="input-field"
+                value={preparedFor}
+                maxLength={60}
+                placeholder="e.g. your name, for an employer"
+                autoComplete="name"
+                onChange={(e) => setPreparedFor(e.target.value)}
+                style={{ marginTop: '4px' }}
+              />
+            </label>
             <button className="btn-primary" disabled={exporting !== null} onClick={() => exportAs('pdf')}>
               {exporting === 'pdf' ? 'Preparing PDF…' : 'Export PDF'}
             </button>

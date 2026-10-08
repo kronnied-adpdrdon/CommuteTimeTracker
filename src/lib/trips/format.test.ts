@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatRelativeDay, formatTimeOfDay, formatTimeRange } from './format';
+import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatDurationWords, formatRelativeDay, formatTimeOfDay, formatTimeRange } from './format';
 
 describe('formatClock', () => {
   it('formats hh:mm:ss', () => {
@@ -63,5 +63,15 @@ describe('formatRelativeDay', () => {
   });
   it('adds the year for other years', () => {
     expect(formatRelativeDay(new Date(2025, 11, 31, 8).getTime(), now)).toBe('Wed, 31 Dec 2025');
+  });
+});
+
+describe('formatDurationWords', () => {
+  it('reads as words, dropping zero parts', () => {
+    expect(formatDurationWords(0)).toBe('0 min');
+    expect(formatDurationWords(2460)).toBe('41 min');
+    expect(formatDurationWords(3600)).toBe('1 h');
+    expect(formatDurationWords(3900)).toBe('1 h 5 min');
+    expect(formatDurationWords(230_400)).toBe('64 h');
   });
 });

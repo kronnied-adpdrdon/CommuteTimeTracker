@@ -5,7 +5,8 @@ import styles from '@/app/page.module.css';
 import Switch from '@/components/Switch';
 import { useCommute } from '@/lib/commute';
 import { sharing, track, useSharing } from '@/lib/sharing';
-import { commutePrompt, minutesPhrase } from '@/lib/sharing/prompt';
+import { commutePrompt } from '@/lib/sharing/prompt';
+import { formatDurationWords } from '@/lib/trips/format';
 
 /** The two choices, worded the same in the setup and in Settings. */
 export const SHARING_CHOICES = {
@@ -76,7 +77,7 @@ export function CommutePromptCard() {
     <div className={styles.card}>
       <div className={styles.cardTitle}>Help map commute times in your city</div>
       <p className={styles.cardText}>
-        Your last 3 commutes took {minutesPhrase(prompt.averageMinutes)} on average. Want to share times like these? It&apos;s optional.
+        Your last 3 commutes took {formatDurationWords(prompt.averageMinutes * 60)} on average. Want to share times like these? It&apos;s optional.
       </p>
       <p className={styles.cardText}>
         Shared for each trip: how long it took, how far, the start time to the nearest 15 minutes, and the rough area it started and ended in (about 5 km across). Never your exact Home, Office or route. Turning it off later in Settings deletes what you shared.

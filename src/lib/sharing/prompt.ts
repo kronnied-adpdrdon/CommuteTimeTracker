@@ -20,10 +20,3 @@ export function commutePrompt(settings: SharingSettings, trips: Trip[]): { avera
   const seconds = latest.reduce((sum, t) => sum + t.durationSeconds, 0) / latest.length;
   return { averageMinutes: Math.max(1, Math.round(seconds / 60)) };
 }
-
-/** "42 min" or "1 h 5 min", for a sentence. */
-export function minutesPhrase(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`;
-}

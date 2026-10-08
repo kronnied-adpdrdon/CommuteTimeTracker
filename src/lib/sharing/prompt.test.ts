@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Trip } from '../trips/types';
-import { commutePrompt, minutesPhrase } from './prompt';
+import { commutePrompt } from './prompt';
 import { DEFAULT_SHARING_SETTINGS } from './settings';
 
 const trip = (id: string, startedAt: number, minutes: number): Trip => ({
@@ -28,13 +28,5 @@ describe('commutePrompt', () => {
   it('never shows again once answered, either way', () => {
     expect(commutePrompt({ ...DEFAULT_SHARING_SETTINGS, commute: false }, three)).toBeNull();
     expect(commutePrompt({ ...DEFAULT_SHARING_SETTINGS, commute: true }, three)).toBeNull();
-  });
-});
-
-describe('minutesPhrase', () => {
-  it('reads naturally', () => {
-    expect(minutesPhrase(42)).toBe('42 min');
-    expect(minutesPhrase(60)).toBe('1 h');
-    expect(minutesPhrase(65)).toBe('1 h 5 min');
   });
 });

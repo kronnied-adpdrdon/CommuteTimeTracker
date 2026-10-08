@@ -12,6 +12,14 @@ export function formatDuration(totalSeconds: number): string {
   return `${Math.floor(s / 3600)}h ${pad(Math.floor((s % 3600) / 60))}m`;
 }
 
+/** 2460 -> "41 min", 3900 -> "1 h 5 min", 7200 -> "2 h". Reads as words, for reports and sentences. */
+export function formatDurationWords(totalSeconds: number): string {
+  const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
 /** 12400 -> "12.4 km" */
 export function formatDistanceKm(meters: number): string {
   return `${(Math.max(0, meters) / 1000).toFixed(1)} km`;

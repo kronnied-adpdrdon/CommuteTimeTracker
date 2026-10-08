@@ -1,6 +1,6 @@
 /**
- * A deliberately small PDF writer: built-in Helvetica fonts, text, filled rectangles and lines,
- * multiple A4 pages. Enough for a commute report without shipping a PDF library.
+ * A deliberately small PDF writer: built-in Helvetica fonts, text, filled rectangles, circles and polygons,
+ * lines, multiple A4 pages. Enough for a commute report without shipping a PDF library.
  */
 
 type Rgb = [number, number, number];
@@ -61,8 +61,26 @@ export class PdfDocument {
     this.ops.push(`${color(rgb)} rg ${num(x)} ${num(PAGE_HEIGHT - y - height)} ${num(width)} ${num(height)} re f`);
   }
 
-  line(x1: number, y1: number, x2: number, y2: number, rgb: Rgb, width = 0.5) {
-    this.ops.push(`${color(rgb)} RG ${num(width)} w ${num(x1)} ${num(PAGE_HEIGHT - y1)} m ${num(x2)} ${num(PAGE_HEIGHT - y2)} l S`);
+  line(x1: number, y1: number, x2: number, y2: number, rgb: Rgb, width = 0.5, round = false) {
+    this.ops.push(`${color(rgb)} RG ${num(width)} w ${round ? 1 : 0} J ${num(x1)} ${num(PAGE_HEIGHT - y1)} m ${num(x2)} ${num(PAGE_HEIGHT - y2)} l S`);
+  }
+
+  /** A filled circle, drawn as four Bézier quarters. */
+  circle(cx: number, cy: number, r: number, rgb: Rgb) {
+    const k = 0.5523 * r;
+    const y = PAGE_HEIGHT - cy;
+    const p = (...xs: number[]) => xs.map(num).join(' ');
+    this.ops.push(
+      `${color(rgb)} rg ${p(cx + r, y)} m ` +
+        `${p(cx + r, y + k, cx + k, y + r, cx, y + r)} c ${p(cx - k, y + r, cx - r, y + k, cx - r, y)} c ` +
+        `${p(cx - r, y - k, cx - k, y - r, cx, y - r)} c ${p(cx + k, y - r, cx + r, y - k, cx + r, y)} c f`,
+    );
+  }
+
+  /** A filled polygon through the given points. */
+  polygon(points: [number, number][], rgb: Rgb) {
+    const [first, ...rest] = points.map(([x, y]) => `${num(x)} ${num(PAGE_HEIGHT - y)}`);
+    this.ops.push(`${color(rgb)} rg ${first} m ${rest.map((pt) => `${pt} l`).join(' ')} h f`);
   }
 
   toBytes(): Uint8Array {
