@@ -225,7 +225,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [ ] Optional, later: lawyer review of the Privacy Policy once there are many users (not needed to launch; DPDP rules are being phased in, check current status)
 
 **Build list (Claude)**
-- [x] Consent screen in the first-time setup (step 5, after reminders; moved there 8 Oct at the owner's request, so steps 1–4 aren't counted in usage statistics) ("Help map commutes in your city", plain language, not pre-ticked) + Settings switches
+- [x] Consent, split 8 Oct: **app usage** is setup step 1 (right after the welcome, so the setup itself is measured); **commute times** is a one-time Home card after the 3rd saved trip ("Your last 3 commutes took X on average…", Share / No thanks). Both also in Settings ("Help map commutes in your city", plain language, not pre-ticked) + Settings switches
 - [x] Firebase Analytics wiring and events; nothing sent until the usage switch is on (AD_ID and ad-services permissions removed; `src/lib/sharing/events.ts`; native `not_a_commute`)
 - [x] Install ID, upload queue, "Delete commute times I've shared" button (hidden at once via view `trips_current`, purged nightly)
 - [x] Cloud Functions `shareTrips`, `deleteSharedTrips`, `purgeDeletedTrips` (asia-south1, deployed 7 Oct) + App Check (record-only until Play) + BigQuery `myce.shared_trips` (partitions expire after 730 days); emulator-tested end to end

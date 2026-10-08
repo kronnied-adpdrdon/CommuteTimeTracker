@@ -3,7 +3,7 @@ import { KeyValueStore } from '../storage/kv';
 export const SETUP_KEY = 'setup.v1';
 
 /** The first-time setup's screens, in order. "welcome" is for new users only; "done" closes the flow. */
-export type SetupStep = 'welcome' | 'places' | 'times' | 'recording' | 'reminders' | 'sharing' | 'battery' | 'done';
+export type SetupStep = 'welcome' | 'usage' | 'places' | 'times' | 'recording' | 'reminders' | 'battery' | 'done';
 
 /** What the "Finish setting up" card on Home lists. Commute times live inside the recording choice. */
 export type ChecklistItem = 'places' | 'recording' | 'reminders' | 'battery';
@@ -37,11 +37,11 @@ export interface SetupFacts {
   manufacturer: string;
   /** Android's "Unrestricted" battery setting for this app. Null when unknown. */
   batteryUnrestricted: boolean | null;
-  /** Both "Help improve MYCE" choices made (on or off). Optional, so it never appears on the Home card. */
-  sharingAnswered: boolean;
+  /** "Share how you use the app" answered (on or off). Optional, so it never appears on the Home card. */
+  usageAnswered: boolean;
 }
 
-const STEPS: SetupStep[] = ['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'battery', 'done'];
+const STEPS: SetupStep[] = ['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'battery', 'done'];
 
 export function sanitize(value: unknown): SetupProgress {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -143,9 +143,10 @@ export function checklist(progress: SetupProgress, facts: SetupFacts): { item: C
  */
 export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupStep[] {
   const seen = (step: SetupStep) => progress.seen.includes(step);
-  // Asked once, also of people who finished the setup before this screen existed.
-  const askSharing = !facts.sharingAnswered && !seen('sharing');
-  if (progress.closed) return askSharing ? ['sharing'] : [];
+  // Asked once, also of people who finished the setup before this screen existed. (Sharing commute times is asked
+  // separately, on Home after the third trip: see `commutePrompt`.)
+  const askUsage = !facts.usageAnswered && !seen('usage');
+  if (progress.closed) return askUsage ? ['usage'] : [];
   const open = (item: ChecklistItem) => itemApplies(item, facts) && !itemDone(item, progress, facts);
   const steps: SetupStep[] = [];
   if (open('places') && !seen('places') && !facts.placesNeverAsk) steps.push('places');
@@ -154,13 +155,12 @@ export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupSt
     steps.push('recording');
   }
   if (open('reminders') && !seen('reminders')) steps.push('reminders');
-  // Step 5 for a new user: asked once they've seen what the app does.
-  if (askSharing) steps.push('sharing');
   if (open('battery') && !seen('battery')) steps.push('battery');
-  // Nothing left to set up: the welcome isn't worth a pop-up on its own, nor is a summary after the sharing question.
-  if (steps.length === 0 || (steps.length === 1 && steps[0] === 'sharing')) return steps;
+  // Nothing left to set up: the welcome isn't worth a pop-up on its own, nor is a summary after the usage question.
+  if (steps.length === 0) return askUsage ? ['usage'] : [];
   const welcome: SetupStep[] = facts.isNewUser && !seen('welcome') ? ['welcome'] : [];
-  return [...welcome, ...steps, 'done'];
+  // Step 1, so the answer covers the setup itself ("where do people get stuck?").
+  return [...welcome, ...(askUsage ? (['usage'] as const) : []), ...steps, 'done'];
 }
 
 /** Commute hours from "when do you usually leave": an hour before to 90 minutes after (people run late more than early). */

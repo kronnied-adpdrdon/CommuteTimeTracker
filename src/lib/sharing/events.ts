@@ -16,7 +16,8 @@ export type UsageEvent =
   | { name: 'trip_deleted'; params: { count: number } }
   | { name: 'upgrade_tap'; params: { from: string } }
   | { name: 'pro_purchased'; params?: undefined }
-  | { name: 'commute_sharing'; params: { enabled: boolean } };
+  | { name: 'commute_sharing'; params: { enabled: boolean } }
+  | { name: 'commute_prompt'; params: { answer: 'yes' | 'no' } };
 
 /** What changed in the saved trips, as usage events. Sample trips from Developer tools don't count. */
 export function tripEvents(before: Trip[], after: Trip[]): UsageEvent[] {

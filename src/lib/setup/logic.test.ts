@@ -22,53 +22,53 @@ const NEW_USER: SetupFacts = {
   notificationsAllowed: false,
   manufacturer: 'Google',
   batteryUnrestricted: false,
-  sharingAnswered: false,
+  usageAnswered: false,
 };
 
 const progress = (patch: Partial<SetupProgress> = {}): SetupProgress => ({ ...INITIAL_PROGRESS, ...patch });
 
 describe('first-time setup: which screens to show', () => {
   it('walks a new user through everything, without a battery screen on a Pixel', () => {
-    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'done']);
+    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'done']);
   });
 
   it('adds the battery screen on phones that stop background apps', () => {
-    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'places', 'times', 'recording', 'reminders', 'sharing', 'battery', 'done']);
+    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'battery', 'done']);
   });
 
   it('shows an existing user only what they have not set up, with no welcome', () => {
-    const tester = { ...NEW_USER, isNewUser: false, placesSet: true, notificationsAllowed: true, sharingAnswered: true };
+    const tester = { ...NEW_USER, isNewUser: false, placesSet: true, notificationsAllowed: true, usageAnswered: true };
     expect(wizardSteps(progress(), tester)).toEqual(['times', 'recording', 'done']);
   });
 
   it('shows nothing to someone who has everything set up', () => {
-    const done = { ...NEW_USER, isNewUser: false, placesSet: true, autoEnabled: true, notificationsAllowed: true, sharingAnswered: true };
+    const done = { ...NEW_USER, isNewUser: false, placesSet: true, autoEnabled: true, notificationsAllowed: true, usageAnswered: true };
     expect(wizardSteps(progress(), done)).toEqual([]);
   });
 
   it('resumes where the user stopped', () => {
     const halfway = progress({ seen: ['welcome', 'places', 'times'] });
-    expect(wizardSteps(halfway, NEW_USER)).toEqual(['recording', 'reminders', 'sharing', 'done']);
+    expect(wizardSteps(halfway, NEW_USER)).toEqual(['usage', 'recording', 'reminders', 'done']);
   });
 
   it("doesn't reopen for the welcome screen alone", () => {
-    const facts = { ...NEW_USER, placesSet: true, autoEnabled: true, notificationsAllowed: true, sharingAnswered: true };
+    const facts = { ...NEW_USER, placesSet: true, autoEnabled: true, notificationsAllowed: true, usageAnswered: true };
     expect(wizardSteps(progress(), facts)).toEqual([]);
   });
 
   it('never opens again once closed', () => {
-    expect(wizardSteps(progress({ closed: true }), { ...NEW_USER, sharingAnswered: true })).toEqual([]);
+    expect(wizardSteps(progress({ closed: true }), { ...NEW_USER, usageAnswered: true })).toEqual([]);
   });
 
-  it('asks the sharing question once, on its own, of people who finished the setup before it existed', () => {
-    expect(wizardSteps(progress({ closed: true }), NEW_USER)).toEqual(['sharing']);
-    expect(wizardSteps(progress({ closed: true, seen: ['sharing'] }), NEW_USER)).toEqual([]);
+  it('asks the usage question once, on its own, of people who finished the setup before it existed', () => {
+    expect(wizardSteps(progress({ closed: true }), NEW_USER)).toEqual(['usage']);
+    expect(wizardSteps(progress({ closed: true, seen: ['usage'] }), NEW_USER)).toEqual([]);
     const allSet = { ...NEW_USER, isNewUser: false, placesSet: true, autoEnabled: true, notificationsAllowed: true };
-    expect(wizardSteps(progress(), allSet)).toEqual(['sharing']);
+    expect(wizardSteps(progress(), allSet)).toEqual(['usage']);
   });
 
-  it('treats a skipped sharing question as answered "no" and does not ask again', () => {
-    expect(wizardSteps(progress({ seen: ['welcome', 'sharing'] }), NEW_USER)).toEqual(['places', 'times', 'recording', 'reminders', 'done']);
+  it('treats a skipped usage question as answered "no" and does not ask again', () => {
+    expect(wizardSteps(progress({ seen: ['welcome', 'usage'] }), NEW_USER)).toEqual(['places', 'times', 'recording', 'reminders', 'done']);
   });
 
   it('respects "Don\'t ask again" from the old Home/Office pop-up', () => {

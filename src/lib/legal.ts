@@ -53,7 +53,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: 'Help improve MYCE (optional)',
       paragraphs: [
-        'The app asks once during setup, and you can change your answer any time in Settings → Help improve MYCE. Both choices are off unless you turn them on, and the app works the same either way. Turning either on confirms you are 18 or older.',
+        'The app asks about app usage once during setup, and about commute times once on the Home screen after your third saved trip. You can change either answer any time in Settings → Help improve MYCE. Both are off unless you turn them on, and the app works the same either way. Turning either on confirms you are 18 or older.',
       ],
       bullets: [
         'Share how you use the app. The app records which features you use: setup screens finished or skipped, whether you chose automatic or manual recording, turning automatic start and stop on or off, that a trip was saved, edited or deleted (not its times, distance or places), reminder switches, and taps on the Pro button or a purchase. This uses Google Analytics for Firebase, a Google service, which also records a random app-instance ID, your phone model, Android version, app version, in-app purchase events, and an approximate location (country, region or city) worked out from a masked IP address. The advertising ID is never collected, and nothing is used for advertising. Turning this off stops it and resets the app-instance ID. Google Analytics keeps this for 14 months; our copy is kept for up to 24 months. How Google handles this data: https://www.google.com/policies/privacy/partners/',

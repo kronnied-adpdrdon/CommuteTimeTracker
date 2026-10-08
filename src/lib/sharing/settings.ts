@@ -65,6 +65,3 @@ export function createSharingSettingsStore(store: KeyValueStore): SharingSetting
     save: (settings) => store.set(SHARING_KEY, JSON.stringify(settings)),
   };
 }
-
-/** Whether the setup still needs to ask. */
-export const sharingAnswered = (settings: SharingSettings) => settings.usage !== null && settings.commute !== null;

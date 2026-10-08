@@ -97,8 +97,8 @@ function Step({ step }: { step: SetupStep }) {
   switch (step) {
     case 'welcome':
       return <Welcome />;
-    case 'sharing':
-      return <Sharing />;
+    case 'usage':
+      return <Usage />;
     case 'places':
       return <Places />;
     case 'times':
@@ -156,26 +156,23 @@ function Feature({ icon, title, text }: { icon: keyof typeof ICONS; title: strin
   );
 }
 
-/** "Help improve MYCE": both switches start off; Continue with both off is a full answer. */
-function Sharing() {
-  const { settings } = sharing.getState();
-  const [usage, setUsage] = useState(settings.usage === true);
-  const [commuteTimes, setCommuteTimes] = useState(settings.commute === true);
+/** Step 1: app-usage statistics only. The switch starts off; Continue with it off is a full answer. */
+function Usage() {
+  const [usage, setUsage] = useState(sharing.getState().settings.usage === true);
 
   return (
     <>
       <h2 id="setup-title" className={styles.setupTitle}>Help improve MYCE</h2>
-      <p className={styles.cardText}>Two optional ways to help. Both stay off unless you turn them on. You can turn them off any time in Settings, which also deletes the commute times you shared.</p>
+      <p className={styles.cardText}>Optional. It stays off unless you turn it on, and you can turn it off any time in Settings.</p>
       <div className={styles.setupStack}>
         <SharingChoice choice="usage" checked={usage} onChange={setUsage} />
-        <SharingChoice choice="commute" checked={commuteTimes} onChange={setCommuteTimes} />
       </div>
-      <SharingFootnote />
+      <SharingFootnote single />
       <div className={styles.setupActions}>
         <button
           className="btn-primary"
           onClick={async () => {
-            await sharing.answer({ usage, commute: commuteTimes });
+            await sharing.setUsage(usage);
             await setup.next();
           }}
         >

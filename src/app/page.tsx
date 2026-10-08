@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import RouteLine from '@/components/RouteLine';
 import SetupChecklist from '@/components/SetupChecklist';
+import { CommutePromptCard } from '@/components/SharingCard';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
@@ -148,6 +149,8 @@ export default function Home() {
             )}
           </div>
         )}
+
+        {phase === 'idle' && <CommutePromptCard />}
 
         {/* This Week Summary */}
         <div className={styles.summaryCard}>
