@@ -68,7 +68,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Add `signingConfigs.release` to `android/app/build.gradle` (reads gitignored `android/keystore.properties`; unsigned build if absent)
 - [x] Generate upload keystore — created at `~/.myce-keys/upload-keystore.jks` (copied from `~/.commute-tracker-keys` on 7 Oct; the old folder is now only a backup) (outside the repo), passwords in gitignored `android/keystore.properties`; Gradle release signing verified
 - [x] **Back up the keystore AND its password off this Mac**: keystore in Google Drive, password saved separately (user confirmed 1 Oct 2026)
-- [ ] Host privacy policy at a public URL — generated from `src/lib/legal.ts` into `docs/privacy-policy.md` (no placeholders left); host it (GitHub Pages or Google Sites are free). **Needs the publisher name and contact email first** (see Legal and compliance below)
+- [x] Privacy policy hosted (GitHub Pages from `docs/`, 9 Oct 2026): **https://kronnied-adpdrdon.github.io/CommuteTimeTracker/privacy-policy**. Terms: …/terms. Enter the privacy URL in Play Console
 - ~~Firebase project, fingerprints, test phone numbers~~ — dropped with Firebase (v2 backlog)
 - ~~Account-deletion URL~~ — not required: the app has no accounts
 
@@ -355,7 +355,7 @@ Working backwards from the fixed constraints: production review after applying t
 **To do before launch**
 
 - [x] Privacy Policy and Terms: publisher **Kaustav Dutta**, contact **provibsol@gmail.com** (in the app and `docs/`, written into `src/lib/legal.ts` since the policy is public anyway); automatic start and stop settings listed; dated 4 October 2026
-- [ ] Host the Privacy Policy (GitHub Pages; repo is public) and put the URL in Play Console (same as the Phase 1 item)
+- [x] Host the Privacy Policy (GitHub Pages): https://kronnied-adpdrdon.github.io/CommuteTimeTracker/privacy-policy; put the URL in Play Console (same as the Phase 1 item)
 - [x] Settings → "Open-source licences" page (`src/lib/licenses.ts`): Barlow under the SIL OFL (text from Google Fonts), MIT (React, Next.js, styled-jsx, Capacitor), Apache 2.0 (SWC helpers, AndroidX), Google Play services and Billing under the Android SDK licence
 - [x] Delete the unused starter images in `public/` (`file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg`)
 - [ ] Play Console target audience: 18 and over
