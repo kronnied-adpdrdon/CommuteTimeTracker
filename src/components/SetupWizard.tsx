@@ -167,7 +167,7 @@ function Usage() {
       <div className={styles.setupStack}>
         <SharingChoice choice="usage" checked={usage} onChange={setUsage} />
       </div>
-      <SharingFootnote single />
+      <SharingFootnote about="usage" />
       <div className={styles.setupActions}>
         <button
           className="btn-primary"

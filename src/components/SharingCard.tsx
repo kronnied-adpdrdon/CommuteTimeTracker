@@ -20,10 +20,17 @@ export const SHARING_CHOICES = {
   },
 } as const;
 
-export function SharingFootnote({ single = false }: { single?: boolean }) {
+/** What each choice promises about selling: app usage never; commute times only as anonymous totals for 20+ people. */
+const SALE_PROMISE = {
+  usage: 'Never sold or shared.',
+  commute: 'Your trips are never sold or shared; only anonymous totals for groups of 20 or more people may be.',
+  both: 'App usage is never sold. Commute times are never sold individually; only anonymous totals for groups of 20 or more people may be.',
+};
+
+export function SharingFootnote({ about }: { about: keyof typeof SALE_PROMISE }) {
   return (
     <p className={styles.cardText}>
-      {single ? 'Turning this on' : 'Turning these on'} confirms you&apos;re 18 or older. No name, email or phone number. Not sold or given to anyone.{' '}
+      {about === 'both' ? 'Turning these on' : 'Turning this on'} confirms you&apos;re 18 or older. No name, email or phone number. {SALE_PROMISE[about]}{' '}
       <Link href="/privacy" className={styles.linkButton} style={{ padding: 0 }}>Privacy policy</Link>
     </p>
   );
@@ -53,7 +60,7 @@ export default function SharingCard({ showTitle = true }: { showTitle?: boolean 
       <SharingChoice choice="commute" checked={settings.commute === true} onChange={(on) => void sharing.setCommute(on)} />
       {settings.commute === true && <p className={styles.cardText}>Turning commute sharing off also deletes the commute times you&apos;ve shared.</p>}
       {settings.pendingDelete && <p className={styles.cardText} role="status">Deleting what you shared. This finishes next time you&apos;re online.</p>}
-      <SharingFootnote />
+      <SharingFootnote about="both" />
     </div>
   );
 }
@@ -82,7 +89,7 @@ export function CommutePromptCard() {
       <p className={styles.cardText}>
         Shared for each trip: how long it took, how far, the start time to the nearest 15 minutes, and the rough area it started and ended in (about 5 km across). Never your exact Home, Office or route. Turning it off later in Settings deletes what you shared.
       </p>
-      <SharingFootnote single />
+      <SharingFootnote about="commute" />
       <div className={styles.bannerActions} style={{ gap: '12px' }}>
         <button className="btn-primary" style={{ flex: 1 }} onClick={() => answer(true)}>Share</button>
         <button className={styles.secondaryButton} style={{ flex: 1, marginTop: 0 }} onClick={() => answer(false)}>No thanks</button>

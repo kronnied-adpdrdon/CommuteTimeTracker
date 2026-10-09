@@ -210,6 +210,8 @@ Working backwards from the fixed constraints: production review after applying t
 
 **Commute fields (per trip):** install ID, date, start time rounded to 15 min, day of week, duration, distance (0.1 km), to work / to home / other, automatic or manual, edited or not, origin and destination as ~5 km grid cells (geohash 5), app version. **Never:** exact Home/Office, addresses, GPS points or routes, names, emails. Later: transport mode and cost (v2 items).
 
+**Decided 9 Oct 2026 (owner): data may be sold, but only anonymised and aggregated, never individual level.** Applies to shared commute times only; app-usage statistics are never sold. Privacy policy and consent footnotes say so (policy dated 9 Oct). Safeguards for any export or sale: built only from the `trips_current` view; groups of at least 20 distinct install IDs per area and time bucket (smaller groups suppressed); no install IDs, trip IDs, exact times or 5 km cells with too few people in the output; outliers removed; raw rows never leave BigQuery.
+
 **Decided 7 Oct 2026:** collect **both** app adoption (Firebase Analytics) and shared commute data, with two separate switches. Raw shared trips kept **24 months**, aggregates kept.
 
 **Background from 4 Oct 2026 (night):**

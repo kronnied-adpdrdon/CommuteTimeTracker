@@ -28,6 +28,7 @@ What the app does with data now (rewritten 7 Oct 2026, after "Help improve MYCE"
 
 - Approximate location also covers Firebase Analytics' coarse location, derived from a masked IP address. Advertising ID is not collected (disabled in the manifest).
 - Google (Firebase, Google Cloud) and the geocoders process data on the developer's behalf, so this is **not "shared"** in Play's sense.
+- **Aggregated statistics may be sold (decided 9 Oct 2026):** only anonymised totals for groups of at least 20 people, never individual-level data. Fully anonymised data that can't be linked to a user shouldn't count as "shared"; confirm against Play Console's current help text before answering, and if in doubt declare Approximate location and Other actions as *shared* for *Analytics*.
 - Nothing else is collected. Email reports are user-initiated through their own email app.
 - **Is all user data encrypted in transit?** → Yes (HTTPS everywhere).
 - **Can users request deletion?** → Yes: turning off "Share commute times" deletes everything shared; turning off "Share how you use the app" stops collection and resets the analytics ID; trips on the phone are deleted in the app or by uninstalling. Shared records also expire after 24 months.

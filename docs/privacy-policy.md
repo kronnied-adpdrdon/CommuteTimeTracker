@@ -1,6 +1,6 @@
 # Privacy Policy — MYCE
 
-Last updated: 7 October 2026
+Last updated: 9 October 2026
 
 MYCE is made by Kaustav Dutta ("we"). It has no accounts. Your trips stay on your phone, unless you choose to help improve MYCE by sharing how you use the app or your commute times. Both are off until you turn them on. This page explains what the app uses, what leaves your phone and when, and the choices you have.
 
@@ -28,10 +28,10 @@ The app asks about app usage once during setup, and about commute times once on 
 - Share how you use the app. The app records which features you use: setup screens finished or skipped, whether you chose automatic or manual recording, turning automatic start and stop on or off, that a trip was saved, edited or deleted (not its times, distance or places), reminder switches, and taps on the Pro button or a purchase. This uses Google Analytics for Firebase, a Google service, which also records a random app-instance ID, your phone model, Android version, app version, in-app purchase events, and an approximate location (country, region or city) worked out from a masked IP address. The advertising ID is never collected, and nothing is used for advertising. Turning this off stops it and resets the app-instance ID. Google Analytics keeps this for 14 months; our copy is kept for up to 24 months. How Google handles this data: <https://www.google.com/policies/privacy/partners/>
 - Share commute times. For each trip that starts after you turn this on: the date and weekday, the start time rounded down to 15 minutes, how long it took, the distance to 0.1 km, whether it was to work, to home or neither, whether it started automatically, whether you edited it, and the areas it started and ended in, each about 5 km across. Never your exact Home, Office, addresses, route or GPS points. Each record carries a random ID made on your phone, which is not linked to your name, email, phone number or Google account. If you edit or delete a trip on your phone, the shared copy is updated or deleted too.
 - Where it goes. Shared commute times are sent over an encrypted connection to our server in Mumbai, India (Google Cloud), and stored in Google BigQuery. Firebase App Check, using Google Play Integrity, confirms each upload comes from the genuine app. Google processes this data for us as a service provider.
-- Why. To understand how long commutes take, by area, day and time of day, and to see which parts of the app work and which confuse people. If we ever publish figures, such as average commute times in a city, they will be totals for groups of at least 20 people, never individual trips.
+- Why. To understand how long commutes take, by area, day and time of day, and to see which parts of the app work and which confuse people.
 - How long. Each shared commute record is deleted automatically 24 months after it arrives.
 - Deleting it. Turning off "Share commute times" deletes everything shared from your phone: it is hidden from us as soon as the request reaches us (straight away, or next time your phone is online) and removed within 48 hours. Turning it on again starts afresh with a new random ID. If you uninstall without turning it off, the shared records can no longer be linked to your phone, and they are deleted after 24 months.
-- We never sell this data, never use it for advertising, and never give it to anyone else.
+- Selling or sharing statistics. We may publish, share or sell statistics built from shared commute times, for example average commute times by area, day and hour, to businesses, researchers, city planners or the public. These are always anonymised and aggregated: totals or averages for groups of at least 20 people, containing nothing that could identify anyone. We never sell, share or give anyone individual-level data: not your trips, not your random ID, and nothing linked to your phone. App-usage statistics are never sold or shared, and nothing is used for advertising.
 
 ## Reminders
 
@@ -45,7 +45,7 @@ If Android backup is switched on for your Google account, Android may include th
 
 ## How your data is used
 
-To time your commutes and measure distance, label trips to work or to home, show your history and weekly summaries, send the reminders you turn on, create the reports you ask for, and unlock Pro. If you choose to share, to understand commute times and improve the app (see "Help improve MYCE"). Emails you send us are used to reply to you and to fix problems. We do not sell your data, use it for advertising, or share it with advertisers.
+To time your commutes and measure distance, label trips to work or to home, show your history and weekly summaries, send the reminders you turn on, create the reports you ask for, and unlock Pro. If you choose to share, to understand commute times and improve the app (see "Help improve MYCE"). Emails you send us are used to reply to you and to fix problems. We never sell or share personal or individual-level data, and we do not use it for advertising. Only anonymised, aggregated commute statistics may be shared or sold (see "Help improve MYCE").
 
 ## How long it is kept
 
