@@ -43,6 +43,9 @@ export interface SetupState {
   wizard: SetupWizard | null;
 }
 
+/** Whether there is an earlier screen to go back to (the welcome screen isn't one). */
+export const wizardCanGoBack = (wizard: SetupWizard) => wizard.index > 0 && wizard.steps[wizard.index - 1] !== 'welcome';
+
 const INITIAL: SetupState = { progress: INITIAL_PROGRESS, loaded: false, manufacturer: '', batteryUnrestricted: null, wizard: null };
 
 let state = INITIAL;

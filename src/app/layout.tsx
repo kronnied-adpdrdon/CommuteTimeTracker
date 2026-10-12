@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import AppLinks from "@/components/AppLinks";
+import BackNavigation from "@/components/BackNavigation";
 import BottomNav from "@/components/BottomNav";
 import SetupWizard from "@/components/SetupWizard";
 import { DiagnosticsSync } from "@/lib/diagnostics";
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body>
         <ThemeSync />
         <AppLinks />
+        <BackNavigation />
         <DiagnosticsSync />
         <RemindersSync />
         <AutoTrackingSync />

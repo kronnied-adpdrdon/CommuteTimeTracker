@@ -20,6 +20,7 @@ export class AddressSearchError extends Error {
 
 interface GeocoderPlugin {
   search(options: { query: string }): Promise<{ results: AddressResult[]; source: string }>;
+  reverse(options: { lat: number; lng: number }): Promise<{ label: string | null }>;
 }
 
 const plugin = lazyPlugin<GeocoderPlugin>('Geocoder');
@@ -46,4 +47,16 @@ async function searchOpenStreetMap(query: string): Promise<AddressResult[]> {
   if (!response.ok) throw new AddressSearchError('failed', 'Address search failed.');
   const rows = (await response.json()) as { display_name: string; lat: string; lon: string }[];
   return rows.map((row) => ({ label: row.display_name, lat: Number(row.lat), lng: Number(row.lon) }));
+}
+
+/** The address at a point (Home or Office saved from GPS), or null if offline or nothing was found. */
+export async function addressAt(where: { lat: number; lng: number }): Promise<string | null> {
+  try {
+    if (await isNativeApp()) return (await (await plugin()).native.reverse(where)).label || null;
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${where.lat}&lon=${where.lng}`);
+    if (!response.ok) return null;
+    return ((await response.json()) as { display_name?: string }).display_name || null;
+  } catch {
+    return null;
+  }
 }

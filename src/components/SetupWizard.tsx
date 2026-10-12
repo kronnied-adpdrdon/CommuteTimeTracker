@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styles from '@/app/page.module.css';
 import AddressPicker from '@/components/AddressPicker';
 import { CommuteTimePicker, DAYS } from '@/components/AutoTrackingCard';
@@ -13,7 +13,7 @@ import { toggleDay } from '@/lib/auto/settings';
 import { commute, useCommute } from '@/lib/commute';
 import { notifications, useNotifications } from '@/lib/notifications';
 import { clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
-import { currentFacts, setup, useSetup } from '@/lib/setup';
+import { currentFacts, setup, useSetup, wizardCanGoBack } from '@/lib/setup';
 import { sharing, track } from '@/lib/sharing';
 import { SetupStep, batteryAdvice, checklist, leaveTimeFromWindow, windowFromLeaveTime } from '@/lib/setup/logic';
 
@@ -27,11 +27,10 @@ export default function SetupWizard() {
   const step = wizard.steps[wizard.index];
   const counted: SetupStep[] = wizard.steps.filter((s) => s !== 'welcome' && s !== 'done');
   const position = counted.indexOf(step);
-  const canGoBack = wizard.index > 0 && wizard.steps[wizard.index - 1] !== 'welcome';
+  const canGoBack = wizardCanGoBack(wizard);
 
   return (
     <div className={styles.setupPage} role="dialog" aria-modal="true" aria-labelledby="setup-title">
-      <BackButton canGoBack={canGoBack} single={wizard.single} />
       {position >= 0 && (
         <div className={styles.setupHeader}>
           {canGoBack ? (
@@ -58,34 +57,6 @@ export default function SetupWizard() {
       </div>
     </div>
   );
-}
-
-/**
- * Android's back button goes back one screen while the setup is showing. On the first screen it closes a
- * single item, or sends the app to the background (the setup resumes there next time).
- */
-function BackButton({ canGoBack, single }: { canGoBack: boolean; single: boolean }) {
-  useEffect(() => {
-    let remove: (() => void) | undefined;
-    let cancelled = false;
-    (async () => {
-      const { Capacitor } = await import('@capacitor/core');
-      if (!Capacitor.isNativePlatform()) return;
-      const { App } = await import('@capacitor/app');
-      const listener = await App.addListener('backButton', () => {
-        if (canGoBack) void setup.back();
-        else if (single) setup.close();
-        else void App.minimizeApp();
-      });
-      if (cancelled) void listener.remove();
-      else remove = () => void listener.remove();
-    })();
-    return () => {
-      cancelled = true;
-      remove?.();
-    };
-  }, [canGoBack, single]);
-  return null;
 }
 
 /** "8:45 AM" or "08:45", following the phone, like the time boxes above it. */
@@ -159,20 +130,24 @@ function Feature({ icon, title, text }: { icon: keyof typeof ICONS; title: strin
 /** Step 1: app-usage statistics only. The switch starts off; Continue with it off is a full answer. */
 function Usage() {
   const [usage, setUsage] = useState(sharing.getState().settings.usage === true);
+  const [shareCommute, setShareCommute] = useState(sharing.getState().settings.commute === true);
 
   return (
     <>
       <h2 id="setup-title" className={styles.setupTitle}>Help improve MYCE</h2>
-      <p className={styles.cardText}>Optional. It stays off unless you turn it on, and you can turn it off any time in Settings.</p>
+      <p className={styles.cardText}>Optional. Both stay off unless you turn them on, and you can turn them off any time in Settings.</p>
       <div className={styles.setupStack}>
         <SharingChoice choice="usage" checked={usage} onChange={setUsage} />
+        <SharingChoice choice="commute" checked={shareCommute} onChange={setShareCommute} />
       </div>
-      <SharingFootnote about="usage" />
+      <SharingFootnote about="both" />
       <div className={styles.setupActions}>
         <button
           className="btn-primary"
           onClick={async () => {
             await sharing.setUsage(usage);
+            // Left off here, commute sharing stays unanswered, so Home can still ask once the user has seen a few trips.
+            if (shareCommute || sharing.getState().settings.commute === true) await sharing.setCommute(shareCommute);
             await setup.next();
           }}
         >

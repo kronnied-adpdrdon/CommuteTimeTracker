@@ -27,7 +27,7 @@ export const STALE_AFTER_MS = 6 * 60 * 60 * 1000;
 /** A reading at least this accurate is good enough to save as Home or Office. */
 export const PLACE_ACCURACY_METERS = 50;
 
-/** Shown for a place saved from GPS instead of a typed address. */
+/** Shown for a place saved from GPS until its address is found (and for good if it never is). */
 export const CURRENT_LOCATION_LABEL = 'Current location';
 
 export type CommutePhase = 'loading' | 'idle' | 'tracking' | 'interrupted';
@@ -68,6 +68,8 @@ export interface CommuteDeps {
   trial?: TrialStore;
   /** Google Play Billing. Null in demo builds, where the Pro switch in Settings is used instead. */
   billing: ProBilling | null;
+  /** The address at a point, for places saved from GPS. Null when offline or unknown. Optional for tests. */
+  addressOf?: (where: LatLng) => Promise<string | null>;
   now?: () => number;
 }
 
@@ -229,6 +231,24 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
     set({ places, trips: await deps.trips.list() });
   }
 
+  /**
+   * Swaps "Current location" for the street address, so Home and Office don't both read "Current location".
+   * Runs after a GPS save, and at start-up for places saved offline or before addresses were looked up.
+   */
+  async function nameUnnamedPlaces() {
+    if (!deps.addressOf) return;
+    for (const kind of ['home', 'office'] as const) {
+      const place = state.places[kind];
+      if (!place || (place.label && place.label !== CURRENT_LOCATION_LABEL)) continue;
+      const label = await deps.addressOf({ lat: place.lat, lng: place.lng }).catch(() => null);
+      // Skip if offline, or if the place was changed or cleared while the address was being looked up.
+      if (!label || state.places[kind] !== place) continue;
+      const places = { ...state.places, [kind]: { ...place, label } };
+      await deps.places.save(places);
+      set({ places });
+    }
+  }
+
   const controller: CommuteController = {
     getState: () => state,
     subscribe(listener) {
@@ -245,6 +265,7 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
           deps.pro.load(),
         ]);
         set({ trips, places, placesPromptNeverAsk, isPro });
+        void nameUnnamedPlaces();
         if (deps.trial) {
           const stored = await deps.trial.load();
           const start = trialStart(stored, trips, now());
@@ -346,6 +367,7 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
           return;
         }
         await savePlace(kind, latest, CURRENT_LOCATION_LABEL);
+        void nameUnnamedPlaces();
         return;
       }
       set({ locating: kind, error: null });
@@ -353,6 +375,7 @@ export function createCommuteController(deps: CommuteDeps): CommuteController {
         // An address needs location only; notifications are asked for when a trip starts, or in the setup.
         await deps.tracker.requestPermissions({ notifications: false });
         await savePlace(kind, await deps.tracker.currentFix(), CURRENT_LOCATION_LABEL);
+        void nameUnnamedPlaces();
       } catch (error) {
         set({ error: asLocationError(error) });
       } finally {

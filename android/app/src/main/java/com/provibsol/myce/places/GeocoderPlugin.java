@@ -26,9 +26,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Turns a typed address into map points. Tries Android's built-in Geocoder first (Google's service on most
- * phones); if that is missing or finds nothing, asks OpenStreetMap's free Nominatim service.
- * Only the typed text leaves the phone, and only when the user presses Search.
+ * Turns a typed address into map points, and a point saved from GPS into its address. Tries Android's built-in
+ * Geocoder first (Google's service on most phones); if that is missing or finds nothing, asks OpenStreetMap's free
+ * Nominatim service. Only the typed text (on Search) or the saved Home or Office point (on "use my current location")
+ * leaves the phone.
  */
 @CapacitorPlugin(name = "Geocoder")
 public class GeocoderPlugin extends Plugin {
@@ -82,6 +83,62 @@ public class GeocoderPlugin extends Plugin {
         });
     }
 
+    /** The address at a point, for Home or Office saved from the current location. Resolves `label: null` if none is found. */
+    @PluginMethod
+    public void reverse(PluginCall call) {
+        Double lat = call.getDouble("lat");
+        Double lng = call.getDouble("lng");
+        if (lat == null || lng == null) {
+            call.reject("lat and lng are required.", "BAD_POINT");
+            return;
+        }
+        executor.execute(() -> {
+            String label = null;
+            String source = "android";
+            try {
+                label = androidReverse(lat, lng);
+            } catch (IOException | RuntimeException e) {
+                DiagLog.log("Geocoder", "Android reverse lookup failed: " + e);
+            }
+            if (label == null) {
+                source = "openstreetmap";
+                try {
+                    label = nominatimReverse(lat, lng);
+                } catch (IOException | JSONException e) {
+                    DiagLog.log("Geocoder", "Nominatim reverse lookup failed: " + e);
+                }
+            }
+            DiagLog.log("Geocoder", label == null ? "Reverse lookup found nothing" : "Reverse lookup found an address via " + source);
+            JSObject out = new JSObject();
+            out.put("label", label);
+            call.resolve(out);
+        });
+    }
+
+    private String androidReverse(double lat, double lng) throws IOException {
+        if (!Geocoder.isPresent()) return null;
+        @SuppressWarnings("deprecation")
+        List<Address> addresses = new Geocoder(getContext(), Locale.getDefault()).getFromLocation(lat, lng, 1);
+        if (addresses == null || addresses.isEmpty()) return null;
+        String label = addressLines(addresses.get(0));
+        return label.isEmpty() ? null : label;
+    }
+
+    private String nominatimReverse(double lat, double lng) throws IOException, JSONException {
+        JSONObject o = new JSONObject(nominatimGet("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + lat + "&lon=" + lng));
+        String label = o.optString("display_name", "");
+        return label.isEmpty() ? null : label;
+    }
+
+    private static String addressLines(Address a) {
+        StringBuilder label = new StringBuilder();
+        for (int i = 0; i <= a.getMaxAddressLineIndex(); i++) {
+            if (label.length() > 0) label.append(", ");
+            label.append(a.getAddressLine(i));
+        }
+        return label.toString();
+    }
+
     private List<JSONObject> androidGeocoder(String query) throws IOException {
         List<JSONObject> out = new ArrayList<>();
         if (!Geocoder.isPresent()) {
@@ -93,20 +150,24 @@ public class GeocoderPlugin extends Plugin {
         if (addresses == null) return out;
         for (Address a : addresses) {
             if (!a.hasLatitude() || !a.hasLongitude()) continue;
-            StringBuilder label = new StringBuilder();
-            for (int i = 0; i <= a.getMaxAddressLineIndex(); i++) {
-                if (label.length() > 0) label.append(", ");
-                label.append(a.getAddressLine(i));
-            }
-            if (label.length() == 0) label.append(query);
-            out.add(point(label.toString(), a.getLatitude(), a.getLongitude()));
+            String label = addressLines(a);
+            out.add(point(label.isEmpty() ? query : label, a.getLatitude(), a.getLongitude()));
         }
         return out;
     }
 
     private List<JSONObject> nominatim(String query) throws IOException, JSONException {
-        URL url = new URL("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=" + MAX_RESULTS + "&q=" + URLEncoder.encode(query, "UTF-8"));
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        JSONArray array = new JSONArray(nominatimGet("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=" + MAX_RESULTS + "&q=" + URLEncoder.encode(query, "UTF-8")));
+        List<JSONObject> out = new ArrayList<>();
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject o = array.getJSONObject(i);
+            out.add(point(o.optString("display_name", query), o.getDouble("lat"), o.getDouble("lon")));
+        }
+        return out;
+    }
+
+    private static String nominatimGet(String address) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(address).openConnection();
         connection.setConnectTimeout(10_000);
         connection.setReadTimeout(10_000);
         // Nominatim's usage policy asks for an identifying User-Agent.
@@ -119,13 +180,7 @@ public class GeocoderPlugin extends Plugin {
                 String line;
                 while ((line = reader.readLine()) != null) body.append(line);
             }
-            JSONArray array = new JSONArray(body.toString());
-            List<JSONObject> out = new ArrayList<>();
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject o = array.getJSONObject(i);
-                out.add(point(o.optString("display_name", query), o.getDouble("lat"), o.getDouble("lon")));
-            }
-            return out;
+            return body.toString();
         } finally {
             connection.disconnect();
         }

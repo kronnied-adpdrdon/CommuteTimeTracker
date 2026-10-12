@@ -131,7 +131,11 @@ function fakeBilling() {
   return { billing, setStatus: (s: ProStatus | Error) => (status = s), setOutcome: (o: PurchaseOutcome | Error) => (outcome = o) };
 }
 
-function setup(store = createMemoryStore(), play: ReturnType<typeof fakeBilling> | null = null) {
+function setup(
+  store = createMemoryStore(),
+  play: ReturnType<typeof fakeBilling> | null = null,
+  addressOf?: (where: { lat: number; lng: number }) => Promise<string | null>,
+) {
   let clock = T0;
   const recorder = fakeRecorder(() => clock);
   const controller = createCommuteController({
@@ -140,6 +144,7 @@ function setup(store = createMemoryStore(), play: ReturnType<typeof fakeBilling>
     places: createPlacesStore(store),
     pro: createProStore(store),
     billing: play?.billing ?? null,
+    addressOf,
     now: () => clock,
   });
   return { controller, recorder, store, advance: (ms: number) => (clock += ms), setClock: (ms: number) => (clock = ms) };
@@ -289,6 +294,45 @@ describe('places', () => {
     const restarted = setup(store).controller;
     await restarted.init();
     expect(restarted.getState().places.home).toMatchObject(home);
+  });
+
+  it('a place saved from GPS gets its street address instead of "Current location"', async () => {
+    const { controller, recorder } = setup(undefined, null, async () => '12th Main, Indiranagar, Bengaluru');
+    await controller.init();
+    await controller.start();
+    recorder.progress(500, { lat: 12.95, lng: 77.6, accuracy: 7, timestamp: T0 });
+    await controller.setPlaceHere('office');
+    await flush();
+    expect(controller.getState().places.office).toEqual({ lat: 12.95, lng: 77.6, label: '12th Main, Indiranagar, Bengaluru' });
+  });
+
+  it('a place saved offline keeps "Current location" and gets its address on a later start', async () => {
+    let online = false;
+    const addressOf = async () => (online ? 'Koramangala, Bengaluru' : null);
+    const { controller, store } = setup(undefined, null, addressOf);
+    await controller.init();
+    await controller.setPlaceHere('home');
+    await flush();
+    expect(controller.getState().places.home?.label).toBe('Current location');
+    online = true;
+    const restarted = setup(store, null, addressOf).controller;
+    await restarted.init();
+    await flush();
+    expect(restarted.getState().places.home?.label).toBe('Koramangala, Bengaluru');
+    const again = setup(store).controller;
+    await again.init();
+    expect(again.getState().places.home?.label).toBe('Koramangala, Bengaluru');
+  });
+
+  it('an address that arrives after the place was changed is ignored', async () => {
+    let answer: (label: string) => void = () => {};
+    const { controller } = setup(undefined, null, () => new Promise((resolve) => (answer = resolve)));
+    await controller.init();
+    await controller.setPlaceHere('home');
+    await controller.setPlace('home', office, 'Typed address');
+    answer('Old spot');
+    await flush();
+    expect(controller.getState().places.home).toMatchObject({ ...office, label: 'Typed address' });
   });
 
   it('a failed reading shows the error and saves nothing', async () => {

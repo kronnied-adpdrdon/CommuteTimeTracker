@@ -17,7 +17,7 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-export const LEGAL_UPDATED = '9 October 2026';
+export const LEGAL_UPDATED = '12 October 2026';
 
 /** Who publishes the app. Shown publicly in both documents, as Google Play requires a privacy contact. */
 export const PUBLISHER_NAME = 'Kaustav Dutta';
@@ -44,7 +44,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: 'What can leave your phone, and only when you act',
       bullets: [
-        'Address search. When you type an address and press Search, the text you typed is sent over HTTPS to your phone\'s built-in address lookup (provided by Google on most phones) and, if that finds nothing, to OpenStreetMap\'s Nominatim service. Only the typed text is sent, and only when you press Search. We do not receive it, and those services have their own privacy policies.',
+        'Address lookup. When you type an address and press Search, the text you typed is sent over HTTPS to your phone\'s built-in address lookup (provided by Google on most phones) and, if that finds nothing, to OpenStreetMap\'s Nominatim service. When you set Home or Office from your current location, that point is sent the same way to find its street address. Nothing else is sent, and only at those moments. We do not receive it, and those services have their own privacy policies.',
         'Bug reports and feedback. If you choose Report a bug or Send feedback, the app opens your own email app with your message, any screenshots you add and, for bug reports, a diagnostics file attached. You can read everything before you press Send, and nothing is sent unless you do. The diagnostics file lists your phone model, Android version, app version, the state of location and notification permissions, and recent app events. It does not contain your locations, addresses or trips.',
         'Google Play. Purchases and restoring a purchase go through Google Play.',
         'Google location services. On most phones, location comes from Google Play services. Google may handle it under your device\'s own location settings. If Google Play services is missing, the app uses Android\'s own GPS instead.',

@@ -1,6 +1,6 @@
 # Privacy Policy — MYCE
 
-Last updated: 9 October 2026
+Last updated: 12 October 2026
 
 MYCE is made by Kaustav Dutta ("we"). It has no accounts. Your trips stay on your phone, unless you choose to help improve MYCE by sharing how you use the app or your commute times. Both are off until you turn them on. This page explains what the app uses, what leaves your phone and when, and the choices you have.
 
@@ -16,7 +16,7 @@ MYCE is made by Kaustav Dutta ("we"). It has no accounts. Your trips stay on you
 
 ## What can leave your phone, and only when you act
 
-- Address search. When you type an address and press Search, the text you typed is sent over HTTPS to your phone's built-in address lookup (provided by Google on most phones) and, if that finds nothing, to OpenStreetMap's Nominatim service. Only the typed text is sent, and only when you press Search. We do not receive it, and those services have their own privacy policies.
+- Address lookup. When you type an address and press Search, the text you typed is sent over HTTPS to your phone's built-in address lookup (provided by Google on most phones) and, if that finds nothing, to OpenStreetMap's Nominatim service. When you set Home or Office from your current location, that point is sent the same way to find its street address. Nothing else is sent, and only at those moments. We do not receive it, and those services have their own privacy policies.
 - Bug reports and feedback. If you choose Report a bug or Send feedback, the app opens your own email app with your message, any screenshots you add and, for bug reports, a diagnostics file attached. You can read everything before you press Send, and nothing is sent unless you do. The diagnostics file lists your phone model, Android version, app version, the state of location and notification permissions, and recent app events. It does not contain your locations, addresses or trips.
 - Google Play. Purchases and restoring a purchase go through Google Play.
 - Google location services. On most phones, location comes from Google Play services. Google may handle it under your device's own location settings. If Google Play services is missing, the app uses Android's own GPS instead.

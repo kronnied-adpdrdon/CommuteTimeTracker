@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { isSettingsScreen } from '@/lib/navigation';
 
 // Using inline SVGs to avoid extra dependencies and match the mockups perfectly.
 const HomeIcon = ({ active }: { active: boolean }) => (
@@ -49,11 +50,13 @@ export default function BottomNav() {
     <nav className="bottom-nav">
       {tabs.map((tab) => {
         // Screens opened from Settings keep the Settings tab lit.
-        const fromSettings = tab.path === '/settings' && /^\/(settings|notifications|feedback|report-bug|privacy|terms|licenses)(\/|$)/.test(pathname);
+        const fromSettings = tab.path === '/settings' && isSettingsScreen(pathname);
         const isActive = pathname === tab.path || fromSettings;
         return (
-          <Link 
-            href={tab.path} 
+          <Link
+            href={tab.path}
+            // Tabs swap the screen rather than stacking it, so Back doesn't walk through every tab visited.
+            replace
             key={tab.name}
             style={{
               display: 'flex',
