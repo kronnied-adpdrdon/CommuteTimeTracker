@@ -2,8 +2,11 @@ package com.provibsol.myce.auto;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentSender;
 import android.os.Build;
 import android.os.PowerManager;
+import android.provider.Settings;
 import com.provibsol.myce.support.DiagLog;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -13,6 +16,11 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.Priority;
 
 /** The app's bridge to automatic start and stop. Settings are saved on the phone; nothing is sent anywhere. */
 @CapacitorPlugin(
@@ -24,12 +32,71 @@ import com.getcapacitor.annotation.PermissionCallback;
 )
 public class AutoTrackingPlugin extends Plugin {
 
+    private static final int REQUEST_ACCURACY = 3101;
+
+    /** Whether location and Location Accuracy were on when last checked, to notice them being turned back on. */
+    private boolean accuracyWasOn;
+
     @Override
     public void load() {
         DiagLog.init(getContext());
+        accuracyWasOn = AutoGeofences.accuracyOn(getContext());
         // Covers a permission granted or revoked in phone settings since the last launch.
         AutoGeofences.sync(getContext());
         AutoActions.apply(getContext(), AutoStore.check(getContext(), System.currentTimeMillis()));
+    }
+
+    /**
+     * Back in the app, e.g. from phone settings or Google's dialog: if location came back on, set the circles up
+     * again, and tell the screen (Google's dialog doesn't hide the app, so the page can't notice by itself).
+     */
+    @Override
+    protected void handleOnResume() {
+        boolean on = AutoGeofences.accuracyOn(getContext());
+        if (on && !accuracyWasOn) {
+            DiagLog.log("auto", "Location Accuracy is back on: setting the circles up again");
+            AutoGeofences.sync(getContext());
+        }
+        if (on != accuracyWasOn) notifyListeners("statusChanged", permissions());
+        accuracyWasOn = on;
+    }
+
+    /**
+     * Asks to turn on location and Google Location Accuracy, with Google's one-tap dialog where available, or opens
+     * the phone's location settings. Resolves at once; the app re-checks when the user comes back.
+     */
+    @PluginMethod
+    public void fixAccuracy(PluginCall call) {
+        LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 60_000).build();
+        LocationSettingsRequest settings = new LocationSettingsRequest.Builder().addLocationRequest(request).setAlwaysShow(true).build();
+        LocationServices.getSettingsClient(getActivity())
+            .checkLocationSettings(settings)
+            .addOnSuccessListener(r -> {
+                // Google's check is satisfied, but the setting may still be off on some phones: show the page.
+                if (!AutoGeofences.accuracyOn(getContext())) openLocationSettings();
+                call.resolve(permissions());
+            })
+            .addOnFailureListener(e -> {
+                boolean shown = false;
+                if (e instanceof ResolvableApiException) {
+                    try {
+                        ((ResolvableApiException) e).startResolutionForResult(getActivity(), REQUEST_ACCURACY);
+                        shown = true;
+                    } catch (IntentSender.SendIntentException | RuntimeException ignored) {
+                        // Fall back to the settings page.
+                    }
+                }
+                if (!shown) openLocationSettings();
+                call.resolve(permissions());
+            });
+    }
+
+    private void openLocationSettings() {
+        try {
+            getActivity().startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        } catch (RuntimeException e) {
+            DiagLog.log("auto", "Couldn't open location settings: " + e);
+        }
     }
 
     /** Saves the user's choices and the Home and Office points (a JSON object), and updates the circles. */
@@ -68,7 +135,7 @@ public class AutoTrackingPlugin extends Plugin {
         call.resolve(permissions());
     }
 
-    /** Whether automatic start and stop can work: "Allow all the time", and Google Play services for geofencing. */
+    /** Whether automatic start and stop can work: "Allow all the time", Google Play services, and Location Accuracy on. */
     @PluginMethod
     public void checkBackground(PluginCall call) {
         call.resolve(permissions());
@@ -78,6 +145,7 @@ public class AutoTrackingPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("background", AutoGeofences.hasBackgroundLocation(getContext()));
         result.put("supported", AutoGeofences.supported(getContext()));
+        result.put("accuracy", AutoGeofences.accuracyOn(getContext()));
         return result;
     }
 

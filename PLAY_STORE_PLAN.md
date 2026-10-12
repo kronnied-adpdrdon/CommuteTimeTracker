@@ -136,7 +136,7 @@ Working backwards from the fixed constraints: production review after applying t
 
 - [x] App icon (pin + clock, adaptive + Android 13 themed + legacy PNGs) and splash screen; `store/play-icon-512.png` for the listing
 - [x] Release AAB builds and is signed with the upload key: `cd android && JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home ./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab` (run `npm run build:android` first)
-- [ ] Upload the AAB and enable Play App Signing. **Ready 12 Oct:** `dist/MYCE-1.2.1-build6.aab` (1.2.1, build 6, Android 8+, signed with the upload key, no developer tools; not in git)
+- [ ] Upload the AAB and enable Play App Signing. **Ready 12 Oct:** `dist/MYCE-1.2.2-build7.aab` (1.2.2, build 7, Android 8+, signed with the upload key, no developer tools; not in git). Testers' demo: `dist/MYCE-1.2.2-demo.apk`
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
 - [x] Privacy policy and Terms and conditions pages inside the app (Settings), offline. Text lives in `src/lib/legal.ts`; `npm run export:legal` writes `docs/privacy-policy.md` and `docs/terms.md`. **Still to do:** host `docs/privacy-policy.md` at a public URL (GitHub Pages / Google Sites) for the Play listing, and have the Terms' governing-law line (India) and the publisher's legal name reviewed
@@ -170,6 +170,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Android Back: an inner screen returns to the one before, a tab goes Home, Home sends the app to the background; tabs no longer stack history
 - [x] Home/Office saved from "use my current location" show the street address (reverse lookup; privacy policy updated 12 Oct)
 - [x] "Share commute times" on the setup's first page, beside app usage (the Home card after 3 trips still asks if left unanswered)
+- [x] Home's weekly comparison: this week so far vs the same part of last week (was a whole week, so every Monday showed "↓100%"); nothing shown until this week has a trip (1.2.2)
 
 ## Phase 5 — Pro (₹100, first 30 days free) and reports (Oct 8–20; **first thing cut if behind**)
 
@@ -290,7 +291,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] ~~Median-based expiry; distance estimate before that~~ replaced 4 Oct by the user's "Usually takes about" time (setup + Settings), with the wait shown in plain words under it
 - [x] Background location: "Allow all the time" flow with a prominent in-app disclosure before the system prompt; "Paused" warning if the permission is taken back; message on phones without Google Play services
 - [ ] Play Console: background location declaration (**text drafted** in `store/play-console-answers.md`, with a video script) + record the demo video; check the Data safety form (location still stays on the phone). **12 Oct:** first half recorded (`store/videos/2-background-location-permission.mp4`: disclosure → "Allow all the time" → switched on). The automatic trip itself couldn't be recorded on the emulator (Google's geofencer ignored the emulator's fake locations even with Location Accuracy on); record it on a real phone during a real commute and join the two clips
-- [ ] **Found 12 Oct:** geofences never fire while Google Location Accuracy is off ("nlp consent=false"), and Android drops them until the app re-registers. Detect it (network provider disabled) and warn in setup / Settings, and re-register geofences when it is turned back on
+- [x] **Found and fixed 12 Oct:** geofences never fire while location or Google Location Accuracy is off (Android drops them). Now: a "paused" warning on Home, in Automatic start and stop and in the Settings summary, with "Turn it on" (Google's one-tap dialog, or location settings); geofences are set up again as soon as it's back on (checked on returning to the app). Emulator-tested off → warning → Turn on → cleared, circles re-registered. Still only noticed when the app is opened: a phone that turns it back on with the app closed re-registers at the next app open, reboot or update
 - [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated)
 - [ ] Battery-saver guidance for phones that kill background apps (Xiaomi, Samsung): **built into the first-time setup** (brand-specific steps + Open app settings, 4 Oct); still to check the wording on a real Xiaomi and Samsung
 - [x] Developer tools: 6 scenarios (commute to work, commute home, errand, under 5 min, never arrives, leaves at 2 pm) through the real Java rules; all matched on the emulator

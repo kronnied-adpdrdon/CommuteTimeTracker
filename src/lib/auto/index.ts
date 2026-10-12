@@ -25,12 +25,17 @@ interface PermissionStatus {
   background: boolean;
   /** Google Play services is present, so the phone can watch Home and Office. */
   supported: boolean;
+  /** Location and Google Location Accuracy are on. Without them the phone never reports leaving or arriving. */
+  accuracy: boolean;
 }
 
 interface AutoTrackingPlugin {
   configure(config: Record<string, unknown>): Promise<void>;
   checkBackground(): Promise<PermissionStatus>;
   requestBackground(): Promise<PermissionStatus>;
+  fixAccuracy(): Promise<PermissionStatus>;
+  /** Location or Location Accuracy was switched on or off while the app was away (or behind Google's dialog). */
+  addListener(event: 'statusChanged', cb: (status: PermissionStatus) => void): Promise<unknown>;
   simulate(options: { event: AutoEvent; place?: AutoPlace; at?: number }): Promise<AutoDecision>;
 }
 
@@ -50,9 +55,18 @@ export interface AutoState {
   /** Null until checked, or in a browser. */
   background: boolean | null;
   supported: boolean | null;
+  accuracy: boolean | null;
 }
 
-const INITIAL: AutoState = { settings: DEFAULT_AUTO_SETTINGS, loaded: false, background: null, supported: null };
+const INITIAL: AutoState = { settings: DEFAULT_AUTO_SETTINGS, loaded: false, background: null, supported: null, accuracy: null };
+
+/** Why automatic start and stop is switched on but can't work right now, or null if nothing is wrong (or not known yet). */
+export function pausedReason(auto: AutoState): 'permission' | 'accuracy' | null {
+  if (!auto.settings.enabled) return null;
+  if (auto.background === false) return 'permission';
+  if (auto.accuracy === false) return 'accuracy';
+  return null;
+}
 
 let state = INITIAL;
 const listeners = new Set<() => void>();
@@ -97,6 +111,7 @@ function start(): Promise<void> {
     commute.subscribe(() => void push());
     await push();
     await refreshPermission();
+    if (await isNativeApp()) await (await plugin()).native.addListener('statusChanged', (status) => set(status));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') void refreshPermission();
     });
@@ -130,6 +145,14 @@ export const autoTracking = {
       return true;
     } catch {
       return false;
+    }
+  },
+  /** Turns on location and Google Location Accuracy: Google's one-tap dialog, or the phone's location settings. */
+  async fixAccuracy(): Promise<void> {
+    try {
+      set(await (await plugin()).native.fixAccuracy());
+    } catch {
+      // Re-checked when the user comes back to the app.
     }
   },
   /** Developer tools: a pretend Home / Office crossing, run through the real rules on the phone. */

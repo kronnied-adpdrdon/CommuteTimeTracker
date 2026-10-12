@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import styles from '@/app/page.module.css';
+import AutoPausedBanner from '@/components/AutoPausedBanner';
 import BackgroundDisclosure from '@/components/BackgroundDisclosure';
 import Switch from '@/components/Switch';
 import { autoTracking, useAutoTracking } from '@/lib/auto';
 import { AutoSettings, MAX_COMMUTE_MINUTES, MAX_RADIUS_METERS, MIN_COMMUTE_MINUTES, MIN_RADIUS_METERS, clampCommute, clampRadius, formatMinutesLong, placesTooClose, toggleDay, waitMinutes } from '@/lib/auto/settings';
-import { commute, useCommute } from '@/lib/commute';
+import { useCommute } from '@/lib/commute';
 import { setup } from '@/lib/setup';
 import { clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
 
@@ -148,14 +149,7 @@ export default function AutoTrackingCard() {
       {supported === false && (
         <p className={styles.fieldError}>This phone doesn&apos;t have Google Play services, which automatic start and stop needs. Start and Stop still work.</p>
       )}
-      {settings.enabled && background === false && (
-        <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
-          <span>Paused: location is no longer set to &ldquo;Allow all the time&rdquo;.</span>
-          <div className={styles.bannerActions}>
-            <button className={styles.linkButton} onClick={() => commute.openSettings()}>Open phone settings</button>
-          </div>
-        </div>
-      )}
+      <AutoPausedBanner />
 
       {settings.enabled && (
         <>

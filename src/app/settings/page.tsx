@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from '../page.module.css';
 import { SettingsGroup, SettingsRow } from '@/components/SettingsList';
-import { useAutoTracking } from '@/lib/auto';
+import { pausedReason, useAutoTracking } from '@/lib/auto';
 import { daysSummary } from '@/lib/auto/settings';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
@@ -48,7 +48,9 @@ function useAppVersion(): string {
  */
 export default function SettingsPage() {
   const state = useCommute();
-  const { settings: auto } = useAutoTracking();
+  const autoState = useAutoTracking();
+  const { settings: auto } = autoState;
+  const paused = pausedReason(autoState) !== null;
   const { settings: sharing } = useSharing();
   const [theme, setTheme] = useTheme();
   const devTools = useDevTools();
@@ -84,7 +86,7 @@ export default function SettingsPage() {
 
         <SettingsGroup title="Commute">
           <SettingsRow icon="pin" title="Home and Office" summary={placesSummary} href="/settings/places" />
-          <SettingsRow icon="auto" title="Automatic start and stop" summary={auto.enabled ? `On · ${daysSummary(auto.days)}` : 'Off · tap Start and Stop yourself'} href="/settings/automatic" />
+          <SettingsRow icon="auto" title="Automatic start and stop" summary={paused ? 'Paused · tap to fix' : auto.enabled ? `On · ${daysSummary(auto.days)}` : 'Off · tap Start and Stop yourself'} href="/settings/automatic" />
           <SettingsRow icon="bell" title="Notifications" summary="Leave-time, weekly summary and more" href="/notifications" />
         </SettingsGroup>
 

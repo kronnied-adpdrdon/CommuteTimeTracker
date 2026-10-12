@@ -51,25 +51,30 @@ export interface WeeklySummary {
   daysWithTrips: number;
   /** Average over days that had at least one trip, not over all seven days. */
   avgSecondsPerDay: number;
-  /** Whole-number % change in total commute time vs the previous week. Positive = longer. Null if last week had no trips. */
+  /**
+   * Whole-number % change in total commute time vs the same part of last week (Monday up to this time a week ago),
+   * so a Monday isn't measured against a whole week. Positive = longer. Null if this week has no trips yet, or last
+   * week had none by this time.
+   */
   changePercent: number | null;
 }
 
-/** Totals for the Monday-to-Sunday week containing `now`, compared with the week before. */
+/** Totals for the Monday-to-Sunday week containing `now`, compared with the same part of the week before. */
 export function weeklySummary(trips: Trip[], now: Date): WeeklySummary {
   const weekStart = startOfWeek(now);
   const nextWeekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7);
   const prevWeekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() - 7);
+  const aWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, now.getHours(), now.getMinutes(), now.getSeconds());
 
   const inRange = (from: Date, to: Date) =>
     trips.filter((t) => t.startedAt >= from.getTime() && t.startedAt < to.getTime());
 
   const thisWeek = inRange(weekStart, nextWeekStart);
-  const lastWeek = inRange(prevWeekStart, weekStart);
+  const lastWeekSoFar = inRange(prevWeekStart, aWeekAgo);
 
   const totalSeconds = thisWeek.reduce((sum, t) => sum + t.durationSeconds, 0);
   const totalMeters = thisWeek.reduce((sum, t) => sum + t.distanceMeters, 0);
-  const prevSeconds = lastWeek.reduce((sum, t) => sum + t.durationSeconds, 0);
+  const prevSeconds = lastWeekSoFar.reduce((sum, t) => sum + t.durationSeconds, 0);
   const daysWithTrips = new Set(thisWeek.map((t) => dayKey(t.startedAt))).size;
 
   return {
@@ -77,7 +82,7 @@ export function weeklySummary(trips: Trip[], now: Date): WeeklySummary {
     totalMeters,
     daysWithTrips,
     avgSecondsPerDay: daysWithTrips === 0 ? 0 : Math.round(totalSeconds / daysWithTrips),
-    changePercent: prevSeconds === 0 ? null : Math.round(((totalSeconds - prevSeconds) / prevSeconds) * 100),
+    changePercent: thisWeek.length === 0 || prevSeconds === 0 ? null : Math.round(((totalSeconds - prevSeconds) / prevSeconds) * 100),
   };
 }
 

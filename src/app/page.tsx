@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import RouteLine from '@/components/RouteLine';
+import AutoPausedBanner from '@/components/AutoPausedBanner';
 import SetupChecklist from '@/components/SetupChecklist';
 import { CommutePromptCard } from '@/components/SharingCard';
 import TripRow from '@/components/TripRow';
@@ -75,6 +76,7 @@ export default function Home() {
         )}
 
         {phase !== 'loading' && phase !== 'interrupted' && <SetupChecklist />}
+        {phase === 'idle' && <AutoPausedBanner />}
 
         {phase === 'interrupted' && session ? (
           <div className={styles.trackingCard}>
@@ -169,16 +171,18 @@ export default function Home() {
             </div>
           </div>
           <div className={styles.trendRow}>
-            {week.changePercent === null ? (
-              <span style={{ color: 'var(--text-secondary)' }}>No trips last week to compare with</span>
+            {week.daysWithTrips === 0 ? (
+              <span style={{ color: 'var(--text-secondary)' }}>No trips yet this week</span>
+            ) : week.changePercent === null ? (
+              <span style={{ color: 'var(--text-secondary)' }}>No trips by this time last week to compare with</span>
             ) : week.changePercent === 0 ? (
-              <span style={{ color: 'var(--text-secondary)' }}>Same as previous week</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Same as this time last week</span>
             ) : (
               <>
                 <span className={week.changePercent < 0 ? styles.trendPositive : styles.trendNegative}>
                   {week.changePercent < 0 ? '↓' : '↑'} {Math.abs(week.changePercent)}%
                 </span>{' '}
-                <span style={{ color: 'var(--text-secondary)' }}>vs Previous Week</span>
+                <span style={{ color: 'var(--text-secondary)' }}>vs this time last week</span>
               </>
             )}
           </div>

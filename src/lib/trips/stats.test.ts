@@ -57,13 +57,24 @@ describe('weeklySummary', () => {
     expect(s.totalMeters).toBe(30000);
   });
 
-  it('compares against the previous week', () => {
+  it('compares against the same part of last week', () => {
     const trips = [trip(2026, 8, 21, 8, 100), trip(...MON, 8, 88)];
     expect(weeklySummary(trips, now).changePercent).toBe(-12);
   });
 
-  it('has no percentage when last week is empty', () => {
-    expect(weeklySummary([trip(...MON, 8, 60)], now).changePercent).toBeNull();
+  it("leaves out last week's trips after this time a week ago", () => {
+    // Wednesday noon: last Wednesday evening and Thursday don't count yet.
+    const trips = [trip(2026, 8, 21, 8, 50), trip(2026, 8, 23, 18, 50), trip(2026, 8, 24, 8, 50), trip(...MON, 8, 50)];
+    expect(weeklySummary(trips, now).changePercent).toBe(0);
+  });
+
+  it('has no percentage early in the week before any trip, instead of showing a 100% drop', () => {
+    const trips = [trip(2026, 8, 21, 8, 60), trip(2026, 8, 22, 8, 60)];
+    expect(weeklySummary(trips, new Date(2026, 8, 28, 9)).changePercent).toBeNull();
+  });
+
+  it('has no percentage when last week had no trips by this time', () => {
+    expect(weeklySummary([trip(...MON, 8, 60), trip(2026, 8, 25, 8, 60)], now).changePercent).toBeNull();
   });
 
   it('ignores trips outside the two weeks', () => {

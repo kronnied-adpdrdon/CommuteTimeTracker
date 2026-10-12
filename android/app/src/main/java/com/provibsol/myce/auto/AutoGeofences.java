@@ -6,8 +6,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import androidx.core.content.ContextCompat;
+import androidx.core.location.LocationManagerCompat;
 import com.provibsol.myce.support.DiagLog;
 import com.provibsol.myce.tracking.PlatformLocation;
 import com.google.android.gms.location.Geofence;
@@ -42,6 +44,20 @@ public final class AutoGeofences {
         return PlatformLocation.fusedAvailable(context);
     }
 
+    /**
+     * Location is on, and so is Google Location Accuracy (Android's "network" location). Geofencing needs both:
+     * with Location Accuracy off, Android silently drops the circles and no crossing is ever reported.
+     */
+    public static boolean accuracyOn(Context context) {
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) return false;
+        try {
+            return LocationManagerCompat.isLocationEnabled(lm) && lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     private static PendingIntent pendingIntent(Context context) {
         Intent intent = new Intent(context, AutoReceiver.class).setAction(ACTION_GEOFENCE);
         // Geofencing fills in the event, so this one must be mutable.
@@ -65,6 +81,7 @@ public final class AutoGeofences {
             DiagLog.log("auto", "Geofences off (" + (!config.ready() ? "not ready" : "no background location") + ")");
             return;
         }
+        if (!accuracyOn(context)) DiagLog.log("auto", "Location or Location Accuracy is off: geofences can't work until it's back on");
         // Android reports which circle the phone is already in (an enter event), so exits can be checked against it.
         AutoStore.forgetInsideIfCirclesChanged(context, config);
         GeofencingRequest request = new GeofencingRequest.Builder()
