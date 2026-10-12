@@ -37,7 +37,7 @@ GENTLE REMINDERS, ALL ON YOUR PHONE
 
 SEE YOUR WEEK AT A GLANCE
 • This week's total commute time and your average per day
-• How this week compares with the last one
+• How this week so far compares with the same days last week
 • Your recent commutes, labelled "To work" or "To home" once you save your Home and Office
 
 HISTORY YOU CAN TRUST
@@ -48,7 +48,7 @@ HISTORY YOU CAN TRUST
 PRO: FREE FOR YOUR FIRST MONTH, THEN A ONE-TIME UPGRADE
 • Reports for any date range, including trips older than two weeks
 • Totals, averages, and to-work vs to-home breakdowns
-• Export as PDF or CSV to share, keep for your records, or attach to a travel claim
+• Export as a PDF to share, keep for your records, or attach to a travel claim
 • A monthly commute recap and a heads-up before your slower weekdays
 • Everything in Pro is free for your first 30 days
 • Then a single one-time purchase through Google Play, no subscription. It restores automatically on any phone with the same Google account
