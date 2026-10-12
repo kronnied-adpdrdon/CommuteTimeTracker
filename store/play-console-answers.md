@@ -37,8 +37,10 @@ What the app does with data now (rewritten 7 Oct 2026, after "Help improve MYCE"
 
 ## App access
 
-**All functionality is available without special access** → choose "All functionality is available without any access restrictions".
-(Pro features need a purchase, not a login. If a reviewer asks, they can be added as a licence tester.)
+**Corrected 12 Oct 2026:** the form is now called **"Sign in details"** and lists *payments, such as one-time products* under **Yes**, so answer **Yes** (Pro is a one-time product), then **Add details**:
+- Name: `Pro features` · Username: `Not needed (no account)` · Password: `Not needed`
+- Other information: "MYCE has no sign-in and no accounts. Every Pro feature (reports for any date range, PDF export, monthly recap and slow-day notifications) is unlocked automatically for the first 30 days after installing, with no purchase, account or payment method needed. The one-time ₹100 Pro purchase is only needed after those 30 days. To see Pro: install, open the app, and use the Reports tab."
+- Leave "allow Android to use these credentials for testing" unticked. If a reviewer still asks, add them as a licence tester.
 
 ## Ads
 
