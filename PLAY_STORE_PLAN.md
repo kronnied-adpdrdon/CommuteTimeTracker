@@ -146,7 +146,7 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (from 7 Oct: `dist/MYCE-<version>-demo.apk`) (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
 - [ ] Icon 512×512 (done: `store/play-icon-512.png`), feature graphic 1024×500, ≥2 phone screenshots, short + full description (**drafted**: `store/listing.md`)
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
-- [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video** of tapping Start and the notification appearing
+- [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video recorded 12 Oct** on the emulator with the Play build: `store/videos/1-foreground-location.mp4` (Start → notification → app in background, still counting → Stop in the notification → trip in History). Not in git (public repo); upload to YouTube as unlisted and paste the link
 - [ ] Data safety form (**redrafted 2 Oct 2026**: `store/play-console-answers.md`; address search now sends typed text to Google's geocoder / OpenStreetMap, so the recommended answer is no longer "nothing collected"; confirm each point in Play Console)
 - [ ] Content rating (IARC), ads declaration (no ads), target audience (**suggested: 18 and over**, see Legal and compliance below)
 - [x] 16 KB page size: the bundle has no native libraries, so nothing to align
@@ -165,10 +165,16 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] Free vs Pro shown side by side, Pro including everything in Free
 - [ ] Test on an older emulator image (Android 7 to 9) and on a phone without Google Play services
 
+### Tester feedback round (12 Oct 2026, demo 1.2.1 build 5)
+
+- [x] Android Back: an inner screen returns to the one before, a tab goes Home, Home sends the app to the background; tabs no longer stack history
+- [x] Home/Office saved from "use my current location" show the street address (reverse lookup; privacy policy updated 12 Oct)
+- [x] "Share commute times" on the setup's first page, beside app usage (the Home card after 3 trips still asks if left unanswered)
+
 ## Phase 5 — Pro (₹100, first 30 days free) and reports (Oct 8–20; **first thing cut if behind**)
 
 - [x] Decide what Pro unlocks: **reports only** (any date range). No free preview; no ₹/km reimbursement line in v1
-- [ ] Payments profile + India tax details (GST/PAN) in Play Console
+- [x] Payments profile + India tax details (GST/PAN) in Play Console (done by the owner, 12 Oct 2026)
 - [ ] One in-app product: **Pro, ₹100, one-time (non-consumable)**. Free month is in-app (Play's free trials are for subscriptions only): starts on first launch or the oldest trip, whichever is earlier; `src/lib/commute/trial.ts`
 - [x] Billing decided (1 Oct 2026): **checked on the phone**, no RevenueCat. `ProBillingPlugin` (Play Billing 9.1.0): status at launch, purchase, acknowledge, restore; cached for offline
 - [ ] Create the one-time product in Play Console with product ID **`pro`** at ₹100 (needs the payments profile and an uploaded AAB first)
@@ -283,7 +289,8 @@ Working backwards from the fixed constraints: production review after applying t
 - [x] "Trip started automatically" notification with Stop and Not a commute (tapping it opens the app, where the trip can be edited once saved)
 - [x] ~~Median-based expiry; distance estimate before that~~ replaced 4 Oct by the user's "Usually takes about" time (setup + Settings), with the wait shown in plain words under it
 - [x] Background location: "Allow all the time" flow with a prominent in-app disclosure before the system prompt; "Paused" warning if the permission is taken back; message on phones without Google Play services
-- [ ] Play Console: background location declaration (**text drafted** in `store/play-console-answers.md`, with a video script) + record the demo video; check the Data safety form (location still stays on the phone)
+- [ ] Play Console: background location declaration (**text drafted** in `store/play-console-answers.md`, with a video script) + record the demo video; check the Data safety form (location still stays on the phone). **12 Oct:** first half recorded (`store/videos/2-background-location-permission.mp4`: disclosure → "Allow all the time" → switched on). The automatic trip itself couldn't be recorded on the emulator (Google's geofencer ignored the emulator's fake locations even with Location Accuracy on); record it on a real phone during a real commute and join the two clips
+- [ ] **Found 12 Oct:** geofences never fire while Google Location Accuracy is off ("nlp consent=false"), and Android drops them until the app re-registers. Detect it (network provider disabled) and warn in setup / Settings, and re-register geofences when it is turned back on
 - [x] Privacy Policy: background location section and how to turn it off (`src/lib/legal.ts`, `docs/privacy-policy.md` regenerated)
 - [ ] Battery-saver guidance for phones that kill background apps (Xiaomi, Samsung): **built into the first-time setup** (brand-specific steps + Open app settings, 4 Oct); still to check the wording on a real Xiaomi and Samsung
 - [x] Developer tools: 6 scenarios (commute to work, commute home, errand, under 5 min, never arrives, leaves at 2 pm) through the real Java rules; all matched on the emulator
