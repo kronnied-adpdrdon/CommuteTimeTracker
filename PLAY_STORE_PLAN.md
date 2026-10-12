@@ -136,15 +136,15 @@ Working backwards from the fixed constraints: production review after applying t
 
 - [x] App icon (pin + clock, adaptive + Android 13 themed + legacy PNGs) and splash screen; `store/play-icon-512.png` for the listing
 - [x] Release AAB builds and is signed with the upload key: `cd android && JAVA_HOME=~/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home ./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab` (run `npm run build:android` first)
-- [ ] Upload the AAB and enable Play App Signing
+- [ ] Upload the AAB and enable Play App Signing. **Ready 12 Oct:** `dist/MYCE-1.2.1-build6.aab` (1.2.1, build 6, Android 8+, signed with the upload key, no developer tools; not in git)
 - [ ] Closed testing track; **12 testers opted in by Oct 8**
 - [ ] Increment `versionCode` on every upload
 - [x] Privacy policy and Terms and conditions pages inside the app (Settings), offline. Text lives in `src/lib/legal.ts`; `npm run export:legal` writes `docs/privacy-policy.md` and `docs/terms.md`. **Still to do:** host `docs/privacy-policy.md` at a public URL (GitHub Pages / Google Sites) for the Play listing, and have the Terms' governing-law line (India) and the publisher's legal name reviewed
 - [x] Upgrade message when the product doesn't exist yet: say "Pro isn't available to buy yet", not "Couldn't reach Google Play" (4 Oct: "Pro isn't available to buy yet. Everything in Free keeps working.")
-- [ ] Decide minimum Android version (now Android 7 / API 24; only tested on the Android 17 emulator). Either test on an older emulator image or raise to Android 8 (26) or 10 (29)
+- [x] Minimum Android version: **Android 8 (API 26)**, raised from 7 on 12 Oct 2026 (Android 7 phones are rare, and the app was never tested there)
 - [ ] Check the new icon and splash screen on a phone
 - [x] Demo APK for direct sharing: `npm run build:android:demo`, then `./gradlew assembleRelease` → `dist/CommuteTimeTracker-1.0-demo.apk` (from 7 Oct: `dist/MYCE-<version>-demo.apk`) (Developer Preview on). Testers must uninstall it before installing the Play version (different signing key)
-- [ ] Icon 512×512 (done: `store/play-icon-512.png`), feature graphic 1024×500, ≥2 phone screenshots, short + full description (**drafted**: `store/listing.md`)
+- [x] Icon 512×512 (`store/play-icon-512.png`), feature graphic 1024×500 (`store/feature-graphic-1024x500.png`), 4 phone screenshots 1080×1920 (`store/screenshots/`, made 12 Oct from the emulator with sample trips), short + full description (**drafted**: `store/listing.md`)
 - [ ] App access: no login, so reviewers need no credentials. Say so; mention how to unlock Pro for review if they ask
 - [ ] Foreground service declaration (`location`) (**text drafted** in `store/play-console-answers.md`) + **demo video recorded 12 Oct** on the emulator with the Play build: `store/videos/1-foreground-location.mp4` (Start → notification → app in background, still counting → Stop in the notification → trip in History). Not in git (public repo); upload to YouTube as unlisted and paste the link
 - [ ] Data safety form (**redrafted 2 Oct 2026**: `store/play-console-answers.md`; address search now sends typed text to Google's geocoder / OpenStreetMap, so the recommended answer is no longer "nothing collected"; confirm each point in Play Console)

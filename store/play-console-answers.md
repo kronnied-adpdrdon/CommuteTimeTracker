@@ -12,7 +12,7 @@ What the app does with data now (rewritten 7 Oct 2026, after "Help improve MYCE"
 - **"Help improve MYCE" (optional, off until the user turns it on, asked in the setup and in Settings):**
   - *Share how you use the app*: Firebase Analytics events (setup screens finished or skipped, recording choice, automatic start on/off, trip saved / edited / deleted without any times, distances or places, reminder switches, Pro button taps and purchase). Firebase adds an app-instance ID, device model, Android version, app version and country/region. Advertising ID collection is disabled and the AD_ID and ad-services permissions are removed from the manifest; Google data-sharing settings are off.
   - *Share commute times*: per trip, date, start time rounded to 15 minutes, weekday, duration, distance (0.1 km), to work / to home / other, automatic or not, edited or not, and the start and end areas as ~5 km geohash cells. Sent with a random install ID (made on the phone, no account) over HTTPS to the developer's Cloud Function in Mumbai and stored in BigQuery. Each record is deleted automatically 24 months after it arrives. Turning "Share commute times" off deletes them (hidden at once, removed within 48 hours).
-- **Address search.** The typed text goes to Android's geocoder (Google) and, if needed, OpenStreetMap Nominatim, only when the user presses Search.
+- **Address lookup.** The typed text goes to Android's geocoder (Google) and, if needed, OpenStreetMap Nominatim, only when the user presses Search. **Since 12 Oct 2026:** when Home or Office is set with "use my current location", that point goes the same way to find its street address (once per save; also retried at start-up for places saved offline). Nothing is kept by the developer.
 - **Report a bug / Send feedback.** Opens the user's own email app; the app itself transmits nothing.
 - Pro ownership is checked through Google Play Billing on the phone.
 
@@ -21,6 +21,7 @@ What the app does with data now (rewritten 7 Oct 2026, after "Help improve MYCE"
 | Data type | Collected / shared | Optional? | Purpose |
 |---|---|---|---|
 | Location → **Approximate location** | Collected, not shared | Yes | **Analytics** (shared commute times, ~5 km areas); **App functionality** (address search text) |
+| Location → **Precise location** (added 12 Oct 2026) | Collected, not shared, **processed ephemerally** | Yes | **App functionality** (the Home or Office point sent to the address service to show its street address) |
 | App activity → **App interactions** | Collected, not shared | Yes | **Analytics** |
 | App activity → **Other actions** (trip duration, distance, start time) | Collected, not shared | Yes | **Analytics** |
 | Device or other IDs | Collected, not shared | Yes | **Analytics** (Firebase app-instance ID; random install ID for shared commute times) |
@@ -68,7 +69,7 @@ Expected rating: Everyone / 3+.
 **User impact if the task is deferred or interrupted:**
 > The commute would be measured incompletely: distance travelled while the screen is off would be lost, making the trip's time and distance wrong.
 
-**Demo video** (to record): tap Start on Home → Android's location prompt → notification appears with timer and distance → lock screen, travel → unlock, distance has increased → tap Stop in the notification → trip appears in History. Then the same from the widget.
+**Demo video: recorded 12 Oct 2026** (`store/videos/1-foreground-location.mp4`, 47 s, emulator, Play build): tap Start on Home → timer and distance count up → app sent to the background → the ongoing notification, still counting → Stop in the notification → trip in History. Upload to YouTube as **Unlisted** and paste the link.
 
 ## Location permissions (App content → Sensitive permissions → Location: background)
 
@@ -85,7 +86,9 @@ Expected rating: Everyone / 3+.
 
 **Data use:** on the phone only. Not sent to the developer or third parties (see Data safety).
 
-**Demo video** (to record, under 30 s if possible): Settings → Automatic start and stop switch → the in-app disclosure → Continue → Android's "Allow all the time" page → back, switch on → (emulator location moved out of the Home circle) → "Trip started automatically" notification → location moved into the Office circle → notification disappears and the trip appears in History labelled "Auto".
+**Demo video, part 1 recorded 12 Oct 2026** (`store/videos/2-background-location-permission.mp4`, 36 s): Automatic start and stop switch → the in-app disclosure → Continue → "Allow all the time" → switched on, commute hours shown. **Part 2 still needed, on a real phone** (the emulator's geofencing didn't respond): leave Home or the Office in your commute hours, show the "Trip started automatically" notification, arrive, show the trip in History labelled automatic. Join the two clips (or upload part 2 alone if Play accepts one link only; then record part 1 again on the phone first).
+
+Original script (under 30 s if possible): Settings → Automatic start and stop switch → the in-app disclosure → Continue → Android's "Allow all the time" page → back, switch on → (emulator location moved out of the Home circle) → "Trip started automatically" notification → location moved into the Office circle → notification disappears and the trip appears in History labelled "Auto".
 
 ## News app / COVID-19 / Government / Financial features declarations
 

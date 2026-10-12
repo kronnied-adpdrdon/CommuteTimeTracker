@@ -53,3 +53,4 @@ google-services.json
 # IDE
 .idea/
 store/videos/
+*.aab
