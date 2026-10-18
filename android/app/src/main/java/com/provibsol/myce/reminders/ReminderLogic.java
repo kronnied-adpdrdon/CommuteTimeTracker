@@ -24,11 +24,16 @@ public final class ReminderLogic {
     public static final int MONTHLY = 4;
     public static final int SLOW_DAY = 5;
     public static final int SETUP = 6;
+    public static final int HEAD_HOME = 7;
 
-    public static final int[] ALL_TYPES = { LEAVE_NOW, EVENING, WEEKLY, MONTHLY, SLOW_DAY, SETUP };
+    public static final int[] ALL_TYPES = { LEAVE_NOW, EVENING, WEEKLY, MONTHLY, SLOW_DAY, SETUP, HEAD_HOME };
 
     static final int DEFAULT_MORNING_MINUTES = 7 * 60 + 30;
     static final int EVENING_DEFAULT_MINUTES = 19 * 60;
+    static final int LEAVE_HOME_DEFAULT_MINUTES = 8 * 60;
+    static final int LEAVE_WORK_DEFAULT_MINUTES = 17 * 60;
+    /** "Time to head out" and "Time to head home" arrive this long before the time the user gave. */
+    static final int HEADS_UP_MINUTES = 10;
     private static final long DAY_MS = 24L * 60 * 60 * 1000;
     private static final String[] WEEKDAYS = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
     private static final String[] MONTHS = {
@@ -59,9 +64,10 @@ public final class ReminderLogic {
         }
     }
 
-    /** User choices pushed from the app's Notifications settings. */
+    /** User choices pushed from the app's Notifications settings, plus how trips are recorded and when. */
     public static final class Config {
         public boolean leaveNow = true;
+        public boolean headHome = true;
         public boolean evening = true;
         public int eveningMinutes = EVENING_DEFAULT_MINUTES;
         public boolean weekly = true;
@@ -71,6 +77,13 @@ public final class ReminderLogic {
         public boolean isPro = false;
         /** End of the free month (epoch ms): Pro reminders run until then even without a purchase. */
         public long trialEndsAt = 0;
+        /** Automatic start and stop is on: trips start by themselves, so nothing says "tap to start". */
+        public boolean auto = false;
+        /** Start and Stop users' answers to "when do you usually leave?" (minutes after midnight) and which days. */
+        public int leaveHomeMinutes = LEAVE_HOME_DEFAULT_MINUTES;
+        public int leaveWorkMinutes = LEAVE_WORK_DEFAULT_MINUTES;
+        /** Indexed by Calendar.DAY_OF_WEEK (1 = Sunday ... 7 = Saturday); index 0 unused. Default Mon-Fri. */
+        public boolean[] days = { false, false, true, true, true, true, true, false };
 
         private boolean proUnlocked() {
             return isPro || System.currentTimeMillis() < trialEndsAt;
@@ -79,7 +92,9 @@ public final class ReminderLogic {
         public boolean enabled(int type) {
             switch (type) {
                 case LEAVE_NOW:
-                    return leaveNow;
+                    return leaveNow && !auto;
+                case HEAD_HOME:
+                    return headHome && !auto;
                 case EVENING:
                     return evening;
                 case WEEKLY:
@@ -101,6 +116,7 @@ public final class ReminderLogic {
             try {
                 JSONObject o = new JSONObject(json);
                 c.leaveNow = o.optBoolean("leaveNow", true);
+                c.headHome = o.optBoolean("headHome", true);
                 c.evening = o.optBoolean("evening", true);
                 c.eveningMinutes = o.optInt("eveningMinutes", EVENING_DEFAULT_MINUTES);
                 c.weekly = o.optBoolean("weekly", true);
@@ -109,10 +125,32 @@ public final class ReminderLogic {
                 c.setup = o.optBoolean("setup", false);
                 c.isPro = o.optBoolean("isPro", false);
                 c.trialEndsAt = o.optLong("trialEndsAt", 0);
+                c.auto = o.optBoolean("auto", false);
+                c.leaveHomeMinutes = minutes(o, "leaveHomeMinutes", LEAVE_HOME_DEFAULT_MINUTES);
+                c.leaveWorkMinutes = minutes(o, "leaveWorkMinutes", LEAVE_WORK_DEFAULT_MINUTES);
+                JSONArray days = o.optJSONArray("days");
+                if (days != null) {
+                    // The app sends JavaScript weekdays: 0 = Sunday ... 6 = Saturday.
+                    c.days = new boolean[8];
+                    for (int i = 0; i < days.length(); i++) {
+                        int d = days.optInt(i, -1);
+                        if (d >= 0 && d <= 6) c.days[d + 1] = true;
+                    }
+                }
             } catch (JSONException ignored) {
                 // Fall back to defaults.
             }
             return c;
+        }
+
+        private static int minutes(JSONObject o, String key, int fallback) {
+            int value = o.optInt(key, fallback);
+            return value >= 0 && value < 24 * 60 ? value : fallback;
+        }
+
+        /** A day the user commutes: the days they chose for Start and Stop, or Mon-Fri with automatic (it has no days). */
+        boolean commuteDay(Calendar c) {
+            return auto ? isWeekday(c) : days[c.get(Calendar.DAY_OF_WEEK)];
         }
     }
 
@@ -190,6 +228,17 @@ public final class ReminderLogic {
         return false;
     }
 
+    private static int tripsOn(List<Trip> trips, long day) {
+        int count = 0;
+        for (Trip t : trips) if (dayStart(t.startedAt) == day) count++;
+        return count;
+    }
+
+    private static boolean tookTripOn(List<Trip> trips, long day, String direction) {
+        for (Trip t : trips) if (dayStart(t.startedAt) == day && direction.equals(t.direction)) return true;
+        return false;
+    }
+
     // ---- Typical commute ---------------------------------------------------------------------------------
 
     /** Median start minute-of-day of weekday trips to work in the last 60 days, or -1 with fewer than 3. */
@@ -205,9 +254,14 @@ public final class ReminderLogic {
     }
 
     static long typicalDurationSeconds(List<Trip> trips, long now) {
+        return typicalDurationSeconds(trips, now, "work");
+    }
+
+    /** Median length of trips in this direction ("work" or "home") in the last 60 days, or 0 with none. */
+    static long typicalDurationSeconds(List<Trip> trips, long now, String direction) {
         List<Integer> seconds = new ArrayList<>();
         for (Trip t : trips) {
-            if (!"work".equals(t.direction) || now - t.startedAt > 60 * DAY_MS || t.startedAt > now) continue;
+            if (!direction.equals(t.direction) || now - t.startedAt > 60 * DAY_MS || t.startedAt > now) continue;
             seconds.add(t.durationSeconds);
         }
         if (seconds.isEmpty()) return 0;
@@ -217,23 +271,34 @@ public final class ReminderLogic {
 
     // ---- Messages (null = nothing worth saying right now) -----------------------------------------------
 
-    public static Message leaveNow(List<Trip> trips, long now) {
-        if (!isWeekday(at(now)) || typicalDepartureMinutes(trips, now) < 0) return null;
-        if (tookTripOn(trips, dayStart(now))) return null;
-        long usual = typicalDurationSeconds(trips, now);
+    /** Start and Stop only: before the time the user leaves home, on their days, if nothing is logged yet today. */
+    public static Message leaveNow(Config config, List<Trip> trips, long now) {
+        if (config.auto || !config.commuteDay(at(now)) || tookTripOn(trips, dayStart(now))) return null;
+        long usual = typicalDurationSeconds(trips, now, "work");
         String body = usual > 0 ? "Your commute usually takes about " + duration(usual) + ". Tap to start tracking." : "Tap to start tracking.";
         return new Message("Time to head out", body);
     }
 
-    public static Message eveningNudge(List<Trip> trips, long now) {
+    /** Start and Stop only: before the time the user leaves work, on their days, unless the trip home is already logged. */
+    public static Message headHome(Config config, List<Trip> trips, long now) {
+        long today = dayStart(now);
+        if (config.auto || !config.commuteDay(at(now))) return null;
+        // Without Home and Office every trip is "unknown", so two trips today count as both ways done.
+        if (tookTripOn(trips, today, "home") || tripsOn(trips, today) >= 2) return null;
+        long usual = typicalDurationSeconds(trips, now, "home");
+        String body = usual > 0 ? "Your trip home usually takes about " + duration(usual) + ". Tap to start tracking." : "Tap to start tracking your trip home.";
+        return new Message("Time to head home", body);
+    }
+
+    public static Message eveningNudge(Config config, List<Trip> trips, long now) {
         Calendar today = at(now);
-        if (!isWeekday(today) || tookTripOn(trips, dayStart(now))) return null;
-        // Only people with a habit: commuted on at least 2 of the previous 5 weekdays.
+        if (!config.commuteDay(today) || tookTripOn(trips, dayStart(now))) return null;
+        // Only people with a habit: commuted on at least 2 of the previous 5 commute days.
         int daysWithTrips = 0;
         int checked = 0;
-        for (int back = 1; back <= 10 && checked < 5; back++) {
+        for (int back = 1; back <= 14 && checked < 5; back++) {
             long day = onDay(dayStart(now), -back, 0);
-            if (!isWeekday(at(day))) continue;
+            if (!config.commuteDay(at(day))) continue;
             checked++;
             if (tookTripOn(trips, day)) daysWithTrips++;
         }
@@ -347,12 +412,14 @@ public final class ReminderLogic {
         return new Message("Set your Home and Office", "Add both addresses so every trip is labelled \"to work\" or \"to home\".");
     }
 
-    public static Message messageFor(int type, List<Trip> trips, long now) {
+    public static Message messageFor(int type, Config config, List<Trip> trips, long now) {
         switch (type) {
             case LEAVE_NOW:
-                return leaveNow(trips, now);
+                return leaveNow(config, trips, now);
+            case HEAD_HOME:
+                return headHome(config, trips, now);
             case EVENING:
-                return eveningNudge(trips, now);
+                return eveningNudge(config, trips, now);
             case WEEKLY:
                 return weekly(trips, now);
             case MONTHLY:
@@ -372,18 +439,17 @@ public final class ReminderLogic {
     public static long nextFire(int type, Config config, List<Trip> trips, long now, long setupAnchor, int setupSent) {
         long today = dayStart(now);
         switch (type) {
-            case LEAVE_NOW: {
-                int typical = typicalDepartureMinutes(trips, now);
-                int minute = typical < 0 ? DEFAULT_MORNING_MINUTES : Math.max(typical - 10, 5 * 60);
-                return nextWeekday(today, now, minute);
-            }
+            case LEAVE_NOW:
+                return nextCommuteDay(config, today, now, Math.max(config.leaveHomeMinutes - HEADS_UP_MINUTES, 0));
+            case HEAD_HOME:
+                return nextCommuteDay(config, today, now, Math.max(config.leaveWorkMinutes - HEADS_UP_MINUTES, 0));
             case SLOW_DAY: {
                 int typical = typicalDepartureMinutes(trips, now);
                 int minute = typical < 0 ? DEFAULT_MORNING_MINUTES : Math.max(typical - 45, 5 * 60);
                 return nextWeekday(today, now, minute);
             }
             case EVENING:
-                return nextWeekday(today, now, config.eveningMinutes);
+                return nextCommuteDay(config, today, now, config.eveningMinutes);
             case WEEKLY: {
                 for (int d = 0; d <= 7; d++) {
                     long candidate = onDay(today, d, 18 * 60);
@@ -405,6 +471,14 @@ public final class ReminderLogic {
             default:
                 return now + DAY_MS;
         }
+    }
+
+    private static long nextCommuteDay(Config config, long today, long now, int minute) {
+        for (int d = 0; d <= 8; d++) {
+            long candidate = onDay(today, d, minute);
+            if (config.commuteDay(at(candidate)) && candidate > now) return candidate;
+        }
+        return now + DAY_MS;
     }
 
     private static long nextWeekday(long today, long now, int minute) {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from '@/app/page.module.css';
 import AddressPicker from '@/components/AddressPicker';
-import { CommuteTimePicker, DAYS } from '@/components/AutoTrackingCard';
+import { CommuteTimePicker, DAYS, LeaveTimeRow } from '@/components/AutoTrackingCard';
 import BackgroundDisclosure from '@/components/BackgroundDisclosure';
 import RouteLine from '@/components/RouteLine';
 import { SharingChoice, SharingFootnote } from '@/components/SharingCard';
@@ -12,10 +12,9 @@ import { autoTracking, useAutoTracking } from '@/lib/auto';
 import { toggleDay } from '@/lib/auto/settings';
 import { commute, useCommute } from '@/lib/commute';
 import { notifications, useNotifications } from '@/lib/notifications';
-import { clockToMinutes, minutesToClock } from '@/lib/notifications/settings';
 import { currentFacts, setup, useSetup, wizardCanGoBack } from '@/lib/setup';
 import { sharing, track } from '@/lib/sharing';
-import { SetupStep, batteryAdvice, checklist, leaveTimeFromWindow, windowFromLeaveTime } from '@/lib/setup/logic';
+import { SetupStep, batteryAdvice, checklist } from '@/lib/setup/logic';
 
 /**
  * The first-time setup: one question per screen, every screen skippable. Opens by itself until finished or
@@ -177,49 +176,56 @@ function Places() {
   );
 }
 
+/** Follows the recording choice: how long the commute takes (automatic), or when and on which days (Start and Stop). */
 function Times() {
+  return useAutoTracking().settings.enabled ? <CommuteLength /> : <LeaveTimes />;
+}
+
+/** Automatic watches at any time, so the only question is how long to wait for the arrival. */
+function CommuteLength() {
   const { settings } = useAutoTracking();
-  const [leaveHome, setLeaveHome] = useState(() => leaveTimeFromWindow(settings.morningStart));
-  const [leaveWork, setLeaveWork] = useState(() => leaveTimeFromWindow(settings.eveningStart));
-  const [days, setDays] = useState(settings.days);
   const [commuteMinutes, setCommuteMinutes] = useState(settings.commuteMinutes);
-  const morning = windowFromLeaveTime(leaveHome);
-  const evening = windowFromLeaveTime(leaveWork);
+
+  return (
+    <>
+      <h2 id="setup-title" className={styles.setupTitle}>How long is your commute?</h2>
+      <CommuteTimePicker minutes={commuteMinutes} onChange={setCommuteMinutes} />
+      <p className={styles.cardText}>A trip starts by itself whenever you leave Home or the Office, on any day. You can change this in Settings.</p>
+      <div className={styles.setupActions}>
+        <button
+          className="btn-primary"
+          onClick={async () => {
+            await autoTracking.update({ commuteMinutes });
+            await setup.next();
+          }}
+        >
+          Next
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** Start and Stop: when to send "Time to head out" and "Time to head home". */
+function LeaveTimes() {
+  const { settings } = useAutoTracking();
+  const [leaveHome, setLeaveHome] = useState(settings.leaveHome);
+  const [leaveWork, setLeaveWork] = useState(settings.leaveWork);
+  const [days, setDays] = useState(settings.days);
 
   const save = async () => {
-    await autoTracking.update({ morningStart: morning.start, morningEnd: morning.end, eveningStart: evening.start, eveningEnd: evening.end, days, commuteMinutes });
+    await autoTracking.update({ leaveHome, leaveWork, days });
     await setup.next();
   };
-
-  const timeInput = (value: number, onChange: (minutes: number) => void, label: string) => (
-    <input
-      aria-label={label}
-      className={`input-field ${styles.timeInput}`}
-      type="time"
-      value={minutesToClock(value)}
-      onChange={(e) => {
-        const minutes = clockToMinutes(e.target.value);
-        if (minutes !== null) onChange(minutes);
-      }}
-    />
-  );
 
   return (
     <>
       <h2 id="setup-title" className={styles.setupTitle}>When do you usually leave?</h2>
-      <label className={styles.timeRow} style={{ justifyContent: 'space-between' }}>
-        <span>Leave home</span>
-        {timeInput(leaveHome, setLeaveHome, 'Usually leave home at')}
-      </label>
-      <label className={styles.timeRow} style={{ justifyContent: 'space-between' }}>
-        <span>Leave work</span>
-        {timeInput(leaveWork, setLeaveWork, 'Usually leave work at')}
-      </label>
+      <LeaveTimeRow label="Leave home" value={leaveHome} onChange={setLeaveHome} />
+      <LeaveTimeRow label="Leave work" value={leaveWork} onChange={setLeaveWork} />
       <DayPicker days={days} onChange={setDays} />
-      <div className="eyebrow" style={{ marginTop: '10px' }}>How long is the trip?</div>
-      <CommuteTimePicker minutes={commuteMinutes} onChange={setCommuteMinutes} />
       <p className={styles.cardText}>
-        Trips starting between {clock(morning.start)} and {clock(morning.end)}, or {clock(evening.start)} and {clock(evening.end)}, count as commutes. You can change this in Settings.
+        On these days you&apos;ll get a reminder to tap Start at {clock(Math.max(leaveHome - 10, 0))} and {clock(Math.max(leaveWork - 10, 0))}. You can change this in Settings.
       </p>
       <div className={styles.setupActions}>
         <button className="btn-primary" disabled={days.length === 0} onClick={save}>Next</button>
@@ -309,7 +315,7 @@ function Recording() {
                 Automatically <span className={styles.recommendedBadge}>Recommended</span>
               </span>
               <span className={styles.cardText}>
-                Starts when you leave Home or the Office during your commute hours, and saves when you arrive at the other. Errands are ignored.
+                Starts whenever you leave Home or the Office, and saves when you arrive at the other. Errands are ignored.
               </span>
               {supported === false ? (
                 <span className={styles.fieldError}>This phone doesn&apos;t have Google Play services, which this needs.</span>
@@ -322,7 +328,7 @@ function Recording() {
                 <span className={styles.choiceRadio} aria-hidden />
                 I&apos;ll tap Start and Stop
               </span>
-              <span className={styles.cardText}>Location is used only while a trip is running. You can switch to automatic later in Settings.</span>
+              <span className={styles.cardText}>Location is used only while a trip is running, and a reminder tells you when to tap Start. You can switch to automatic later in Settings.</span>
             </button>
           </div>
           <div className={styles.setupActions}>
@@ -337,16 +343,19 @@ function Recording() {
 }
 
 const REMINDER_ROWS = [
-  { key: 'leaveNow', title: 'Time to leave', text: 'Shortly before you usually head out.' },
-  { key: 'evening', title: 'Forgot to track?', text: 'In the evening, if nothing was logged today.' },
-  { key: 'weekly', title: 'Weekly summary', text: 'Sunday evening: your week compared with the last.' },
+  { key: 'leaveNow', title: 'Time to leave', text: '10 minutes before you leave home, on your commute days.', manualOnly: true },
+  { key: 'headHome', title: 'Time to head home', text: '10 minutes before you leave work, until the trip home is logged.', manualOnly: true },
+  { key: 'evening', title: 'Forgot to track?', text: 'In the evening, if nothing was logged today.', manualOnly: false },
+  { key: 'weekly', title: 'Weekly summary', text: 'Sunday evening: your week compared with the last.', manualOnly: false },
 ] as const;
 
 function Reminders() {
   const { settings, allowed } = useNotifications();
   const auto = useAutoTracking().settings.enabled;
   const [refused, setRefused] = useState(false);
-  const anyOn = REMINDER_ROWS.some((row) => settings[row.key]);
+  // Automatic trips start by themselves, so the "tap Start" reminders don't apply.
+  const rows = REMINDER_ROWS.filter((row) => !(auto && row.manualOnly));
+  const anyOn = rows.some((row) => settings[row.key]);
   const needsPermission = (anyOn || auto) && allowed !== true;
 
   const proceed = async () => {
@@ -365,7 +374,7 @@ function Reminders() {
     <>
       <h2 id="setup-title" className={styles.setupTitle}>Reminders</h2>
       <div className={styles.setupStack}>
-        {REMINDER_ROWS.map((row) => (
+        {rows.map((row) => (
           <div key={row.key} className={styles.settingRow} style={{ padding: 0 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className={styles.settingTitle}>{row.title}</div>
@@ -472,7 +481,7 @@ function Done() {
       </div>
       <p className={styles.cardText}>
         {settings.enabled
-          ? `Leave home between ${clock(settings.morningStart)} and ${clock(settings.morningEnd)} on a commute day and the trip starts by itself.${reminders === 'Not allowed yet' ? '' : " You'll see a notification when it does."}`
+          ? `Leave Home or the Office and the trip starts by itself.${reminders === 'Not allowed yet' ? '' : " You'll see a notification when it does."}`
           : 'When you head out, tap Start Tracking. Tip: add the app’s widget to your home screen to start with one tap.'}
         {skipped && ' Anything you skipped is waiting on the Home screen.'}
       </p>

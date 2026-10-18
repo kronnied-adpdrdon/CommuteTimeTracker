@@ -8,9 +8,7 @@ import {
   batteryAdvice,
   checklist,
   createSetupStore,
-  leaveTimeFromWindow,
   sanitize,
-  windowFromLeaveTime,
   wizardSteps,
 } from './logic';
 
@@ -29,16 +27,16 @@ const progress = (patch: Partial<SetupProgress> = {}): SetupProgress => ({ ...IN
 
 describe('first-time setup: which screens to show', () => {
   it('walks a new user through everything, without a battery screen on a Pixel', () => {
-    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'done']);
+    expect(wizardSteps(progress(), NEW_USER)).toEqual(['welcome', 'usage', 'places', 'recording', 'times', 'reminders', 'done']);
   });
 
   it('adds the battery screen on phones that stop background apps', () => {
-    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'battery', 'done']);
+    expect(wizardSteps(progress(), { ...NEW_USER, manufacturer: 'Xiaomi' })).toEqual(['welcome', 'usage', 'places', 'recording', 'times', 'reminders', 'battery', 'done']);
   });
 
   it('shows an existing user only what they have not set up, with no welcome', () => {
     const tester = { ...NEW_USER, isNewUser: false, placesSet: true, notificationsAllowed: true, usageAnswered: true };
-    expect(wizardSteps(progress(), tester)).toEqual(['times', 'recording', 'done']);
+    expect(wizardSteps(progress(), tester)).toEqual(['recording', 'times', 'done']);
   });
 
   it('shows nothing to someone who has everything set up', () => {
@@ -68,7 +66,7 @@ describe('first-time setup: which screens to show', () => {
   });
 
   it('treats a skipped usage question as answered "no" and does not ask again', () => {
-    expect(wizardSteps(progress({ seen: ['welcome', 'usage'] }), NEW_USER)).toEqual(['places', 'times', 'recording', 'reminders', 'done']);
+    expect(wizardSteps(progress({ seen: ['welcome', 'usage'] }), NEW_USER)).toEqual(['places', 'recording', 'times', 'reminders', 'done']);
   });
 
   it('respects "Don\'t ask again" from the old Home/Office pop-up', () => {
@@ -108,19 +106,6 @@ describe('first-time setup: the Home checklist', () => {
     expect(xiaomi.find((i) => i.item === 'battery')?.done).toBe(false);
     const confirmed = checklist(progress({ battery: 'done' }), { ...NEW_USER, manufacturer: 'Xiaomi' });
     expect(confirmed.find((i) => i.item === 'battery')?.done).toBe(true);
-  });
-});
-
-describe('first-time setup: commute hours from leave times', () => {
-  it('covers an hour before to 90 minutes after', () => {
-    expect(windowFromLeaveTime(8 * 60 + 45)).toEqual({ start: 7 * 60 + 45, end: 10 * 60 + 15 });
-    expect(leaveTimeFromWindow(7 * 60 + 45)).toBe(8 * 60 + 45);
-  });
-
-  it('wraps past midnight for night shifts', () => {
-    expect(windowFromLeaveTime(23 * 60)).toEqual({ start: 22 * 60, end: 30 });
-    expect(windowFromLeaveTime(30)).toEqual({ start: 23 * 60 + 30, end: 2 * 60 });
-    expect(leaveTimeFromWindow(23 * 60 + 30)).toBe(30);
   });
 });
 

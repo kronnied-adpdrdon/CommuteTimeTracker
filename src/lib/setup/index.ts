@@ -116,7 +116,7 @@ function start(): Promise<void> {
 /** Each Home card item opens these screens. */
 const ITEM_STEPS: Record<ChecklistItem, SetupStep[]> = {
   places: ['places'],
-  recording: ['times', 'recording'],
+  recording: ['recording', 'times'],
   reminders: ['reminders'],
   battery: ['battery'],
 };
@@ -137,8 +137,10 @@ export const setup = {
     const step = wizard.steps[wizard.index];
     track(step === 'done' ? { name: 'setup_complete' } : { name: 'setup_step', params: { step, action } });
     const seen = state.progress.seen.includes(step) ? state.progress.seen : [...state.progress.seen, step];
-    const last = wizard.index >= wizard.steps.length - 1;
-    set({ wizard: last ? null : { ...wizard, index: wizard.index + 1, direction: 'forward' } });
+    // The commute-times screen follows up on the recording choice, so skipping the choice skips it too.
+    const jump = step === 'recording' && action === 'skip' && wizard.steps[wizard.index + 1] === 'times' ? 2 : 1;
+    const last = wizard.index + jump > wizard.steps.length - 1;
+    set({ wizard: last ? null : { ...wizard, index: wizard.index + jump, direction: 'forward' } });
     await save({ seen, closed: state.progress.closed || (last && !wizard.single) });
   },
   async back() {
@@ -166,7 +168,7 @@ export const setup = {
   async preview() {
     await store.clear();
     const battery: SetupStep[] = itemApplies('battery', currentFacts()) ? ['battery'] : [];
-    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'usage', 'places', 'times', 'recording', 'reminders', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
+    set({ progress: INITIAL_PROGRESS, wizard: { steps: ['welcome', 'usage', 'places', 'recording', 'times', 'reminders', ...battery, 'done'], index: 0, single: false, direction: 'forward' } });
   },
   refreshBattery,
 };

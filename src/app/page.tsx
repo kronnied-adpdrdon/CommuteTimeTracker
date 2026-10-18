@@ -8,6 +8,7 @@ import AutoPausedBanner from '@/components/AutoPausedBanner';
 import SetupChecklist from '@/components/SetupChecklist';
 import { CommutePromptCard } from '@/components/SharingCard';
 import TripRow from '@/components/TripRow';
+import { useAutoTracking } from '@/lib/auto';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
@@ -27,6 +28,7 @@ function useNow(ticking: boolean): number {
 export default function Home() {
   const state = useCommute();
   const { phase, session, trips, busy } = state;
+  const autoOn = useAutoTracking().settings.enabled;
   const tracking = phase === 'tracking' && session !== null;
   const now = useNow(tracking);
 
@@ -146,7 +148,9 @@ export default function Home() {
                 <button className={styles.startButton} disabled={busy || phase === 'loading' || state.locating !== null} onClick={() => commute.start()}>
                   Start Tracking
                 </button>
-                <p className={styles.hint}>Uses your location only while a trip is running.</p>
+                <p className={styles.hint}>
+                  {autoOn ? 'Automatic is on: a trip starts by itself when you leave Home or the Office.' : 'Uses your location only while a trip is running.'}
+                </p>
               </>
             )}
           </div>

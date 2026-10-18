@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
         <SettingsGroup title="Commute">
           <SettingsRow icon="pin" title="Home and Office" summary={placesSummary} href="/settings/places" />
-          <SettingsRow icon="auto" title="Automatic start and stop" summary={paused ? 'Paused · tap to fix' : auto.enabled ? `On · ${daysSummary(auto.days)}` : 'Off · tap Start and Stop yourself'} href="/settings/automatic" />
+          <SettingsRow icon="auto" title="Automatic start and stop" summary={paused ? 'Paused · tap to fix' : auto.enabled ? 'On · any time' : `Off · Start and Stop, ${daysSummary(auto.days)}`} href="/settings/automatic" />
           <SettingsRow icon="bell" title="Notifications" summary="Leave-time, weekly summary and more" href="/notifications" />
         </SettingsGroup>
 

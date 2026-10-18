@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from '../page.module.css';
 import PageHeader from '@/components/PageHeader';
 import Switch from '@/components/Switch';
+import { useAutoTracking } from '@/lib/auto';
 import { commute, useCommute } from '@/lib/commute';
 import { proUnlocked } from '@/lib/commute/trial';
 import { useNow } from '@/lib/useNow';
@@ -16,10 +17,13 @@ interface Row {
   title: string;
   text: string;
   pro?: boolean;
+  /** A "tap Start" reminder: off while automatic start and stop is on. */
+  manualOnly?: boolean;
 }
 
 const ROWS: Row[] = [
-  { key: 'leaveNow', title: 'Time to leave', text: 'A nudge shortly before you usually head out, with how long the trip normally takes. Starts once you have a few trips.' },
+  { key: 'leaveNow', title: 'Time to leave', text: '10 minutes before you usually leave home, on your commute days, with how long the trip normally takes.', manualOnly: true },
+  { key: 'headHome', title: 'Time to head home', text: '10 minutes before you usually leave work, until the trip home is logged.', manualOnly: true },
   { key: 'evening', title: 'Forgot to track?', text: 'In the evening, only if you usually commute but nothing was logged today.' },
   { key: 'weekly', title: 'Weekly summary', text: 'Sunday evening: your commute time this week and how it compares with last week.' },
   { key: 'monthly', title: 'Monthly recap', text: 'On the 1st: last month’s total commute time, trips and distance.', pro: true },
@@ -29,6 +33,7 @@ const ROWS: Row[] = [
 export default function NotificationsPage() {
   const unlocked = proUnlocked(useCommute(), useNow());
   const { settings, allowed } = useNotifications();
+  const auto = useAutoTracking().settings.enabled;
   const [testError, setTestError] = useState(false);
 
   return (
@@ -48,6 +53,7 @@ export default function NotificationsPage() {
         <div className={styles.card} style={{ gap: 0 }}>
           {ROWS.map((row, i) => {
             const locked = row.pro && !unlocked;
+            const notNeeded = auto && row.manualOnly;
             return (
               <div key={row.key}>
                 {i > 0 && <div className={styles.rowDivider} />}
@@ -57,7 +63,12 @@ export default function NotificationsPage() {
                       {row.title}
                       {row.pro && <span className={styles.proBadge} style={{ marginLeft: '8px' }}>PRO</span>}
                     </div>
-                    <div className={styles.cardText}>{row.text}</div>
+                    <div className={styles.cardText}>{notNeeded ? 'Not needed: automatic start and stop starts your trips.' : row.text}</div>
+                    {row.manualOnly && !auto && settings[row.key] && (
+                      <Link href="/settings/automatic" className={styles.linkButton} style={{ textDecoration: 'none', display: 'inline-block', marginTop: '4px' }}>
+                        Change times and days
+                      </Link>
+                    )}
                     {row.key === 'evening' && settings.evening && (
                       <label className={styles.timeRow}>
                         <span>Remind me at</span>
@@ -78,7 +89,12 @@ export default function NotificationsPage() {
                       </Link>
                     )}
                   </div>
-                  <Switch label={row.title} checked={!locked && settings[row.key] === true} onChange={(value) => !locked && notifications.update({ [row.key]: value })} />
+                  <Switch
+                    label={row.title}
+                    checked={!locked && !notNeeded && settings[row.key] === true}
+                    disabled={notNeeded}
+                    onChange={(value) => !locked && !notNeeded && notifications.update({ [row.key]: value })}
+                  />
                 </div>
               </div>
             );

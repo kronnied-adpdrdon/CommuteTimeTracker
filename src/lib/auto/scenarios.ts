@@ -65,8 +65,12 @@ export const SCENARIOS: Scenario[] = [
   {
     id: 'afternoon',
     label: 'Leaves at 2 pm',
-    expect: 'ignored: outside-window',
-    steps: [{ event: 'exit', place: 'home', clock: '14:00' }],
+    // Automatic has no commute hours: any time of day counts.
+    expect: 'kept, 14:00 to 14:40',
+    steps: [
+      { event: 'exit', place: 'home', clock: '14:00' },
+      { event: 'enter', place: 'office', clock: '14:40' },
+    ],
   },
 ];
 

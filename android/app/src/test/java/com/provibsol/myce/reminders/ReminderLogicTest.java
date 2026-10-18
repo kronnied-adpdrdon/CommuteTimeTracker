@@ -45,45 +45,89 @@ public class ReminderLogicTest {
         assertEquals(0, ReminderLogic.parseTrips(null).size());
     }
 
+    private static ReminderLogic.Config manual() {
+        return new ReminderLogic.Config();
+    }
+
+    private static ReminderLogic.Config automatic() {
+        ReminderLogic.Config c = new ReminderLogic.Config();
+        c.auto = true;
+        return c;
+    }
+
     @Test
-    public void leaveNowNeedsAHabitAndNoTripYet() {
-        assertNull(ReminderLogic.leaveNow(new ArrayList<>(), MONDAY_MORNING));
-        ReminderLogic.Message message = ReminderLogic.leaveNow(habitTrips(), MONDAY_MORNING);
+    public void leaveNowFiresFromDayOneUntilATripIsLogged() {
+        assertNotNull(ReminderLogic.leaveNow(manual(), new ArrayList<>(), MONDAY_MORNING));
+        ReminderLogic.Message message = ReminderLogic.leaveNow(manual(), habitTrips(), MONDAY_MORNING);
         assertNotNull(message);
         assertTrue(message.body.contains("40 min"));
 
         List<ReminderLogic.Trip> withToday = habitTrips();
         withToday.add(trip(time(2026, 10, 5, 6, 50), 30, "work"));
-        assertNull(ReminderLogic.leaveNow(withToday, MONDAY_MORNING));
+        assertNull(ReminderLogic.leaveNow(manual(), withToday, MONDAY_MORNING));
     }
 
     @Test
-    public void leaveNowSkipsWeekends() {
-        assertNull(ReminderLogic.leaveNow(habitTrips(), time(2026, 10, 3, 7, 0)));
+    public void startAndStopRemindersAreOffWithAutomatic() {
+        assertNull(ReminderLogic.leaveNow(automatic(), habitTrips(), MONDAY_MORNING));
+        assertNull(ReminderLogic.headHome(automatic(), habitTrips(), time(2026, 10, 5, 16, 50)));
+        assertTrue(!automatic().enabled(ReminderLogic.LEAVE_NOW) && !automatic().enabled(ReminderLogic.HEAD_HOME));
+        assertTrue(manual().enabled(ReminderLogic.LEAVE_NOW) && manual().enabled(ReminderLogic.HEAD_HOME));
     }
 
     @Test
-    public void leaveNowFiresTenMinutesBeforeTheUsualDeparture() {
-        long next = ReminderLogic.nextFire(ReminderLogic.LEAVE_NOW, new ReminderLogic.Config(), habitTrips(), MONDAY_MORNING, 0, 0);
-        assertEquals(time(2026, 10, 5, 8, 20), next);
+    public void remindersFollowTheChosenDays() {
+        ReminderLogic.Config c = ReminderLogic.Config.fromJson("{\"days\":[6],\"leaveHomeMinutes\":540,\"leaveWorkMinutes\":1080}");
+        long saturday = time(2026, 10, 3, 7, 0);
+        assertNull(ReminderLogic.leaveNow(c, habitTrips(), MONDAY_MORNING));
+        assertNotNull(ReminderLogic.leaveNow(c, habitTrips(), saturday));
+        // Monday midday: the next Saturday, 10 minutes before 9:00 and 18:00.
+        long mondayNoon = time(2026, 10, 5, 12, 0);
+        assertEquals(time(2026, 10, 10, 8, 50), ReminderLogic.nextFire(ReminderLogic.LEAVE_NOW, c, habitTrips(), mondayNoon, 0, 0));
+        assertEquals(time(2026, 10, 10, 17, 50), ReminderLogic.nextFire(ReminderLogic.HEAD_HOME, c, habitTrips(), mondayNoon, 0, 0));
     }
 
     @Test
-    public void leaveNowWithoutHistoryChecksAtDefaultMorningTimeAndSkipsTheWeekend() {
+    public void leaveNowFiresTenMinutesBeforeTheTimeGivenAndSkipsTheWeekend() {
+        assertEquals(time(2026, 10, 5, 7, 50), ReminderLogic.nextFire(ReminderLogic.LEAVE_NOW, manual(), habitTrips(), MONDAY_MORNING, 0, 0));
         long friday = time(2026, 10, 2, 12, 0);
-        long next = ReminderLogic.nextFire(ReminderLogic.LEAVE_NOW, new ReminderLogic.Config(), new ArrayList<>(), friday, 0, 0);
-        assertEquals(time(2026, 10, 5, 7, 30), next);
+        assertEquals(time(2026, 10, 5, 7, 50), ReminderLogic.nextFire(ReminderLogic.LEAVE_NOW, manual(), new ArrayList<>(), friday, 0, 0));
+    }
+
+    @Test
+    public void headHomeUntilTheTripHomeIsLogged() {
+        long mondayEvening = time(2026, 10, 5, 16, 50);
+        List<ReminderLogic.Trip> trips = habitTrips();
+        trips.add(trip(time(2026, 10, 1, 17, 0), 55, "home"));
+        ReminderLogic.Message message = ReminderLogic.headHome(manual(), trips, mondayEvening);
+        assertNotNull(message);
+        assertTrue(message.body, message.body.contains("55 min"));
+
+        // Only the morning trip so far: still remind.
+        trips.add(trip(time(2026, 10, 5, 8, 30), 40, "work"));
+        assertNotNull(ReminderLogic.headHome(manual(), trips, mondayEvening));
+        trips.add(trip(time(2026, 10, 5, 16, 40), 50, "home"));
+        assertNull(ReminderLogic.headHome(manual(), trips, mondayEvening));
+
+        // Without Home and Office, two trips today count as done.
+        List<ReminderLogic.Trip> unknown = new ArrayList<>();
+        unknown.add(trip(time(2026, 10, 5, 8, 30), 40, "unknown"));
+        assertNotNull(ReminderLogic.headHome(manual(), unknown, mondayEvening));
+        unknown.add(trip(time(2026, 10, 5, 16, 30), 40, "unknown"));
+        assertNull(ReminderLogic.headHome(manual(), unknown, mondayEvening));
+        assertEquals(time(2026, 10, 5, 16, 50), ReminderLogic.nextFire(ReminderLogic.HEAD_HOME, manual(), trips, MONDAY_MORNING, 0, 0));
     }
 
     @Test
     public void eveningNudgeOnlyForPeopleWithAHabit() {
         long mondayEvening = time(2026, 10, 5, 19, 0);
-        assertNull(ReminderLogic.eveningNudge(new ArrayList<>(), mondayEvening));
-        assertNotNull(ReminderLogic.eveningNudge(habitTrips(), mondayEvening));
+        assertNull(ReminderLogic.eveningNudge(manual(), new ArrayList<>(), mondayEvening));
+        assertNotNull(ReminderLogic.eveningNudge(manual(), habitTrips(), mondayEvening));
+        assertNotNull(ReminderLogic.eveningNudge(automatic(), habitTrips(), mondayEvening));
 
         List<ReminderLogic.Trip> withToday = habitTrips();
         withToday.add(trip(time(2026, 10, 5, 8, 30), 40, "work"));
-        assertNull(ReminderLogic.eveningNudge(withToday, mondayEvening));
+        assertNull(ReminderLogic.eveningNudge(manual(), withToday, mondayEvening));
     }
 
     @Test

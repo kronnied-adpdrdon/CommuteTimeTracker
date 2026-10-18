@@ -13,6 +13,7 @@ import { generateSampleTrips, isSampleTrip } from '@/lib/trips/sample';
 
 const REMINDERS: { kind: ReminderKind; label: string; pro?: boolean }[] = [
   { kind: 'leaveNow', label: 'Time to leave' },
+  { kind: 'headHome', label: 'Time to head home' },
   { kind: 'evening', label: 'Forgot to track' },
   { kind: 'weekly', label: 'Weekly summary' },
   { kind: 'setup', label: 'Set-up reminder' },

@@ -25,7 +25,7 @@ public class AutoLogicTest {
     private static final long MONDAY_8 = time(2026, 10, 5, 8, 0);
     private static final long MONDAY_17 = time(2026, 10, 5, 17, 0);
 
-    /** Home and Office 10 km apart, automatic tracking on, default windows (Mon-Fri 7-10 and 16-20). */
+    /** Home and Office 10 km apart, automatic tracking on. */
     private static AutoLogic.Config config() {
         AutoLogic.Config c = new AutoLogic.Config();
         c.enabled = true;
@@ -101,37 +101,18 @@ public class AutoLogicTest {
         assertEquals(AutoLogic.OFFICE, r.candidate.from);
     }
 
-    // ---- Commute windows and days -----------------------------------------------------------------------
+    // ---- Any time, any day -----------------------------------------------------------------------------
 
     @Test
-    public void outsideTheWindowsNothingIsWatched() {
+    public void leavingAtAnyTimeOrDayStartsATrip() {
         long monday2pm = time(2026, 10, 5, 14, 0);
         long saturday8am = time(2026, 10, 10, 8, 0);
-        assertEquals("outside-window", AutoLogic.onExit(null, AutoLogic.HOME, monday2pm, config()).reason);
-        assertEquals(AutoLogic.Action.NONE, AutoLogic.onExit(null, AutoLogic.HOME, saturday8am, config()).action);
-        // An unfinished candidate is dropped rather than left hanging.
-        AutoLogic.Result r = AutoLogic.onExit(leftHomeAt(MONDAY_8), AutoLogic.HOME, monday2pm, config());
-        assertEquals(AutoLogic.Action.DROP, r.action);
-    }
-
-    @Test
-    public void windowStartIsInsideAndEndIsOutside() {
-        AutoLogic.Config c = config();
-        assertTrue(AutoLogic.inWindow(c, time(2026, 10, 5, 7, 0)));
-        assertTrue(AutoLogic.inWindow(c, time(2026, 10, 5, 9, 59)));
-        assertFalse(AutoLogic.inWindow(c, time(2026, 10, 5, 10, 0)));
-        assertTrue(AutoLogic.inWindow(c, time(2026, 10, 5, 16, 0)));
-        assertFalse(AutoLogic.inWindow(c, time(2026, 10, 5, 20, 0)));
-    }
-
-    @Test
-    public void aWindowCanCrossMidnightForNightShifts() {
-        AutoLogic.Config c = config();
-        c.eveningStart = 22 * 60;
-        c.eveningEnd = 2 * 60;
-        assertTrue(AutoLogic.inWindow(c, time(2026, 10, 5, 23, 30)));
-        assertTrue(AutoLogic.inWindow(c, time(2026, 10, 6, 1, 0)));
-        assertFalse(AutoLogic.inWindow(c, time(2026, 10, 6, 3, 0)));
+        long tuesday3am = time(2026, 10, 6, 3, 0);
+        for (long at : new long[] { monday2pm, saturday8am, tuesday3am }) {
+            assertEquals(AutoLogic.Action.START, AutoLogic.onExit(null, AutoLogic.HOME, at, config()).action);
+        }
+        AutoLogic.Candidate c = leftHomeAt(saturday8am);
+        assertEquals("work", AutoLogic.onEnter(c, AutoLogic.OFFICE, saturday8am + 30 * MIN).direction);
     }
 
     // ---- Not ready --------------------------------------------------------------------------------------
@@ -224,11 +205,6 @@ public class AutoLogicTest {
             + "\"home\":{\"lat\":12.9,\"lng\":77.6},\"office\":{\"lat\":13.0,\"lng\":77.7}}";
         AutoLogic.Config c = AutoLogic.Config.fromJson(json);
         assertTrue(c.enabled);
-        assertEquals(360, c.morningStart);
-        assertEquals(16 * 60, c.eveningStart);
-        assertTrue(c.days[Calendar.SUNDAY]);
-        assertTrue(c.days[Calendar.SATURDAY]);
-        assertFalse(c.days[Calendar.MONDAY]);
         assertEquals(100, c.homeRadius);
         assertEquals(400, c.officeRadius);
         assertNotNull(c.home);

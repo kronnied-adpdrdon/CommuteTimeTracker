@@ -2,8 +2,11 @@ import { KeyValueStore } from '../storage/kv';
 
 export const SETUP_KEY = 'setup.v1';
 
-/** The first-time setup's screens, in order. "welcome" is for new users only; "done" closes the flow. */
-export type SetupStep = 'welcome' | 'usage' | 'places' | 'times' | 'recording' | 'reminders' | 'battery' | 'done';
+/**
+ * The first-time setup's screens, in order. "welcome" is for new users only; "done" closes the flow. "times" follows
+ * the recording choice and depends on it: how long the commute takes (automatic), or when and which days (Start and Stop).
+ */
+export type SetupStep = 'welcome' | 'usage' | 'places' | 'recording' | 'times' | 'reminders' | 'battery' | 'done';
 
 /** What the "Finish setting up" card on Home lists. Commute times live inside the recording choice. */
 export type ChecklistItem = 'places' | 'recording' | 'reminders' | 'battery';
@@ -41,7 +44,7 @@ export interface SetupFacts {
   usageAnswered: boolean;
 }
 
-const STEPS: SetupStep[] = ['welcome', 'usage', 'places', 'times', 'recording', 'reminders', 'battery', 'done'];
+const STEPS: SetupStep[] = ['welcome', 'usage', 'places', 'recording', 'times', 'reminders', 'battery', 'done'];
 
 export function sanitize(value: unknown): SetupProgress {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -151,8 +154,8 @@ export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupSt
   const steps: SetupStep[] = [];
   if (open('places') && !seen('places') && !facts.placesNeverAsk) steps.push('places');
   if (open('recording') && !seen('recording')) {
-    if (!seen('times')) steps.push('times');
     steps.push('recording');
+    if (!seen('times')) steps.push('times');
   }
   if (open('reminders') && !seen('reminders')) steps.push('reminders');
   if (open('battery') && !seen('battery')) steps.push('battery');
@@ -161,18 +164,4 @@ export function wizardSteps(progress: SetupProgress, facts: SetupFacts): SetupSt
   const welcome: SetupStep[] = facts.isNewUser && !seen('welcome') ? ['welcome'] : [];
   // Step 1, so the answer covers the setup itself ("where do people get stuck?").
   return [...welcome, ...(askUsage ? (['usage'] as const) : []), ...steps, 'done'];
-}
-
-/** Commute hours from "when do you usually leave": an hour before to 90 minutes after (people run late more than early). */
-export const WINDOW_BEFORE_MINUTES = 60;
-export const WINDOW_AFTER_MINUTES = 90;
-const DAY = 24 * 60;
-
-export function windowFromLeaveTime(minutes: number): { start: number; end: number } {
-  return { start: (minutes - WINDOW_BEFORE_MINUTES + DAY) % DAY, end: (minutes + WINDOW_AFTER_MINUTES) % DAY };
-}
-
-/** The reverse, to prefill the question from the saved hours. */
-export function leaveTimeFromWindow(start: number): number {
-  return (start + WINDOW_BEFORE_MINUTES) % DAY;
 }

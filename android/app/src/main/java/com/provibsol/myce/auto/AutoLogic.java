@@ -1,8 +1,6 @@
 package com.provibsol.myce.auto;
 
 import com.provibsol.myce.tracking.Fix;
-import java.util.Calendar;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,9 +8,9 @@ import org.json.JSONObject;
  * Automatic start and stop, decided from Home and Office geofence crossings. Pure Java (no Android
  * classes) so it is unit-tested on a laptop.
  *
- * Leaving one place inside a commute window starts a candidate trip. It becomes a real trip only if it
+ * Leaving one place, at any time of day, starts a candidate trip. It becomes a real trip only if it
  * ends inside the other place before it expires; returning to where it started, or never arriving,
- * drops it. Outside the commute windows nothing happens at all, so weekend errands are never watched.
+ * drops it, so errands are never saved.
  */
 public final class AutoLogic {
 
@@ -49,13 +47,6 @@ public final class AutoLogic {
     /** The user's choices, pushed from the app's settings, plus the saved Home and Office. */
     public static final class Config {
         public boolean enabled = false;
-        /** Minutes after midnight; a window covers [start, end). */
-        public int morningStart = 7 * 60;
-        public int morningEnd = 10 * 60;
-        public int eveningStart = 16 * 60;
-        public int eveningEnd = 20 * 60;
-        /** Indexed by Calendar.DAY_OF_WEEK (1 = Sunday ... 7 = Saturday); index 0 unused. Default Mon-Fri. */
-        public boolean[] days = { false, false, true, true, true, true, true, false };
         public int homeRadius = DEFAULT_RADIUS_METERS;
         public int officeRadius = DEFAULT_RADIUS_METERS;
         /** How long the user says the commute usually takes. */
@@ -82,19 +73,6 @@ public final class AutoLogic {
             try {
                 JSONObject o = new JSONObject(json);
                 c.enabled = o.optBoolean("enabled", false);
-                c.morningStart = minutes(o, "morningStart", c.morningStart);
-                c.morningEnd = minutes(o, "morningEnd", c.morningEnd);
-                c.eveningStart = minutes(o, "eveningStart", c.eveningStart);
-                c.eveningEnd = minutes(o, "eveningEnd", c.eveningEnd);
-                JSONArray days = o.optJSONArray("days");
-                if (days != null) {
-                    // The app sends JavaScript weekdays: 0 = Sunday ... 6 = Saturday.
-                    c.days = new boolean[8];
-                    for (int i = 0; i < days.length(); i++) {
-                        int d = days.optInt(i, -1);
-                        if (d >= 0 && d <= 6) c.days[d + 1] = true;
-                    }
-                }
                 c.homeRadius = radius(o, "homeRadius");
                 c.officeRadius = radius(o, "officeRadius");
                 c.commuteMinutes = Math.max(MIN_COMMUTE_MINUTES, Math.min(MAX_COMMUTE_MINUTES, o.optInt("commuteMinutes", DEFAULT_COMMUTE_MINUTES)));
@@ -104,11 +82,6 @@ public final class AutoLogic {
                 return new Config();
             }
             return c;
-        }
-
-        private static int minutes(JSONObject o, String key, int fallback) {
-            int value = o.optInt(key, fallback);
-            return value >= 0 && value < 24 * 60 ? value : fallback;
         }
 
         private static int radius(JSONObject o, String key) {
@@ -238,10 +211,9 @@ public final class AutoLogic {
 
     /** The phone left Home or Office at `at` (the geofence's own timestamp, not when the event was delivered). */
     public static Result onExit(Candidate current, String place, long at, Config config) {
-        String skip = !config.ready() ? "not-ready" : !inWindow(config, at) ? "outside-window" : null;
-        if (skip != null) {
+        if (!config.ready()) {
             // An unfinished candidate can't still be right: the phone has since been back inside a place.
-            return current != null ? Result.drop(skip) : Result.none(null, skip);
+            return current != null ? Result.drop("not-ready") : Result.none(null, "not-ready");
         }
         // Any earlier candidate is replaced: its arrival was missed, or it already expired.
         return Result.start(new Candidate(place, at, at + waitMs(config)));
@@ -263,19 +235,6 @@ public final class AutoLogic {
     }
 
     // ---- Rules ------------------------------------------------------------------------------------------
-
-    /** Whether `at` falls on a chosen day, inside the morning or evening window. */
-    static boolean inWindow(Config config, long at) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(at);
-        if (!config.days[c.get(Calendar.DAY_OF_WEEK)]) return false;
-        int minute = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
-        return within(minute, config.morningStart, config.morningEnd) || within(minute, config.eveningStart, config.eveningEnd);
-    }
-
-    private static boolean within(int minute, int start, int end) {
-        return start <= end ? minute >= start && minute < end : minute >= start || minute < end;
-    }
 
     /** How long to wait for the arrival: 2.5 x the commute time the user gave, between 45 minutes and 3 hours. */
     static long waitMs(Config config) {

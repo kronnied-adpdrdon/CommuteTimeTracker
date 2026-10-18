@@ -22,20 +22,22 @@ export const DAYS: { day: number; label: string; name: string }[] = [
   { day: 0, label: 'S', name: 'Sunday' },
 ];
 
-type WindowKey = 'morningStart' | 'morningEnd' | 'eveningStart' | 'eveningEnd';
-
-function TimeInput({ value, field, label }: { value: number; field: WindowKey; label: string }) {
+/** "Leave home  [08:00]": one of the Start and Stop answers that time its reminders. */
+export function LeaveTimeRow({ label, value, onChange }: { label: string; value: number; onChange: (minutes: number) => void }) {
   return (
-    <input
-      aria-label={label}
-      className={`input-field ${styles.timeInput}`}
-      type="time"
-      value={minutesToClock(value)}
-      onChange={(e) => {
-        const minutes = clockToMinutes(e.target.value);
-        if (minutes !== null) void autoTracking.update({ [field]: minutes });
-      }}
-    />
+    <label className={styles.timeRow} style={{ justifyContent: 'space-between' }}>
+      <span>{label}</span>
+      <input
+        aria-label={`Usually ${label.toLowerCase()} at`}
+        className={`input-field ${styles.timeInput}`}
+        type="time"
+        value={minutesToClock(value)}
+        onChange={(e) => {
+          const minutes = clockToMinutes(e.target.value);
+          if (minutes !== null) onChange(minutes);
+        }}
+      />
+    </label>
   );
 }
 
@@ -111,7 +113,10 @@ function RadiusStepper({ settings, kind }: { settings: AutoSettings; kind: 'home
   );
 }
 
-/** Automatic start and stop: on/off (with the disclosure), commute hours, days and circle sizes. */
+/**
+ * Automatic start and stop: on/off (with the disclosure), commute length and circle sizes. Turned off, it asks when
+ * and on which days the user commutes instead, which times the Start and Stop reminders.
+ */
 export default function AutoTrackingCard() {
   const { settings, loaded, background, supported } = useAutoTracking();
   const { places } = useCommute();
@@ -139,7 +144,7 @@ export default function AutoTrackingCard() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className={styles.settingTitle}>Automatic start and stop</div>
           <div className={styles.cardText}>
-            Starts a trip when you leave Home or the Office during your commute hours, and saves it when you arrive at the other one. Errands are thrown away, and nothing is watched outside these hours.
+            Starts a trip whenever you leave Home or the Office, and saves it when you arrive at the other one. Errands are thrown away.
           </div>
         </div>
         <Switch label="Automatic start and stop" checked={settings.enabled || disclosing} onChange={toggle} />
@@ -160,20 +165,24 @@ export default function AutoTrackingCard() {
             </p>
           )}
 
-          <div className="eyebrow" style={{ marginTop: '6px' }}>Commute hours</div>
-          <label className={styles.timeRow}>
-            <span style={{ minWidth: '64px' }}>Morning</span>
-            <TimeInput value={settings.morningStart} field="morningStart" label="Morning from" />
-            <span>to</span>
-            <TimeInput value={settings.morningEnd} field="morningEnd" label="Morning until" />
-          </label>
-          <label className={styles.timeRow}>
-            <span style={{ minWidth: '64px' }}>Evening</span>
-            <TimeInput value={settings.eveningStart} field="eveningStart" label="Evening from" />
-            <span>to</span>
-            <TimeInput value={settings.eveningEnd} field="eveningEnd" label="Evening until" />
-          </label>
+          <div className="eyebrow" style={{ marginTop: '6px' }}>Commute length</div>
+          <CommuteTimePicker minutes={settings.commuteMinutes} onChange={(commuteMinutes) => void autoTracking.update({ commuteMinutes })} />
 
+          <div className="eyebrow" style={{ marginTop: '6px' }}>Circle size</div>
+          <RadiusStepper settings={settings} kind="home" />
+          <RadiusStepper settings={settings} kind="office" />
+          <p className={styles.cardText}>
+            A trip starts when you cross the edge of a circle. Make the Office circle bigger if it&apos;s a large campus (300 to 500 m).
+          </p>
+        </>
+      )}
+
+      {loaded && !settings.enabled && !disclosing && (
+        <>
+          <div className="eyebrow" style={{ marginTop: '6px' }}>When do you usually leave?</div>
+          <p className={styles.cardText}>For Start and Stop: a reminder to tap Start comes 10 minutes before, on these days.</p>
+          <LeaveTimeRow label="Leave home" value={settings.leaveHome} onChange={(leaveHome) => void autoTracking.update({ leaveHome })} />
+          <LeaveTimeRow label="Leave work" value={settings.leaveWork} onChange={(leaveWork) => void autoTracking.update({ leaveWork })} />
           <div className={styles.segmented} role="group" aria-label="Commute days" style={{ marginTop: '6px' }}>
             {DAYS.map(({ day, label, name }) => {
               const on = settings.days.includes(day);
@@ -190,16 +199,7 @@ export default function AutoTrackingCard() {
               );
             })}
           </div>
-
-          <div className="eyebrow" style={{ marginTop: '6px' }}>Commute length</div>
-          <CommuteTimePicker minutes={settings.commuteMinutes} onChange={(commuteMinutes) => void autoTracking.update({ commuteMinutes })} />
-
-          <div className="eyebrow" style={{ marginTop: '6px' }}>Circle size</div>
-          <RadiusStepper settings={settings} kind="home" />
-          <RadiusStepper settings={settings} kind="office" />
-          <p className={styles.cardText}>
-            A trip starts when you cross the edge of a circle. Make the Office circle bigger if it&apos;s a large campus (300 to 500 m).
-          </p>
+          {settings.days.length === 0 && <p className={styles.fieldError}>Pick at least one day, or there are no reminders to tap Start.</p>}
         </>
       )}
     </div>

@@ -17,8 +17,8 @@ How long does your commute really take? MYCE shows you, one trip at a time.
 Let it start and stop by itself, or tap Start when you leave and Stop when you arrive. The app times the journey and measures the distance with your phone's GPS, even with the screen off. Over a week it builds a clear picture of where your time goes.
 
 STARTS AND STOPS BY ITSELF
-• Leave Home or the Office during your commute hours and the trip starts on its own. It saves itself when you reach the other place
-• Errands are ignored, and nothing is watched outside the hours you choose
+• Leave Home or the Office, any time, and the trip starts on its own. It saves itself when you reach the other place
+• Errands are ignored: a trip only counts if it ends at the other place
 • A notification shows when a trip starts, with a "Not a commute" button
 • Prefer to stay in control? Tap Start and Stop yourself instead
 
@@ -32,7 +32,8 @@ SET HOME AND OFFICE BY ADDRESS
 • Trips are labelled "To work" or "To home" automatically
 
 GENTLE REMINDERS, ALL ON YOUR PHONE
-• A nudge before you usually leave, a Sunday summary of your week, and a "forgot to track?" check
+• Using Start and Stop? A nudge before you leave home and before you leave work, on the days you choose
+• A Sunday summary of your week, and a "forgot to track?" check
 • Switch each one on or off, and choose the evening time
 
 SEE YOUR WEEK AT A GLANCE

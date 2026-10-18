@@ -18,13 +18,12 @@ const MIN_WAIT_MINUTES = 45;
 const MAX_WAIT_MINUTES = 180;
 
 export interface AutoSettings {
+  /** Automatic start and stop: watches Home and Office at any time, so it needs no hours or days. */
   enabled: boolean;
-  /** Minutes after midnight. A window covers [start, end) and may cross midnight. */
-  morningStart: number;
-  morningEnd: number;
-  eveningStart: number;
-  eveningEnd: number;
-  /** JavaScript weekdays: 0 = Sunday ... 6 = Saturday. */
+  /** Start and Stop only, for its reminders: when the user usually leaves home and work, in minutes after midnight. */
+  leaveHome: number;
+  leaveWork: number;
+  /** Start and Stop only: the days they commute. JavaScript weekdays: 0 = Sunday ... 6 = Saturday. */
   days: number[];
   /** Circle sizes around Home and Office, in metres. */
   homeRadius: number;
@@ -35,10 +34,8 @@ export interface AutoSettings {
 
 export const DEFAULT_AUTO_SETTINGS: AutoSettings = {
   enabled: false,
-  morningStart: 7 * 60,
-  morningEnd: 10 * 60,
-  eveningStart: 16 * 60,
-  eveningEnd: 20 * 60,
+  leaveHome: 8 * 60,
+  leaveWork: 17 * 60,
   days: [1, 2, 3, 4, 5],
   homeRadius: DEFAULT_RADIUS_METERS,
   officeRadius: DEFAULT_RADIUS_METERS,
@@ -68,9 +65,12 @@ export function createAutoSettingsStore(store: KeyValueStore): AutoSettingsStore
 /** Keeps only known fields with the right types, so an old or damaged file can't break the screen. */
 export function sanitize(value: unknown): AutoSettings {
   const input = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
-  const minutes = (key: 'morningStart' | 'morningEnd' | 'eveningStart' | 'eveningEnd') => {
+  const isMinutes = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 24 * 60;
+  // Up to version 1.2.2 these were commute hours starting an hour before the leave time.
+  const leave = (key: 'leaveHome' | 'leaveWork', legacy: 'morningStart' | 'eveningStart') => {
     const v = input[key];
-    return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 24 * 60 ? v : DEFAULT_AUTO_SETTINGS[key];
+    const old = input[legacy];
+    return isMinutes(v) ? v : isMinutes(old) ? (old + 60) % (24 * 60) : DEFAULT_AUTO_SETTINGS[key];
   };
   const radius = (key: 'homeRadius' | 'officeRadius') => {
     const v = input[key];
@@ -82,10 +82,8 @@ export function sanitize(value: unknown): AutoSettings {
   const commute = input.commuteMinutes;
   return {
     enabled: typeof input.enabled === 'boolean' ? input.enabled : DEFAULT_AUTO_SETTINGS.enabled,
-    morningStart: minutes('morningStart'),
-    morningEnd: minutes('morningEnd'),
-    eveningStart: minutes('eveningStart'),
-    eveningEnd: minutes('eveningEnd'),
+    leaveHome: leave('leaveHome', 'morningStart'),
+    leaveWork: leave('leaveWork', 'eveningStart'),
     days,
     homeRadius: radius('homeRadius'),
     officeRadius: radius('officeRadius'),

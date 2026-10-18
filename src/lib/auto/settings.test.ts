@@ -3,7 +3,7 @@ import { createMemoryStore } from '../storage/kv';
 import { DEFAULT_AUTO_SETTINGS, clampCommute, clampRadius, createAutoSettingsStore, formatMinutesLong, placesTooClose, sanitize, toggleDay, waitMinutes, daysSummary } from './settings';
 
 describe('auto settings', () => {
-  it('starts off, with Mon-Fri 7-10am and 4-8pm and 150 m circles', async () => {
+  it('starts off, with Mon-Fri 8am and 5pm and 150 m circles', async () => {
     const settings = await createAutoSettingsStore(createMemoryStore()).load();
     expect(settings).toEqual(DEFAULT_AUTO_SETTINGS);
     expect(settings.enabled).toBe(false);
@@ -20,11 +20,16 @@ describe('auto settings', () => {
   it('repairs damaged values instead of failing', () => {
     const repaired = sanitize({ enabled: 'yes', morningStart: 9999, days: [1, 1, 9, 'x', 0], homeRadius: 20, officeRadius: 'big' });
     expect(repaired.enabled).toBe(false);
-    expect(repaired.morningStart).toBe(7 * 60);
+    expect(repaired.leaveHome).toBe(8 * 60);
     expect(repaired.days).toEqual([0, 1]);
     expect(repaired.homeRadius).toBe(100);
     expect(repaired.officeRadius).toBe(150);
     expect(sanitize(null)).toEqual(DEFAULT_AUTO_SETTINGS);
+  });
+
+  it('turns the old commute hours into leave times', () => {
+    expect(sanitize({ morningStart: 7 * 60 + 45, eveningStart: 23 * 60 + 30 })).toMatchObject({ leaveHome: 8 * 60 + 45, leaveWork: 30 });
+    expect(sanitize({ leaveHome: 9 * 60, morningStart: 6 * 60 }).leaveHome).toBe(9 * 60);
   });
 
   it('keeps circles between 100 m and 1 km', () => {

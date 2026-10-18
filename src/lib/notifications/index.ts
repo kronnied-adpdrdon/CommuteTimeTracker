@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
+import { autoTracking } from '../auto';
 import { commute } from '../commute';
 import { isNativeApp, lazyPlugin } from '../native';
 import { KeyValueStore } from '../storage/kv';
@@ -16,10 +17,10 @@ interface RemindersPlugin {
 
 const plugin = lazyPlugin<RemindersPlugin>('Reminders');
 
-export type ReminderKind = 'leaveNow' | 'evening' | 'weekly' | 'monthly' | 'slowDay' | 'setup';
+export type ReminderKind = 'leaveNow' | 'headHome' | 'evening' | 'weekly' | 'monthly' | 'slowDay' | 'setup';
 
 /** Must match the type numbers in the Android `ReminderLogic`. */
-const REMINDER_TYPE_IDS: Record<ReminderKind, number> = { leaveNow: 1, evening: 2, weekly: 3, monthly: 4, slowDay: 5, setup: 6 };
+const REMINDER_TYPE_IDS: Record<ReminderKind, number> = { leaveNow: 1, evening: 2, weekly: 3, monthly: 4, slowDay: 5, setup: 6, headHome: 7 };
 
 const preferences: KeyValueStore = {
   get: async (key) => (await import('../storage/preferences')).preferencesStore.get(key),
@@ -50,9 +51,15 @@ let lastPushed = '';
 /** Tells the Android side what to schedule. It reads trips itself when each reminder fires, so this only carries choices. */
 async function push(): Promise<void> {
   const app = commute.getState();
-  if (!state.loaded || app.phase === 'loading' || !(await isNativeApp())) return;
+  const auto = autoTracking.getState();
+  if (!state.loaded || app.phase === 'loading' || !auto.loaded || !(await isNativeApp())) return;
   const config = {
     ...state.settings,
+    // Automatic users get no "tap to start" reminders; Start and Stop users get them at the times and days they gave.
+    auto: auto.settings.enabled,
+    leaveHomeMinutes: auto.settings.leaveHome,
+    leaveWorkMinutes: auto.settings.leaveWork,
+    days: auto.settings.days,
     isPro: app.isPro,
     // Monthly recap and slow-day heads-up run during the free month too; Android checks the date itself.
     trialEndsAt: app.trialEndsAt ?? 0,
@@ -82,8 +89,9 @@ let started: Promise<void> | null = null;
 function start(): Promise<void> {
   started ??= (async () => {
     set({ settings: await store.load(), loaded: true });
-    await commute.init();
+    await Promise.all([commute.init(), autoTracking.start()]);
     commute.subscribe(() => void push());
+    autoTracking.subscribe(() => void push());
     await push();
     await refreshAllowed();
     document.addEventListener('visibilitychange', () => {

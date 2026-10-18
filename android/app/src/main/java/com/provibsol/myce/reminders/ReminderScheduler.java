@@ -92,7 +92,7 @@ public final class ReminderScheduler {
     static void fire(Context context, int type) {
         ReminderLogic.Config config = config(context);
         if (config.enabled(type)) {
-            ReminderLogic.Message message = ReminderLogic.messageFor(type, trips(context), System.currentTimeMillis());
+            ReminderLogic.Message message = ReminderLogic.messageFor(type, config, trips(context), System.currentTimeMillis());
             if (message != null) {
                 show(context, type, message.title, message.body);
                 if (type == ReminderLogic.SETUP) {
@@ -108,9 +108,11 @@ public final class ReminderScheduler {
     private static String quietReason(int type) {
         switch (type) {
             case ReminderLogic.LEAVE_NOW:
-                return "Time to leave only fires on weekdays, before any trip is logged today, once you have 3 or more trips to work.";
+                return "Time to leave is for Start and Stop only, on your commute days, before any trip is logged today.";
+            case ReminderLogic.HEAD_HOME:
+                return "Time to head home is for Start and Stop only, on your commute days, until the trip home is logged.";
             case ReminderLogic.EVENING:
-                return "Forgot to track only fires on weekdays when nothing is logged today and you commuted on 2 of the last 5 weekdays.";
+                return "Forgot to track only fires on commute days when nothing is logged today and you commuted on 2 of the last 5.";
             case ReminderLogic.WEEKLY:
                 return "Weekly summary needs at least one trip this week.";
             case ReminderLogic.MONTHLY:
@@ -129,7 +131,7 @@ public final class ReminderScheduler {
     public static boolean preview(Context context, int type) {
         List<ReminderLogic.Trip> trips = trips(context);
         long now = System.currentTimeMillis();
-        ReminderLogic.Message message = type == ReminderLogic.SLOW_DAY ? ReminderLogic.slowDayPreview(trips, now) : ReminderLogic.messageFor(type, trips, now);
+        ReminderLogic.Message message = type == ReminderLogic.SLOW_DAY ? ReminderLogic.slowDayPreview(trips, now) : ReminderLogic.messageFor(type, config(context), trips, now);
         if (message == null) {
             show(context, type, "Preview: nothing to send right now", quietReason(type));
             return false;

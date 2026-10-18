@@ -17,7 +17,7 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-export const LEGAL_UPDATED = '12 October 2026';
+export const LEGAL_UPDATED = '17 October 2026';
 
 /** Who publishes the app. Shown publicly in both documents, as Google Play requires a privacy contact. */
 export const PUBLISHER_NAME = 'Kaustav Dutta';
@@ -33,11 +33,11 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: 'What the app uses',
       bullets: [
         'Precise location while a trip is being recorded. Tracking begins when you tap Start (in the app or on the home-screen widget) and ends when you tap Stop (in the app, on the widget or in the notification). While tracking, the app shows a notification and may keep reading location with the screen off or the app closed. Apart from automatic start and stop (below), it does not read location at any other time, except when you choose "Use my current location" to set Home or Office.',
-        'Location in the background, only if you turn on automatic start and stop. It is off until you switch it on and allow location "all the time". Your phone then tells the app when you cross a circle around your saved Home or Office, even when the app is closed. Leaving one during the commute hours you chose starts recording a trip, with the usual notification; arriving at the other saves it, and anything else (an errand, never arriving) is thrown away. Outside your commute hours, crossings are ignored. Like all trip data, this stays on your phone.',
+        'Location in the background, only if you turn on automatic start and stop. It is off until you switch it on and allow location "all the time". Your phone then tells the app when you cross a circle around your saved Home or Office, even when the app is closed. Leaving one, at any time of day, starts recording a trip, with the usual notification; arriving at the other saves it, and anything else (an errand, coming back, never arriving) is thrown away along with its recording. Like all trip data, this stays on your phone.',
         'Trip data: for each commute, the start and end times, duration, distance, start and end points, and whether it was to work or to home. The full route is used only to measure distance while the trip runs. It is not saved. If you edit a trip, the times, distance and direction first recorded are kept with it on your phone.',
         'Saved places: the Home and Office you set, with the address you picked.',
         'Reminder settings: which reminders you turned on and the evening time you chose.',
-        'Automatic start and stop settings: whether it is on, your commute hours and days, how long your commute usually takes, and the size of the Home and Office circles.',
+        'Automatic start and stop settings: whether it is on, how long your commute usually takes, and the size of the Home and Office circles. If you use Start and Stop instead, the times you usually leave home and work and your commute days, which decide when reminders arrive.',
         'Purchase status: whether you have bought Pro. Payments are handled entirely by Google Play. We never see your card or payment details.',
       ],
     },

@@ -3,8 +3,9 @@ import { KeyValueStore } from '../storage/kv';
 export const NOTIFICATION_SETTINGS_KEY = 'notifications.v1';
 
 export interface NotificationSettings {
-  /** Free */
+  /** Free. "Time to leave" and "Time to head home" are for Start and Stop users only. */
   leaveNow: boolean;
+  headHome: boolean;
   evening: boolean;
   /** Minutes after midnight for the evening reminder, e.g. 1140 = 19:00. */
   eveningMinutes: number;
@@ -16,6 +17,7 @@ export interface NotificationSettings {
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   leaveNow: true,
+  headHome: true,
   evening: true,
   eveningMinutes: 19 * 60,
   weekly: true,
@@ -50,6 +52,7 @@ export function sanitize(value: unknown): NotificationSettings {
   const minutes = input.eveningMinutes;
   return {
     leaveNow: flag('leaveNow'),
+    headHome: flag('headHome'),
     evening: flag('evening'),
     eveningMinutes: typeof minutes === 'number' && Number.isInteger(minutes) && minutes >= 0 && minutes < 24 * 60 ? minutes : DEFAULT_NOTIFICATION_SETTINGS.eveningMinutes,
     weekly: flag('weekly'),
