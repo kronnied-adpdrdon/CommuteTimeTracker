@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "android/**",
     // Compiled Cloud Functions.
     "functions/lib/**",
+    // Promo reels: a separate Remotion project with its own packages.
+    "marketing/**",
   ]),
 ]);
 

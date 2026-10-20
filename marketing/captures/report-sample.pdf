@@ -1,0 +1,142 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 6713 >>
+stream
+0.08 0.09 0.11 rg 0 745.89 595.28 96 re f
+1 0.71 0 rg 0 742.89 595.28 3 re f
+1 0.79 0.2 rg 52.52 814.41 6.96 3.48 re f
+1 0.79 0.2 rg 54.61 810.24 2.78 4.87 re f
+1 0.71 0 rg 68.3 811.17 m 72.23 807.23 l 69.77 804.77 l 65.84 808.71 l h f
+1 0.71 0 rg 68.05 808.46 m 69.53 806.99 l 67.07 804.53 l 65.59 806 l h f
+1 0.71 0 rg 72 794.93 m 72 803.77 64.84 810.93 56 810.93 c 47.16 810.93 40 803.77 40 794.93 c 40 786.1 47.16 778.93 56 778.93 c 64.84 778.93 72 786.1 72 794.93 c f
+1 0.71 0 rg 43.69 784.71 m 68.31 784.71 l 56 769.89 l h f
+0.08 0.09 0.11 rg 64.7 794.93 m 64.7 799.74 60.8 803.63 56 803.63 c 51.2 803.63 47.3 799.74 47.3 794.93 c 47.3 790.13 51.2 786.24 56 786.24 c 60.8 786.24 64.7 790.13 64.7 794.93 c f
+1 1 1 RG 2.09 w 1 J 56 794.93 m 56 801.19 l S
+1 1 1 RG 2.09 w 1 J 56 794.93 m 60.17 792.5 l S
+BT /F2 10 Tf 1 0.71 0 rg 88 805.89 Td (MYCE) Tj ET
+BT /F2 22 Tf 1 1 1 rg 88 780.89 Td (Commute Report) Tj ET
+BT /F1 11 Tf 0.78 0.8 0.83 rg 88 761.89 Td (5 - 11 Oct 2026) Tj ET
+0.96 0.95 0.93 rg 40 658.89 121.32 58 re f
+1 0.71 0 rg 40 714.39 121.32 2.5 re f
+BT /F2 15 Tf 0.1 0.11 0.13 rg 50 690.89 Td (11) Tj ET
+BT /F1 9 Tf 0.42 0.45 0.5 rg 50 670.89 Td (Trips) Tj ET
+0.96 0.95 0.93 rg 171.32 658.89 121.32 58 re f
+1 0.71 0 rg 171.32 714.39 121.32 2.5 re f
+BT /F2 15 Tf 0.1 0.11 0.13 rg 181.32 690.89 Td (7 h 20 min) Tj ET
+BT /F1 9 Tf 0.42 0.45 0.5 rg 181.32 670.89 Td (Total time) Tj ET
+0.96 0.95 0.93 rg 302.64 658.89 121.32 58 re f
+1 0.71 0 rg 302.64 714.39 121.32 2.5 re f
+BT /F2 15 Tf 0.1 0.11 0.13 rg 312.64 690.89 Td (131.7 km) Tj ET
+BT /F1 9 Tf 0.42 0.45 0.5 rg 312.64 670.89 Td (Distance) Tj ET
+0.96 0.95 0.93 rg 433.96 658.89 121.32 58 re f
+1 0.71 0 rg 433.96 714.39 121.32 2.5 re f
+BT /F2 15 Tf 0.1 0.11 0.13 rg 443.96 690.89 Td (40 min) Tj ET
+BT /F1 9 Tf 0.42 0.45 0.5 rg 443.96 670.89 Td (Avg per trip) Tj ET
+BT /F1 10 Tf 0.1 0.11 0.13 rg 40 632.89 Td (To work: 5 trips, avg 40 min) Tj ET
+BT /F1 10 Tf 0.1 0.11 0.13 rg 211.76 632.89 Td (To home: 5 trips, avg 42 min) Tj ET
+BT /F1 10 Tf 0.1 0.11 0.13 rg 383.52 632.89 Td (Other: 1 trip, avg 25 min) Tj ET
+BT /F1 10 Tf 0.42 0.45 0.5 rg 40 616.89 Td (Days with commutes: 6) Tj ET
+0.96 0.95 0.93 rg 40 566.89 515.28 20 re f
+BT /F2 9 Tf 0.42 0.45 0.5 rg 48 572.89 Td (Date) Tj ET
+BT /F2 9 Tf 0.42 0.45 0.5 rg 170 572.89 Td (Time) Tj ET
+BT /F2 9 Tf 0.42 0.45 0.5 rg 290 572.89 Td (Duration) Tj ET
+BT /F2 9 Tf 0.42 0.45 0.5 rg 370 572.89 Td (Distance) Tj ET
+BT /F2 9 Tf 0.42 0.45 0.5 rg 460 572.89 Td (Direction) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 552.89 Td (5 Oct 2026 \(Mon\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 552.89 Td (08:21 - 08:59) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 552.89 Td (38 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 552.89 Td (11.9 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 552.89 Td (To work) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 546.89 m 555.28 546.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 532.89 Td (5 Oct 2026 \(Mon\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 532.89 Td (18:13 - 18:54) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 532.89 Td (41 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 532.89 Td (12.2 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 532.89 Td (To home) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 526.89 m 555.28 526.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 512.89 Td (6 Oct 2026 \(Tue\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 512.89 Td (08:48 - 09:42) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 512.89 Td (54 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 512.89 Td (13.0 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 512.89 Td (To work) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 506.89 m 555.28 506.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 492.89 Td (6 Oct 2026 \(Tue\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 492.89 Td (17:51 - 18:45) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 492.89 Td (54 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 492.89 Td (12.7 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 492.89 Td (To home) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 486.89 m 555.28 486.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 472.89 Td (7 Oct 2026 \(Wed\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 472.89 Td (08:32 - 09:12) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 472.89 Td (40 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 472.89 Td (12.1 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 472.89 Td (To work) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 466.89 m 555.28 466.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 452.89 Td (7 Oct 2026 \(Wed\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 452.89 Td (17:58 - 18:35) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 452.89 Td (37 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 452.89 Td (12.3 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 452.89 Td (To home) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 446.89 m 555.28 446.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 432.89 Td (8 Oct 2026 \(Thu\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 432.89 Td (08:43 - 09:21) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 432.89 Td (38 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 432.89 Td (12.7 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 432.89 Td (To work) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 426.89 m 555.28 426.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 412.89 Td (8 Oct 2026 \(Thu\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 412.89 Td (18:21 - 18:57) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 412.89 Td (36 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 412.89 Td (12.4 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 412.89 Td (To home) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 406.89 m 555.28 406.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 392.89 Td (9 Oct 2026 \(Fri\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 392.89 Td (08:39 - 09:11) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 392.89 Td (32 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 392.89 Td (12.1 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 392.89 Td (To work) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 386.89 m 555.28 386.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 372.89 Td (9 Oct 2026 \(Fri\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 372.89 Td (18:09 - 18:49) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 372.89 Td (40 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 372.89 Td (12.0 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 372.89 Td (To home) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 366.89 m 555.28 366.89 l S
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 48 352.89 Td (10 Oct 2026 \(Sat\)) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 170 352.89 Td (11:39 - 12:04) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 290 352.89 Td (25 min) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 370 352.89 Td (8.3 km) Tj ET
+BT /F1 9.5 Tf 0.1 0.11 0.13 rg 460 352.89 Td (-) Tj ET
+0.9 0.9 0.92 RG 0.5 w 0 J 40 346.89 m 555.28 346.89 l S
+BT /F1 8 Tf 0.42 0.45 0.5 rg 40 28 Td (Generated by MYCE on 18 Oct 2026 \(Sun\)  -  Page 1 of 1) Tj ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000212 00000 n 
+0000000314 00000 n 
+0000000456 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+7221
+%%EOF
