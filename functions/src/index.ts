@@ -8,7 +8,7 @@ import { logger } from 'firebase-functions';
 import { onRequest, Request } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { LOCATION, ensureSchema, purgeDeleted, requestDeletion, storeTrips } from './store';
-import { checkUpload, isInstallId } from './trips';
+import { MAX_BODY_BYTES, checkUpload, isInstallId } from './trips';
 
 initializeApp();
 
@@ -16,6 +16,9 @@ initializeApp();
 const CORS = ['https://localhost', 'http://localhost', /^http:\/\/localhost:\d+$/];
 
 const options = { region: LOCATION, cors: CORS, invoker: 'public', memory: '256MiB', maxInstances: 5, timeoutSeconds: 30 } as const;
+
+/** Real uploads are a few KB at most; anything far bigger is refused before any work is done. */
+const tooLarge = (request: Request) => (request.rawBody?.length ?? 0) > MAX_BODY_BYTES;
 
 const enforceAppCheck = () => process.env.ENFORCE_APP_CHECK === 'true';
 
@@ -52,6 +55,10 @@ export const shareTrips = onRequest(options, async (request, response) => {
     response.status(405).send('POST only');
     return;
   }
+  if (tooLarge(request)) {
+    response.status(413).send('Too large');
+    return;
+  }
   const checked = checkUpload(request.body, Date.now());
   if (!checked) {
     response.status(400).send('Malformed upload');
@@ -82,6 +89,10 @@ export const shareTrips = onRequest(options, async (request, response) => {
 export const deleteSharedTrips = onRequest(options, async (request, response) => {
   if (request.method !== 'POST') {
     response.status(405).send('POST only');
+    return;
+  }
+  if (tooLarge(request)) {
+    response.status(413).send('Too large');
     return;
   }
   const installId = (request.body as { installId?: unknown } | undefined)?.installId;

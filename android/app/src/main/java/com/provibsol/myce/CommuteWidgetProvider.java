@@ -20,7 +20,7 @@ import java.util.Locale;
  */
 public class CommuteWidgetProvider extends AppWidgetProvider {
 
-    /** Opens the app to ask for location permission: the one case a widget can't handle itself. */
+    /** Opens the app's home screen, where Start asks for location: the one case a widget can't handle itself. */
     static final String START_URL = "myce://start";
 
     @Override
@@ -89,7 +89,8 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
 
     /**
      * Starts the recorder directly (Android allows a location service to start from a widget tap).
-     * If precise location isn't granted or location is off, the widget can't fix that, so it opens the app.
+     * If precise location isn't granted or location is off, the widget can't fix that, so it opens the app for the
+     * user to tap Start there.
      */
     private static PendingIntent startAction(Context context, String action, int requestCode) {
         if (TrackingService.hasPreciseLocation(context) && TrackingService.isLocationEnabled(context)) {

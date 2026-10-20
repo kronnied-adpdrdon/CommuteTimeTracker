@@ -1,5 +1,8 @@
-/** What a myce:// link asks for. The widget only sends one when location permission is missing. */
-export function widgetAction(url: string): 'start' | 'stop' | 'open' | null {
-  const match = /^myce:\/\/(start|stop|open)\b/.exec(url);
-  return match ? (match[1] as 'start' | 'stop' | 'open') : null;
+/**
+ * Whether a link is the widget's myce://start, sent only when the widget can't record by itself (no location
+ * permission, or location off). It only opens the app: any app can send this link, so it must never start or
+ * stop a trip. The user taps Start, which asks for what's missing.
+ */
+export function isWidgetLink(url: string): boolean {
+  return /^myce:\/\/start\b/.test(url);
 }

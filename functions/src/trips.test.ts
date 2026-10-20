@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkUpload, tripProblem } from './trips';
+import { MAX_BODY_BYTES, MAX_ITEMS, checkUpload, tripProblem } from './trips';
 
 const NOW = Date.parse('2026-10-07T12:00:00Z');
 const INSTALL = '0b8f7a52-6a0e-4d3e-9a51-2c1f6f0b7c11';
@@ -53,5 +53,13 @@ describe('checkUpload', () => {
     expect(checkUpload({ installId: 'someone@example.com', appVersion: '1', trips: [], deleted: [] }, NOW)).toBeNull();
     expect(checkUpload({ installId: INSTALL, appVersion: '1', trips: Array(101).fill(trip()), deleted: [] }, NOW)).toBeNull();
     expect(checkUpload('nope', NOW)).toBeNull();
+  });
+});
+
+describe('MAX_BODY_BYTES', () => {
+  it('fits the largest upload the app can send', () => {
+    const longest = trip({ tripId: 'x'.repeat(80), distanceKm: 123.4, durationSeconds: 21599 });
+    const body = JSON.stringify({ installId: INSTALL, appVersion: 'x'.repeat(20), trips: Array(MAX_ITEMS).fill(longest), deleted: [] });
+    expect(Buffer.byteLength(body)).toBeLessThan(MAX_BODY_BYTES);
   });
 });

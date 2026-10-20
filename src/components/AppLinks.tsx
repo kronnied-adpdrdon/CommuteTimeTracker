@@ -2,10 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { commute } from '@/lib/commute';
-import { widgetAction } from '@/lib/commute/widget';
+import { isWidgetLink } from '@/lib/commute/widget';
 
-/** Handles the widget's Start / Stop / open taps, which arrive as myce:// links. */
+/** Handles the widget's Start tap when it can't record by itself: arrives as myce://start and opens the home screen. */
 export default function AppLinks() {
   const router = useRouter();
 
@@ -14,12 +13,7 @@ export default function AppLinks() {
     let cancelled = false;
 
     const handle = async (url: string) => {
-      const action = widgetAction(url);
-      if (!action) return;
-      await commute.init();
-      router.push('/');
-      if (action === 'start') await commute.start();
-      if (action === 'stop') await commute.stop();
+      if (isWidgetLink(url)) router.push('/');
     };
 
     (async () => {

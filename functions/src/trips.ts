@@ -4,6 +4,8 @@
  */
 
 export const MAX_ITEMS = 100;
+/** Request bodies larger than this are refused before anything else. A full upload of MAX_ITEMS is about 30 KB. */
+export const MAX_BODY_BYTES = 64 * 1024;
 /** Trips older than this are refused (the app sends up to 60 days back). */
 export const MAX_AGE_DAYS = 90;
 
