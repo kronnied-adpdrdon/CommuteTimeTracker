@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <meta name="description" content="{{ site.description }}">
+  <meta name="theme-color" content="#171a21">
+  <link rel="icon" href="{{ '/assets/img/icon.svg' | relative_url }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="{{ '/' | relative_url }}" aria-label="MYCE home">
+      <img src="{{ '/assets/img/icon.svg' | relative_url }}" alt="" width="34" height="34">
+      <span>MYCE</span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="{{ '/#features' | relative_url }}">Features</a>
+      <a href="{{ '/#privacy' | relative_url }}">Privacy</a>
+      <a href="{{ '/#pricing' | relative_url }}">Pricing</a>
+      <a href="{{ '/#faq' | relative_url }}">FAQ</a>
+      <a href="{{ '/#story' | relative_url }}">The story</a>
+    </nav>
+    <span class="soon-pill">Coming soon</span>
+  </div>
+</header>
+
+<main id="main" class="prose">
+  <a class="back" href="{{ '/' | relative_url }}">← MYCE home</a>
+  {{ content }}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="{{ '/' | relative_url }}" aria-label="MYCE home">
+        <img src="{{ '/assets/img/icon.svg' | relative_url }}" alt="" width="34" height="34">
+        <span>MYCE</span>
+      </a>
+      <p style="margin-top:14px">Commute time tracker for Android.</p>
+      <p>© 2026 Kaustav Dutta</p>
+    </div>
+    <nav aria-label="Legal and contact">
+      <a href="{{ '/privacy-policy' | relative_url }}">Privacy Policy</a>
+      <a href="{{ '/terms' | relative_url }}">Terms and Conditions</a>
+      <a href="{{ '/delete-data' | relative_url }}">Delete your data</a>
+      <a href="mailto:provibsol@gmail.com">provibsol@gmail.com</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,3 +1,9 @@
 # GitHub Pages settings for the public policy pages (docs/ on main).
 title: MYCE
-description: Commute time tracker for Android. Privacy policy and terms.
+description: MYCE, the commute time tracker for Android. Privacy policy, terms and data deletion.
+# Every Markdown page (privacy policy, terms, delete data) uses the site's own layout in _layouts/default.html.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

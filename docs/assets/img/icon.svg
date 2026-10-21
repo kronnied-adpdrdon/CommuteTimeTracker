@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#232832"/>
+      <stop offset="1" stop-color="#0E1014"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFC933"/>
+      <stop offset="1" stop-color="#FF9F00"/>
+    </linearGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#g)"/>
+  <!-- MYCE "Stopwatch Pin": same drawing as android/app/src/main/res/drawable/ic_launcher_foreground.xml -->
+  <g transform="translate(54 54) scale(0.92) translate(-54 -51.5)">
+    <rect x="49" y="17" width="10" height="5" rx="2" fill="#FFC933"/>
+    <rect x="52" y="21" width="4" height="7" fill="#FFC933"/>
+    <g transform="rotate(45 54 50)">
+      <rect x="50" y="21" width="8" height="5" rx="1.5" fill="#FFB400"/>
+      <rect x="52.5" y="24" width="3" height="5" fill="#FFB400"/>
+    </g>
+    <path d="M54,27c-12.7,0 -23,10.3 -23,23c0,17 23,36 23,36s23,-19 23,-36c0,-12.7 -10.3,-23 -23,-23z" fill="url(#amber)"/>
+    <circle cx="54" cy="50" r="12.5" fill="#14171C"/>
+    <path d="M54,50V41M54,50l6,3.5" stroke="#F4F2EC" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

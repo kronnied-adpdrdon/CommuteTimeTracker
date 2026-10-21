@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MYCE – Commute time tracker for Android</title>
+  <meta name="description" content="MYCE times your commute by itself: it starts when you leave Home or the Office and saves when you arrive. No account, no ads. Coming soon to Google Play.">
+  <meta name="theme-color" content="#171a21">
+  <link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://kronnied-adpdrdon.github.io/CommuteTimeTracker/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MYCE – How long is your commute, really?">
+  <meta property="og:description" content="A commute time tracker for Android that starts and stops by itself. No account, no ads.">
+  <meta property="og:url" content="https://kronnied-adpdrdon.github.io/CommuteTimeTracker/">
+  <meta property="og:image" content="https://kronnied-adpdrdon.github.io/CommuteTimeTracker/assets/img/share-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="assets/fonts/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/barlow-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="MYCE home">
+      <img src="assets/img/icon.svg" alt="" width="34" height="34">
+      <span>MYCE</span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#story">The story</a>
+    </nav>
+    <span class="soon-pill">Coming soon</span>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Commute time tracker for Android</span>
+        <h1 id="hero-title">How long is your commute, <em>really?</em></h1>
+        <p class="lead">MYCE times every trip to work and back, <strong>all by itself</strong>. Leave Home and the timer starts. Reach the Office and the trip is saved. Over a week, you see exactly where your time goes.</p>
+        <div class="cta-row">
+          <div class="store-soon" role="note" aria-label="Coming soon to Google Play">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" fill="none" stroke="#FFB400" stroke-width="2.2"/><path d="M12 13V8.5M12 13l3.2 1.9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/><rect x="9.5" y="1.5" width="5" height="2.6" rx="1" fill="#FFB400"/></svg>
+            <span><small>Coming soon to</small><b>Google Play</b></span>
+          </div>
+          <a class="btn-ghost" href="#reel"><span class="play" aria-hidden="true"></span>Watch the 26-second reel</a>
+        </div>
+        <ul class="facts">
+          <li>Free to use</li>
+          <li>No account</li>
+          <li>No ads</li>
+          <li>Android 8 and newer</li>
+        </ul>
+      </div>
+
+      <div class="hero-visual">
+        <span class="route" aria-hidden="true"></span>
+        <div class="phone">
+          <picture>
+            <source srcset="assets/img/dark-home-week.jpg" media="(prefers-color-scheme: dark)">
+            <img src="assets/img/light-home-week.jpg" width="540" height="1212" alt="MYCE Home screen: this week's total commute time of 5 hours 33 minutes, 1 hour 23 minutes a day on average, 24% less than the same days last week, and the three most recent commutes.">
+          </picture>
+        </div>
+        <img class="notif-float" src="assets/img/notification-auto.png" width="700" height="263" alt="Notification: Trip started automatically. 0.3 km, saved when you arrive. Buttons: Stop, Not a commute.">
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What it does</span>
+        <h2 id="features-title">Your commute, measured properly</h2>
+        <span class="lane" aria-hidden="true"></span>
+        <p>Not a guess from a maps app. Your actual door-to-door time, every day, timed and measured with your phone's GPS.</p>
+      </div>
+
+      <article class="feature">
+        <div>
+          <span class="eyebrow">Automatic, and free</span>
+          <h3>Starts and stops by itself</h3>
+          <p>Save your Home and Office once. From then on, leaving one starts a trip, at any time of day, and reaching the other saves it.</p>
+          <ul class="ticks">
+            <li>Errands are ignored: a trip only counts if it ends at the other place</li>
+            <li>A notification shows when a trip starts, with a "Not a commute" button</li>
+            <li>Prefer to stay in control? Tap Start and Stop in the app, on the notification, or on the home-screen widget</li>
+            <li>Works with the screen locked</li>
+          </ul>
+        </div>
+        <div class="feature-media">
+          <div class="phone">
+            <img src="assets/img/light-home-auto-saved.jpg" width="540" height="1212" loading="lazy" alt="MYCE Home screen after an automatic trip was saved.">
+          </div>
+        </div>
+      </article>
+
+      <article class="feature">
+        <div>
+          <span class="eyebrow">History</span>
+          <h3>Every trip, day by day</h3>
+          <p>The last two weeks of trips, grouped by day with daily totals. Each one is labelled "To work" or "To home" without you doing anything.</p>
+          <ul class="ticks">
+            <li>Fix a trip's times, distance or direction, or delete it</li>
+            <li>GPS glitches are filtered out, so a phone waiting at a signal doesn't invent kilometres</li>
+            <li>See how this week compares with the same days last week</li>
+          </ul>
+        </div>
+        <div class="feature-media">
+          <div class="phone">
+            <picture>
+              <source srcset="assets/img/dark-history.jpg" media="(prefers-color-scheme: dark)">
+              <img src="assets/img/light-history.jpg" width="540" height="1212" loading="lazy" alt="MYCE History screen: trips grouped by day with daily totals.">
+            </picture>
+          </div>
+        </div>
+      </article>
+
+      <article class="feature">
+        <div>
+          <span class="eyebrow">Reports</span>
+          <h3>Reports and PDF export <span class="tag-pro">PRO</span></h3>
+          <p>Pick any date range, including trips older than two weeks, and get the totals: trips, time, distance, and average per trip, with to-work and to-home shown separately.</p>
+          <ul class="ticks">
+            <li>Export a clean PDF to keep, share, or attach to a travel claim</li>
+            <li>A monthly commute recap, and a heads-up before your slower weekdays</li>
+          </ul>
+        </div>
+        <div class="feature-media pair">
+          <div class="phone">
+            <picture>
+              <source srcset="assets/img/dark-reports.jpg" media="(prefers-color-scheme: dark)">
+              <img src="assets/img/light-reports.jpg" width="540" height="1212" loading="lazy" alt="MYCE Reports screen for 5 to 11 October: 11 trips, 7 hours 20 minutes, 131.7 km, 40 minutes per trip on average.">
+            </picture>
+          </div>
+          <div class="phone">
+            <picture>
+              <source srcset="assets/img/dark-reports-export.jpg" media="(prefers-color-scheme: dark)">
+              <img src="assets/img/light-reports-export.jpg" width="540" height="1212" loading="lazy" alt="MYCE Reports screen with the PDF export option.">
+            </picture>
+          </div>
+        </div>
+      </article>
+
+      <div class="mini-grid">
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg></span>
+          <h4>Home-screen widget</h4>
+          <p>Start and stop a trip without opening the app.</p>
+        </div>
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+          <h4>Gentle reminders</h4>
+          <p>A nudge before you leave, a Sunday summary, and a "forgot to track?" check. Switch each one on or off.</p>
+        </div>
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+          <h4>Home and Office by address</h4>
+          <p>Type an address and pick the match, or use where you're standing.</p>
+        </div>
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg></span>
+          <h4>Light and dark</h4>
+          <p>Two themes built around one signal amber, easy to read at a glance.</p>
+        </div>
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span>
+          <h4>Comes with you to a new phone</h4>
+          <p>Android's own backup can bring your trips back. Pro restores with your Google account.</p>
+        </div>
+        <div class="mini">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.2L4 17.2z"/><path d="M8 9h8M8 12h5"/></svg></span>
+          <h4>Bug reports in one tap</h4>
+          <p>Send feedback or report a bug, with screenshots, straight from Settings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reel -->
+  <section id="reel" class="section band" aria-labelledby="reel-title">
+    <div class="wrap reel">
+      <div class="section-head">
+        <span class="eyebrow">See it move</span>
+        <h2 id="reel-title">MYCE in 26 seconds</h2>
+        <span class="lane" aria-hidden="true"></span>
+        <p>From the first trip to the weekly report: a quick look at how MYCE fits into your day. Turn the sound on for the voiceover.</p>
+        <p style="font-size:14px">The voiceover is AI-generated.</p>
+      </div>
+      <video controls playsinline preload="none" poster="assets/video/myce-reel-1-poster.jpg" width="540" height="960">
+        <source src="assets/video/myce-reel-1.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="assets/video/myce-reel-1.mp4">Download the reel (MP4)</a>.
+      </video>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section id="privacy" class="section" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Private by design</span>
+        <h2 id="privacy-title">Your trips stay on your phone</h2>
+        <span class="lane" aria-hidden="true"></span>
+        <p>No account to create, nothing to log into, and nothing to sell you through ads.</p>
+      </div>
+      <div class="privacy-grid">
+        <div><b>No account</b><span>No sign-up, no login, no password.</span></div>
+        <div><b>On your phone</b><span>Trips, places and settings are stored on the device.</span></div>
+        <div><b>Always visible</b><span>A notification shows whenever a trip is being recorded.</span></div>
+        <div><b>No ads</b><span>None, in either the free version or Pro.</span></div>
+      </div>
+      <p class="privacy-note">Sharing rough commute times to help improve MYCE is optional, and it stays off unless you turn it on. The <a href="privacy-policy">Privacy Policy</a> explains exactly what can leave your phone and when, in plain words.</p>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="section band" aria-labelledby="pricing-title">
+    <div class="wrap">
+      <div class="section-head center">
+        <span class="eyebrow">Pricing</span>
+        <h2 id="pricing-title">Free to use. Pro is one payment.</h2>
+        <span class="lane" aria-hidden="true"></span>
+        <p>Everything in Pro is free for your first 30 days. After that, keep using MYCE for free, or unlock Pro once. There's no subscription.</p>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <h3>Free</h3>
+          <div class="price">₹0</div>
+          <p class="sub">Forever, no catch.</p>
+          <hr class="dashed">
+          <ul class="ticks">
+            <li>Automatic start and stop</li>
+            <li>Start and Stop by hand, or from the widget</li>
+            <li>This week's total, daily average and weekly comparison</li>
+            <li>The last two weeks of history</li>
+            <li>Edit or delete any trip</li>
+            <li>Reminders and the Sunday summary</li>
+          </ul>
+        </div>
+        <div class="plan pro">
+          <h3>Pro</h3>
+          <div class="price">₹100<small>one time</small></div>
+          <p class="sub">Bought through Google Play. It restores on any phone signed in to the same Google account.</p>
+          <span class="trial-chip">Free for your first 30 days</span>
+          <hr class="dashed">
+          <ul class="ticks">
+            <li>Everything in Free</li>
+            <li>Reports for any date range, including trips older than two weeks</li>
+            <li>Totals, averages, and to-work vs to-home breakdowns</li>
+            <li>PDF export</li>
+            <li>Monthly recap and a heads-up before your slower weekdays</li>
+          </ul>
+        </div>
+      </div>
+      <p class="plan-foot">Older trips are never deleted. They stay on your phone, ready for a report whenever you want one.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head center">
+        <span class="eyebrow">Questions</span>
+        <h2 id="faq-title">Good to know</h2>
+        <span class="lane" aria-hidden="true"></span>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>When can I download MYCE?</summary>
+          <div class="answer"><p>Soon. MYCE is in a closed test on Google Play with a group of testers right now, which Google requires before an app can launch publicly. Once that's done, it goes live on Google Play for everyone, and the link will appear right here.</p></div>
+        </details>
+        <details>
+          <summary>How does automatic start and stop know it's a commute?</summary>
+          <div class="answer">
+            <p>You save your Home and your Office. Your phone then watches for you crossing a circle around each one, reaching 150 metres out by default (you can make it bigger or smaller). Leaving one starts a trip, at any time of day. The trip is saved only when you arrive at the other place.</p>
+            <p>A detour to the shop that brings you back home is thrown away, and so is anything shorter than five minutes. If a trip starts when you weren't commuting, tap "Not a commute" on the notification.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Will it drain my battery?</summary>
+          <div class="answer"><p>While you're not travelling, automatic mode relies on Android's own location circles, the same system your phone already runs for other apps, rather than keeping GPS on. GPS runs only while a trip is being recorded, and a notification is always showing at that time. As with any app that uses GPS, battery use goes up during the trip itself.</p></div>
+        </details>
+        <details>
+          <summary>Do I need an account?</summary>
+          <div class="answer"><p>No. There's no sign-up and no login. Your Google account already takes care of the two things an account would normally do: Google Play remembers that you bought Pro, and Android's backup can restore your trips on a new phone.</p></div>
+        </details>
+        <details>
+          <summary>What leaves my phone?</summary>
+          <div class="answer">
+            <p>Your trips don't, unless you choose to share. When you search for an address, the text you type is sent to an address lookup service to find the match. If you turn on "Share commute times", rough details of each trip are sent without your name or exact locations: the start time rounded to 15 minutes, how long it took, and areas about 5 km across. You can turn it off any time, and doing that deletes what was shared.</p>
+            <p>The <a href="privacy-policy">Privacy Policy</a> lists everything.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Is my data sold?</summary>
+          <div class="answer"><p>Your own data never is. If you turn on sharing, MYCE may publish or sell statistics made from many people's shared commute times, such as average commute times by area and hour. Those numbers always combine at least 20 people and contain nothing that could identify anyone. Individual trips, your random ID, and anything linked to your phone are never sold or shared, and nothing is used for advertising.</p></div>
+        </details>
+        <details>
+          <summary>Is there an iPhone version?</summary>
+          <div class="answer"><p>Not yet. MYCE is for Android phones running Android 8 or newer, through Google Play.</p></div>
+        </details>
+        <details>
+          <summary>How do I delete my data?</summary>
+          <div class="answer"><p>Delete trips one at a time in History, or all at once in Settings. Uninstalling the app removes everything on the phone. The <a href="delete-data">Delete your data</a> page covers shared data too.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Story -->
+  <section id="story" class="section band" aria-labelledby="story-title">
+    <div class="wrap story">
+      <aside class="story-card" aria-label="The build so far">
+        <div class="row"><div class="num">28 Sep</div><span>Day one, 2026</span></div>
+        <div class="row"><div class="num">1</div><span>person building it, with an AI coding assistant</span></div>
+        <div class="row"><div class="num">12</div><span>testers in the Google Play closed test</span></div>
+      </aside>
+      <div class="letter">
+        <span class="eyebrow">The story</span>
+        <h2 id="story-title" style="font-size:clamp(38px,5vw,56px);margin-top:12px">A note from the maker</h2>
+        <span class="lane" aria-hidden="true"></span>
+        <p>I'm a mechanical engineer turned MBA, and MYCE is my first app. The idea is simple: show people how long, and how far, their daily commute really takes.</p>
+        <p>On day one, the app already <em>looked</em> finished. Every screen was there, but the timer, the distance and the history were all fake numbers. In mechanical terms, it was a beautiful prototype with no engine. So I planned it like a production schedule: worked backwards from launch, broke the work into phases, and found that the real bottleneck wasn't code. It was Google's rule of 12 testers for 14 days, a mandatory pilot batch.</p>
+        <p>I'm building MYCE with an AI coding assistant, and I share the journey in public on LinkedIn: what worked, what didn't, and the mistakes along the way.</p>
+        <p>If MYCE helps you understand your commute, or you find something broken, I'd love to hear from you at <a href="mailto:provibsol@gmail.com">provibsol@gmail.com</a>.</p>
+        <p class="sign">Kaustav Dutta<small>Maker of MYCE</small></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="./" aria-label="MYCE home">
+        <img src="assets/img/icon.svg" alt="" width="34" height="34">
+        <span>MYCE</span>
+      </a>
+      <p style="margin-top:14px">Commute time tracker for Android.</p>
+      <p>© 2026 Kaustav Dutta</p>
+    </div>
+    <nav aria-label="Legal and contact">
+      <a href="privacy-policy">Privacy Policy</a>
+      <a href="terms">Terms and Conditions</a>
+      <a href="delete-data">Delete your data</a>
+      <a href="mailto:provibsol@gmail.com">provibsol@gmail.com</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
