@@ -302,21 +302,6 @@ section { scroll-margin-top: 72px; }
 .faq .answer { padding: 0 0 24px; color: var(--text-2); }
 .faq .answer p + p { margin-top: 12px; }
 
-/* ---------- Story ---------- */
-.story { display: grid; grid-template-columns: 300px 1fr; gap: 64px; align-items: start; }
-.story-card {
-  position: sticky; top: 96px;
-  border-radius: 24px; padding: 28px; background: var(--hero-bg); color: var(--hero-text);
-}
-.story-card .num { font: 700 64px/1 var(--font-head); color: var(--accent); }
-.story-card .num + span { display: block; color: var(--hero-text-2); margin-top: 4px; font-size: 15px; }
-.story-card .row + .row { margin-top: 20px; padding-top: 20px; border-top: 1px dashed rgba(255, 255, 255, .18); }
-.letter { max-width: 640px; }
-.letter p { margin-top: 18px; font-size: 19px; }
-.letter .sign { margin-top: 28px; font: 700 28px/1 var(--font-head); }
-.letter .sign small { display: block; margin-top: 6px; font: 400 15px/1.4 var(--font-body); color: var(--text-2); }
-@media (max-width: 860px) { .story { grid-template-columns: 1fr; gap: 36px; } .story-card { position: static; } }
-
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--border); padding: 48px 0 56px; color: var(--text-2); font-size: 15px; }
 .site-footer .wrap { display: flex; flex-wrap: wrap; gap: 24px 48px; align-items: flex-start; justify-content: space-between; }
