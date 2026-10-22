@@ -290,6 +290,9 @@ function Recording() {
 
   const chosen = async (recording: 'auto' | 'manual') => {
     track({ name: 'recording_choice', params: { choice: recording } });
+    // Picking Start and Stop after trying automatic (e.g. Back from the location step) must switch automatic off, or
+    // trips keep starting by themselves and the next screen asks about commute length instead of leave times.
+    if (recording === 'manual' && settings.enabled) await autoTracking.update({ enabled: false });
     await setup.answer({ recording });
     await setup.next();
   };
