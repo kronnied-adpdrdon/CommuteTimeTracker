@@ -91,7 +91,7 @@ export default function Home() {
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">Track Commute</h1>
+        <h1 className="page-title">MYCE</h1>
       </header>
 
       <div className={styles.homeContainer}>
