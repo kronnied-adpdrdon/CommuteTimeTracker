@@ -16,8 +16,8 @@ import com.provibsol.myce.tracking.TrackingStore;
 import java.util.Locale;
 
 /**
- * Home-screen widget: live timer and distance with a Start / Stop button, and today's total when no trip is running. Buttons control the native
- * recorder directly, so the app doesn't open. Tapping the rest of the widget does nothing.
+ * Home-screen widget: live timer and distance with a Start / Stop button, and today's total when no trip is running.
+ * The button controls the native recorder directly, so the app doesn't open; tapping anywhere else opens the app.
  */
 public class CommuteWidgetProvider extends AppWidgetProvider {
 
@@ -87,7 +87,17 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_caption, today.caption());
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_START, 1));
         }
+        views.setOnClickPendingIntent(android.R.id.background, openApp(context));
         return views;
+    }
+
+    /** The rest of the widget: opens MYCE where it was (Home, or a running trip). */
+    private static PendingIntent openApp(Context context) {
+        Intent intent = new Intent(context, MainActivity.class)
+            .setAction(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_LAUNCHER)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return PendingIntent.getActivity(context, 20, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     /**

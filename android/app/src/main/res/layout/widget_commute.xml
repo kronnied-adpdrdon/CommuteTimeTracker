@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- One-row control strip in the app's tracking-card look: MYCE, status, the time and distance (live while tracking,
      today's total otherwise) on the left, a round Start/Stop button on the right.
-     The root has no click action on purpose: only the button does anything. -->
+     The button starts or stops a trip; tapping anywhere else opens the app. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
