@@ -346,6 +346,42 @@
   max-width: 100%;
 }
 
+.weekValue { grid-area: value; }
+.weekLabel { grid-area: label; }
+.weekDetail { grid-area: detail; }
+
+/* Large text (see lib/textScale): side-by-side numbers would overlap, so the hero stacks time over distance and
+   the week card becomes rows of label on the left, number on the right. */
+:global(html[data-large-text]) .heroStats {
+  grid-template-columns: 1fr;
+  row-gap: 10px;
+}
+
+:global(html[data-large-text]) .heroStat + .heroStat {
+  border-left: none;
+  border-top: 1.5px dashed var(--hero-line);
+  padding-top: 10px;
+}
+
+:global(html[data-large-text]) .weekStrip {
+  grid-template-columns: 1fr;
+}
+
+:global(html[data-large-text]) .weekStat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'label value' 'detail value';
+  align-items: center;
+  column-gap: 12px;
+  text-align: left;
+  padding: 10px 0;
+}
+
+:global(html[data-large-text]) .weekStat + .weekStat {
+  border-left: none;
+  border-top: 1.5px dashed var(--divider-muted);
+}
+
 .trendRow {
   text-align: center;
   padding-top: 12px;
@@ -1758,4 +1794,57 @@
 
 .helpBody strong {
   color: var(--text-primary);
+}
+
+/* Large text (see lib/textScale): History and Reports rows that sit side by side get room to wrap. */
+:global(html[data-large-text]) .tripRow {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+:global(html[data-large-text]) .tripMain {
+  flex-basis: calc(100% - 56px);
+}
+
+:global(html[data-large-text]) .tripStats {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-left: 54px; /* icon (42px) + gap (12px) */
+  text-align: left;
+}
+
+:global(html[data-large-text]) .tripActions {
+  margin-left: auto;
+}
+
+:global(html[data-large-text]) .historySummary {
+  grid-template-columns: 1fr;
+  padding: 6px 18px;
+}
+
+:global(html[data-large-text]) .historySummaryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+:global(html[data-large-text]) .historySummaryItem + .historySummaryItem {
+  border-left: none;
+  border-top: 1px solid var(--border-color);
+}
+
+:global(html[data-large-text]) .historySummaryValue {
+  order: 2;
+}
+
+:global(html[data-large-text]) .dayHeader {
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+:global(html[data-large-text]) .statGrid {
+  grid-template-columns: 1fr;
 }

@@ -10,6 +10,7 @@ import { AutoTrackingSync } from "@/lib/auto";
 import { RemindersSync } from "@/lib/notifications";
 import { SharingSync } from "@/lib/sharing";
 import { THEME_BOOT_SCRIPT, ThemeSync } from "@/lib/theme";
+import { TEXT_SCALE_BOOT_SCRIPT } from "@/lib/textScale";
 
 // Downloaded once at build time and bundled with the app, so text renders offline.
 // Barlow Condensed (highway-sign look) is for headings and big numbers; Barlow is for everything else.
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en" className={`${barlowCondensed.variable} ${barlow.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: TEXT_SCALE_BOOT_SCRIPT }} />
       </head>
       <body>
         <ThemeSync />
