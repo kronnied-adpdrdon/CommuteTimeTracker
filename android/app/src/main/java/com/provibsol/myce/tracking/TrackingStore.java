@@ -120,6 +120,11 @@ public final class TrackingStore {
         return queue;
     }
 
+    /** Finished trips not yet filed by the app, leaving the queue alone (the widget counts them in today's total). */
+    public synchronized JSONArray peekFinished() {
+        return readFinished();
+    }
+
     private JSONArray readFinished() {
         try {
             return new JSONArray(prefs.getString(FINISHED, "[]"));

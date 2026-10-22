@@ -69,15 +69,58 @@
   }
 }
 
-.timeDisplay {
+/* Home's tracking card is more compact than the setup screens' version, so the week shows without scrolling. */
+.homeHero {
+  padding: 20px 20px 18px;
+}
+
+.homeHero .trackingPill {
+  margin-bottom: 16px;
+}
+
+.homeHero .startButton,
+.homeHero .stopButton {
+  margin-top: 14px;
+  padding: 13px;
+}
+
+.homeHero .hint {
+  margin-top: 10px;
+}
+
+/* Time and distance side by side, split by a dashed line like the week card's columns. */
+.heroStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.heroStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.heroStat + .heroStat {
+  border-left: 1.5px dashed var(--hero-line);
+}
+
+.heroStat .timeLabel {
+  margin-bottom: 0;
+}
+
+.heroValue {
   font-family: var(--font-display);
-  font-size: 4.32rem;
+  font-size: 2.6rem;
   font-weight: 500;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--hero-text);
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  white-space: nowrap;
 }
 
 .timeLabel {
@@ -255,29 +298,52 @@
   text-transform: uppercase;
 }
 
-.summaryGrid {
+/* Week card: three equal columns split by dashed "lane" lines, like the hero's time and distance. */
+.weekStrip {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
 }
 
-.summaryItem {
+.weekStat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  padding: 0 6px;
+  min-width: 0;
 }
 
-.summaryValue {
+.weekStat + .weekStat {
+  border-left: 1.5px dashed var(--divider-muted);
+}
+
+.weekValue {
   font-family: var(--font-display);
-  font-size: 2.28rem;
+  font-size: 1.85rem;
   font-weight: 500;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.weekLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-primary);
 }
 
-.summaryLabel {
-  font-size: 0.8rem;
+.weekDetail {
+  font-size: 0.78rem;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .trendRow {
@@ -1636,4 +1702,18 @@
 
 .legalList li::marker {
   color: var(--accent);
+}
+
+/* First-run card on Home, until the first trip is saved */
+.welcomeText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.welcomeHint {
+  margin-top: -8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
 }

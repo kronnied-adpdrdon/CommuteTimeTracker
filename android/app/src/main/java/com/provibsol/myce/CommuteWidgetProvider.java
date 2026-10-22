@@ -10,12 +10,13 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.RemoteViews;
+import com.provibsol.myce.reminders.ReminderScheduler;
 import com.provibsol.myce.tracking.TrackingService;
 import com.provibsol.myce.tracking.TrackingStore;
 import java.util.Locale;
 
 /**
- * Home-screen widget: live timer and distance with a Start / Stop button. Buttons control the native
+ * Home-screen widget: live timer and distance with a Start / Stop button, and today's total when no trip is running. Buttons control the native
  * recorder directly, so the app doesn't open. Tapping the rest of the widget does nothing.
  */
 public class CommuteWidgetProvider extends AppWidgetProvider {
@@ -39,7 +40,8 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
 
     private static RemoteViews buildViews(Context context) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_commute);
-        TrackingStore.Session session = new TrackingStore(context).loadSession();
+        TrackingStore store = new TrackingStore(context);
+        TrackingStore.Session session = store.loadSession();
         boolean running = TrackingService.isRunning();
 
         if (session != null && running) {
@@ -50,7 +52,7 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_distance, km(session.engine.totalMeters()));
             views.setTextViewText(R.id.widget_status, "TRACKING");
             views.setInt(R.id.widget_status, "setBackgroundResource", R.drawable.widget_pill_live);
-            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_on_accent));
+            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_on_live));
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_stop);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_stop);
             views.setContentDescription(R.id.widget_button, "Stop tracking");
@@ -64,7 +66,7 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_distance, km(session.engine.totalMeters()));
             views.setTextViewText(R.id.widget_status, "PAUSED");
             views.setInt(R.id.widget_status, "setBackgroundResource", R.drawable.widget_pill);
-            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_text_secondary));
+            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_text_primary));
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_play);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start);
             views.setContentDescription(R.id.widget_button, "Resume tracking");
@@ -72,16 +74,17 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_caption, "Paused · tap ▶ to resume");
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_RESUME, 3));
         } else {
-            showStaticTime(views, clock(0));
-            views.setTextViewText(R.id.widget_distance, km(0));
+            WidgetToday today = WidgetToday.of(ReminderScheduler.trips(context), store.peekFinished(), System.currentTimeMillis());
+            showStaticTime(views, WidgetToday.duration(today.seconds));
+            views.setTextViewText(R.id.widget_distance, km(today.meters));
             views.setTextViewText(R.id.widget_status, "READY");
             views.setInt(R.id.widget_status, "setBackgroundResource", R.drawable.widget_pill);
-            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_text_secondary));
+            views.setTextColor(R.id.widget_status, context.getColor(R.color.widget_text_primary));
             views.setImageViewResource(R.id.widget_button_icon, R.drawable.ic_widget_play);
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start);
             views.setContentDescription(R.id.widget_button, "Start tracking");
             views.setTextViewText(R.id.widget_button_label, "Start");
-            views.setTextViewText(R.id.widget_caption, "Tap ▶ to start your trip");
+            views.setTextViewText(R.id.widget_caption, today.caption());
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_START, 1));
         }
         return views;

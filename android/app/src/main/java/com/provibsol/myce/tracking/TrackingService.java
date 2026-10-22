@@ -348,7 +348,7 @@ public class TrackingService extends Service {
         boolean auto = s != null && s.auto;
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_tracking)
-            .setColor(ContextCompat.getColor(this, R.color.widget_accent))
+            .setColor(ContextCompat.getColor(this, R.color.notification_accent))
             .setContentTitle(auto ? "Trip started automatically" : "Tracking your commute")
             .setContentText(auto ? km + (km.isEmpty() ? "" : " · ") + "Saved when you arrive" : km)
             .setContentIntent(open)

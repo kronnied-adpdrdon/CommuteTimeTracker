@@ -131,15 +131,31 @@ public class ReminderLogicTest {
     }
 
     @Test
-    public void weeklySummaryComparesWithLastWeek() {
+    public void weeklySummaryComparesTheAverageTripWithTheLastFourWeeks() {
         List<ReminderLogic.Trip> trips = new ArrayList<>();
-        trips.add(trip(time(2026, 9, 29, 8, 30), 100, "work")); // last week
-        trips.add(trip(time(2026, 10, 5, 8, 30), 50, "work")); // this week
+        trips.add(trip(time(2026, 9, 14, 8, 30), 50, "work")); // the 4 weeks before
+        trips.add(trip(time(2026, 9, 21, 8, 30), 50, "work"));
+        trips.add(trip(time(2026, 9, 28, 8, 30), 50, "work"));
+        trips.add(trip(time(2026, 10, 5, 8, 30), 45, "work")); // this week: more trips, each quicker
+        trips.add(trip(time(2026, 10, 6, 8, 30), 45, "work"));
+        trips.add(trip(time(2026, 10, 7, 8, 30), 45, "work"));
+        trips.add(trip(time(2026, 10, 8, 8, 30), 2, "work")); // Start tapped by mistake: not in the average
+        ReminderLogic.Message message = ReminderLogic.weekly(trips, time(2026, 10, 11, 18, 0));
+        assertNotNull(message);
+        assertTrue(message.body, message.body.contains("2h 17m commuting over 4 trips"));
+        assertTrue(message.body, message.body.contains("average trip was 45 min, 5 min quicker than the last 4 weeks"));
+        assertNull(ReminderLogic.weekly(new ArrayList<>(), time(2026, 10, 5, 18, 0)));
+    }
+
+    @Test
+    public void weeklySummaryLeavesOutTheComparisonWithFewerThanThreeEarlierTrips() {
+        List<ReminderLogic.Trip> trips = new ArrayList<>();
+        trips.add(trip(time(2026, 9, 29, 8, 30), 100, "work"));
+        trips.add(trip(time(2026, 10, 5, 8, 30), 50, "work"));
         ReminderLogic.Message message = ReminderLogic.weekly(trips, time(2026, 10, 5, 18, 0));
         assertNotNull(message);
         assertTrue(message.body, message.body.contains("50 min"));
-        assertTrue(message.body, message.body.contains("50% less"));
-        assertNull(ReminderLogic.weekly(new ArrayList<>(), time(2026, 10, 5, 18, 0)));
+        assertTrue(message.body, !message.body.contains("average trip"));
     }
 
     @Test

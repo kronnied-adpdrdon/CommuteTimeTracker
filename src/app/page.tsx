@@ -11,8 +11,54 @@ import TripRow from '@/components/TripRow';
 import { useAutoTracking } from '@/lib/auto';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
-import { formatClock, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
-import { recentTrips, weeklySummary } from '@/lib/trips/stats';
+import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
+import { USUAL_WEEKS, WeeklySummary, recentTrips, weeklySummary } from '@/lib/trips/stats';
+
+/** One column of the week card: a big number, what it is, and one line of context. */
+function Stat({ value, label, detail }: { value: string; label: string; detail: string }) {
+  return (
+    <div className={styles.weekStat}>
+      <div className={styles.weekValue}>{value}</div>
+      <div className={styles.weekLabel}>{label}</div>
+      <div className={styles.weekDetail}>{detail}</div>
+    </div>
+  );
+}
+
+/** This week's average trip against the usual one, in whole minutes; under a minute either way reads as the same. */
+function TrendLine({ week }: { week: WeeklySummary }) {
+  const muted = { color: 'var(--text-secondary)' };
+  if (week.tripCount === 0) return <span style={muted}>No trips yet this week</span>;
+  if (week.changeSeconds === null) return <span style={muted}>Compared with your usual trip once you have a few weeks of trips</span>;
+  const minutes = Math.round(Math.abs(week.changeSeconds) / 60);
+  if (minutes === 0) return <span style={muted}>About the same as your usual trip (last {USUAL_WEEKS} weeks)</span>;
+  const quicker = week.changeSeconds < 0;
+  return (
+    <>
+      <span className={quicker ? styles.trendPositive : styles.trendNegative}>
+        {quicker ? '↓' : '↑'} {minutes} min {quicker ? 'quicker' : 'slower'}
+      </span>{' '}
+      <span style={muted}>per trip than your last {USUAL_WEEKS} weeks</span>
+    </>
+  );
+}
+
+/** Shown instead of empty totals until the first trip is saved: what happens next, for automatic or Start and Stop. */
+function WelcomeCard({ tracking, autoOn }: { tracking: boolean; autoOn: boolean }) {
+  return (
+    <div className={styles.summaryCard}>
+      <div className={styles.summaryHeader}>Welcome to MYCE</div>
+      <p className={styles.welcomeText}>
+        {tracking
+          ? 'Your first trip is running. It shows up here once it is saved.'
+          : autoOn
+            ? "You're all set. Your first trip appears here after you go between Home and the Office. No need to tap anything."
+            : 'Tap Start Tracking when you leave, and Stop when you arrive. Your first trip appears here.'}
+      </p>
+      <p className={styles.welcomeHint}>After that, this is where you see your week: total time, your average trip and your quickest.</p>
+    </div>
+  );
+}
 
 /** The current time, refreshed every second while `ticking`. */
 function useNow(ticking: boolean): number {
@@ -81,7 +127,7 @@ export default function Home() {
         {phase === 'idle' && <AutoPausedBanner />}
 
         {phase === 'interrupted' && session ? (
-          <div className={styles.trackingCard}>
+          <div className={`${styles.trackingCard} ${styles.homeHero}`}>
             <div className={styles.trackingPill}>
               Interrupted
             </div>
@@ -108,7 +154,7 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className={styles.trackingCard}>
+          <div className={`${styles.trackingCard} ${styles.homeHero}`}>
             {tracking ? (
               <div className={`${styles.trackingPill} ${styles.trackingPillLive}`}>{auto ? 'Auto · Tracking' : 'Tracking'}</div>
             ) : (
@@ -117,11 +163,16 @@ export default function Home() {
               </div>
             )}
 
-            <div className={styles.timeDisplay}>{formatClock(elapsedSeconds)}</div>
-            <div className={styles.timeLabel}>Commute time</div>
-
-            <div className={styles.distanceDisplay}>{formatDistanceKm(tracking ? distanceMeters : 0)}</div>
-            <div className={styles.timeLabel}>{waitingForGps ? 'Finding GPS signal…' : 'Distance travelled'}</div>
+            <div className={styles.heroStats}>
+              <div className={styles.heroStat}>
+                <div className={styles.heroValue}>{formatClock(elapsedSeconds)}</div>
+                <div className={styles.timeLabel}>Commute time</div>
+              </div>
+              <div className={styles.heroStat}>
+                <div className={styles.heroValue}>{formatDistanceKm(tracking ? distanceMeters : 0)}</div>
+                <div className={styles.timeLabel}>{waitingForGps ? 'Finding GPS…' : 'Distance'}</div>
+              </div>
+            </div>
 
             <RouteLine active={tracking} />
 
@@ -158,58 +209,50 @@ export default function Home() {
 
         {phase === 'idle' && <CommutePromptCard />}
 
-        {/* This Week Summary */}
-        <div className={styles.summaryCard}>
-          <div className={styles.summaryHeader}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            This Week
-          </div>
-          <div className={styles.summaryGrid}>
-            <div className={styles.summaryItem}>
-              <div className={styles.summaryValue}>{formatDuration(week.totalSeconds)}</div>
-              <div className={styles.summaryLabel}>Total Commute Time</div>
+        {phase !== 'loading' && trips.length === 0 ? (
+          <WelcomeCard tracking={tracking} autoOn={autoOn} />
+        ) : (
+          <>
+            {/* This Week Summary */}
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryHeader}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                This Week
+              </div>
+              <div className={styles.weekStrip}>
+                <Stat value={formatDuration(week.totalSeconds)} label="Total" detail={week.tripCount === 1 ? '1 trip' : `${week.tripCount} trips`} />
+                <Stat
+                  value={week.avgSecondsPerTrip === null ? '–' : formatDuration(week.avgSecondsPerTrip)}
+                  label="Avg. trip"
+                  detail={week.usualSecondsPerTrip === null ? 'this week' : `usual ${formatDuration(week.usualSecondsPerTrip)}`}
+                />
+                <Stat
+                  value={week.quickest ? formatDuration(week.quickest.durationSeconds) : '–'}
+                  label="Quickest"
+                  detail={week.quickest ? formatDayLabel(week.quickest.startedAt) : 'last 30 days'}
+                />
+              </div>
+              <div className={styles.trendRow}>
+                <TrendLine week={week} />
+              </div>
             </div>
-            <div className={styles.summaryItem}>
-              <div className={styles.summaryValue}>{formatDuration(week.avgSecondsPerDay)}</div>
-              <div className={styles.summaryLabel}>Avg. per Day</div>
+
+            {/* Recent Commutes */}
+            <div className={styles.historySection}>
+              <div className={styles.historyHeader}>
+                <div className={styles.historyTitle}>Recent Commutes</div>
+                <Link href="/history" className={styles.seeAllBtn}>See All</Link>
+              </div>
+
+              {recent.map((t, i) => (
+                <div key={t.id}>
+                  {i > 0 && <div className={styles.divider} style={{ marginLeft: '52px' }} />}
+                  <TripRow trip={t} showDay inset />
+                </div>
+              ))}
             </div>
-          </div>
-          <div className={styles.trendRow}>
-            {week.daysWithTrips === 0 ? (
-              <span style={{ color: 'var(--text-secondary)' }}>No trips yet this week</span>
-            ) : week.changePercent === null ? (
-              <span style={{ color: 'var(--text-secondary)' }}>No trips by this time last week to compare with</span>
-            ) : week.changePercent === 0 ? (
-              <span style={{ color: 'var(--text-secondary)' }}>Same as this time last week</span>
-            ) : (
-              <>
-                <span className={week.changePercent < 0 ? styles.trendPositive : styles.trendNegative}>
-                  {week.changePercent < 0 ? '↓' : '↑'} {Math.abs(week.changePercent)}%
-                </span>{' '}
-                <span style={{ color: 'var(--text-secondary)' }}>vs this time last week</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Commutes */}
-        <div className={styles.historySection}>
-          <div className={styles.historyHeader}>
-            <div className={styles.historyTitle}>Recent Commutes</div>
-            <Link href="/history" className={styles.seeAllBtn}>See All</Link>
-          </div>
-
-          {phase !== 'loading' && recent.length === 0 && (
-            <p className={styles.emptyState}>No trips yet. Tap Start Tracking when you leave.</p>
-          )}
-
-          {recent.map((t, i) => (
-            <div key={t.id}>
-              {i > 0 && <div className={styles.divider} style={{ marginLeft: '52px' }} />}
-              <TripRow trip={t} showDay inset />
-            </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
     </>
   );

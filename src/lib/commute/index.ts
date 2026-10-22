@@ -55,6 +55,15 @@ if (typeof document !== 'undefined') {
     void commute.refresh();
     void nativeTracker.refreshWidget();
   });
+
+  // The widget shows today's total, so redraw it whenever trips are filed, edited or deleted.
+  let lastTrips = commute.getState().trips;
+  commute.subscribe(() => {
+    const { trips } = commute.getState();
+    if (trips === lastTrips) return;
+    lastTrips = trips;
+    void nativeTracker.refreshWidget();
+  });
 }
 
 export function useCommute(): CommuteState {

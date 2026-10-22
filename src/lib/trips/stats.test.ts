@@ -48,39 +48,61 @@ describe('groupByDay', () => {
 describe('weeklySummary', () => {
   const now = new Date(2026, 8, 30, 12); // Wednesday
 
-  it('totals the current week and averages over days that had trips', () => {
+  // The 4 weeks before this one: Mon 31 Aug to Sun 27 Sep.
+  const usual = (minutes: number) => [trip(2026, 8, 7, 8, minutes), trip(2026, 8, 14, 8, minutes), trip(2026, 8, 21, 8, minutes)];
+
+  it('totals the current week and averages per trip', () => {
     const trips = [trip(...MON, 8, 60), trip(...MON, 18, 60), trip(2026, 8, 29, 8, 90)];
     const s = weeklySummary(trips, now);
     expect(s.totalSeconds).toBe(210 * 60);
-    expect(s.daysWithTrips).toBe(2);
-    expect(s.avgSecondsPerDay).toBe(105 * 60);
+    expect(s.tripCount).toBe(3);
+    expect(s.avgSecondsPerTrip).toBe(70 * 60);
     expect(s.totalMeters).toBe(30000);
   });
 
-  it('compares against the same part of last week', () => {
-    const trips = [trip(2026, 8, 21, 8, 100), trip(...MON, 8, 88)];
-    expect(weeklySummary(trips, now).changePercent).toBe(-12);
+  it('compares the average trip with the 4 weeks before, so more trips this week is not "slower"', () => {
+    const trips = [...usual(50), trip(...MON, 8, 45), trip(...MON, 18, 45), trip(2026, 8, 29, 8, 45), trip(2026, 8, 29, 18, 45)];
+    const s = weeklySummary(trips, now);
+    expect(s.usualSecondsPerTrip).toBe(50 * 60);
+    expect(s.changeSeconds).toBe(-5 * 60);
   });
 
-  it("leaves out last week's trips after this time a week ago", () => {
-    // Wednesday noon: last Wednesday evening and Thursday don't count yet.
-    const trips = [trip(2026, 8, 21, 8, 50), trip(2026, 8, 23, 18, 50), trip(2026, 8, 24, 8, 50), trip(...MON, 8, 50)];
-    expect(weeklySummary(trips, now).changePercent).toBe(0);
+  it('leaves trips older than 4 weeks out of the usual trip', () => {
+    const trips = [trip(2026, 7, 24, 8, 20), ...usual(50), trip(...MON, 8, 60)];
+    expect(weeklySummary(trips, now).usualSecondsPerTrip).toBe(50 * 60);
   });
 
-  it('has no percentage early in the week before any trip, instead of showing a 100% drop', () => {
-    const trips = [trip(2026, 8, 21, 8, 60), trip(2026, 8, 22, 8, 60)];
-    expect(weeklySummary(trips, new Date(2026, 8, 28, 9)).changePercent).toBeNull();
+  it('has no comparison with fewer than 3 trips in the 4 weeks before', () => {
+    const s = weeklySummary([trip(2026, 8, 14, 8, 50), trip(2026, 8, 21, 8, 50), trip(...MON, 8, 60)], now);
+    expect(s.usualSecondsPerTrip).toBeNull();
+    expect(s.changeSeconds).toBeNull();
   });
 
-  it('has no percentage when last week had no trips by this time', () => {
-    expect(weeklySummary([trip(...MON, 8, 60), trip(2026, 8, 25, 8, 60)], now).changePercent).toBeNull();
+  it('has no average or comparison before the first trip of the week, instead of showing a big drop', () => {
+    const s = weeklySummary(usual(50), now);
+    expect(s.tripCount).toBe(0);
+    expect(s.avgSecondsPerTrip).toBeNull();
+    expect(s.changeSeconds).toBeNull();
   });
 
-  it('ignores trips outside the two weeks', () => {
+  it('leaves trips under 5 minutes out of the average and the quickest, but not the total', () => {
+    const s = weeklySummary([trip(...MON, 8, 2), trip(...MON, 9, 40)], now);
+    expect(s.totalSeconds).toBe(42 * 60);
+    expect(s.avgSecondsPerTrip).toBe(40 * 60);
+    expect(s.quickest?.durationSeconds).toBe(40 * 60);
+  });
+
+  it('picks the quickest trip from the last 30 days, today included', () => {
+    // 30 days back from Wed 30 Sep starts on Tue 1 Sep.
+    const inWindow = trip(2026, 8, 1, 8, 25);
+    const s = weeklySummary([trip(2026, 7, 31, 8, 20), inWindow, trip(...MON, 8, 40)], now);
+    expect(s.quickest).toBe(inWindow);
+  });
+
+  it('ignores trips outside this week in the totals', () => {
     const s = weeklySummary([trip(2026, 7, 1, 8, 60), trip(2026, 9, 5, 8, 60)], now);
     expect(s.totalSeconds).toBe(0);
-    expect(s.avgSecondsPerDay).toBe(0);
+    expect(s.tripCount).toBe(0);
   });
 
   it('counts a Sunday-evening trip in the week that ends that day', () => {

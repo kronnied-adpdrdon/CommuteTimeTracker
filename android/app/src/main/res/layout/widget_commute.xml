@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One-row control strip: status, live timer and distance on the left, a round Start/Stop button on the right.
+<!-- One-row control strip in the app's tracking-card look: MYCE, status, the time and distance (live while tracking,
+     today's total otherwise) on the left, a round Start/Stop button on the right.
      The root has no click action on purpose: only the button does anything. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
@@ -28,10 +29,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="Commute"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
+                android:fontFamily="sans-serif-condensed"
+                android:letterSpacing="0.12"
+                android:text="MYCE"
+                android:textColor="@color/widget_brand"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -47,7 +49,7 @@
                 android:paddingTop="2dp"
                 android:paddingBottom="2dp"
                 android:text="READY"
-                android:textColor="@color/widget_text_secondary"
+                android:textColor="@color/widget_text_primary"
                 android:textSize="10sp" />
         </LinearLayout>
 
@@ -64,7 +66,7 @@
                 android:id="@+id/widget_timer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="sans-serif-condensed"
                 android:includeFontPadding="false"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="30sp"
@@ -75,9 +77,9 @@
                 android:id="@+id/widget_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="sans-serif-condensed"
                 android:includeFontPadding="false"
-                android:text="00:00"
+                android:text="0 min"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="30sp"
                 android:textStyle="bold" />
@@ -87,10 +89,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="sans-serif-condensed"
                 android:includeFontPadding="false"
                 android:text="0.0 km"
-                android:textColor="@color/widget_accent"
+                android:textColor="@color/widget_brand"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -102,7 +104,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Tap ▶ to start your trip"
+            android:text="Today · no trips yet"
             android:textColor="@color/widget_text_secondary"
             android:textSize="12sp" />
     </LinearLayout>

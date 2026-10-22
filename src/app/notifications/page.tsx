@@ -25,7 +25,7 @@ const ROWS: Row[] = [
   { key: 'leaveNow', title: 'Time to leave', text: '10 minutes before you usually leave home, on your commute days, with how long the trip normally takes.', manualOnly: true },
   { key: 'headHome', title: 'Time to head home', text: '10 minutes before you usually leave work, until the trip home is logged.', manualOnly: true },
   { key: 'evening', title: 'Forgot to track?', text: 'In the evening, only if you usually commute but nothing was logged today.' },
-  { key: 'weekly', title: 'Weekly summary', text: 'Sunday evening: your commute time this week and how it compares with last week.' },
+  { key: 'weekly', title: 'Weekly summary', text: 'Sunday evening: your commute time this week, and how your average trip compares with the 4 weeks before.' },
   { key: 'monthly', title: 'Monthly recap', text: 'On the 1st: last month’s total commute time, trips and distance.', pro: true },
   { key: 'slowDay', title: 'Slow-day heads-up', text: 'Tells you in the morning when today’s weekday is usually slower for you, so you can leave earlier.', pro: true },
 ];

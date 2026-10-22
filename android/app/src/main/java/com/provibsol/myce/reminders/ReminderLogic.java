@@ -306,29 +306,51 @@ public final class ReminderLogic {
         return new Message("No commute logged today", "Forgot to track? The home-screen widget starts a trip in one tap.");
     }
 
+    /** Trips shorter than this don't count towards the average trip: usually Start tapped by mistake. Matches the app. */
+    static final int MIN_COUNTED_SECONDS = 5 * 60;
+    /** "Your usual trip" is the average over this many full weeks before the current one... */
+    static final int USUAL_WEEKS = 4;
+    /** ...and needs at least this many trips. Same rule as the app's Home screen. */
+    static final int MIN_USUAL_TRIPS = 3;
+
+    /**
+     * Sunday's summary: this week's totals, and the average trip against the 4 weeks before (per trip, not totals,
+     * so commuting on more days doesn't read as a slower commute).
+     */
     public static Message weekly(List<Trip> trips, long now) {
         Calendar monday = startOfDay(now);
         monday.add(Calendar.DAY_OF_MONTH, -((monday.get(Calendar.DAY_OF_WEEK) + 5) % 7));
         long weekStart = monday.getTimeInMillis();
-        long prevStart = onDay(weekStart, -7, 0);
+        long usualStart = onDay(weekStart, -7 * USUAL_WEEKS, 0);
         long total = 0;
         long meters = 0;
-        long prevTotal = 0;
         int count = 0;
+        long countedTotal = 0;
+        int counted = 0;
+        long usualTotal = 0;
+        int usualCount = 0;
         for (Trip t : trips) {
             if (t.startedAt >= weekStart && t.startedAt <= now) {
                 total += t.durationSeconds;
                 meters += t.distanceMeters;
                 count++;
-            } else if (t.startedAt >= prevStart && t.startedAt < weekStart) {
-                prevTotal += t.durationSeconds;
+                if (t.durationSeconds >= MIN_COUNTED_SECONDS) {
+                    countedTotal += t.durationSeconds;
+                    counted++;
+                }
+            } else if (t.startedAt >= usualStart && t.startedAt < weekStart && t.durationSeconds >= MIN_COUNTED_SECONDS) {
+                usualTotal += t.durationSeconds;
+                usualCount++;
             }
         }
         if (count == 0) return null;
         StringBuilder body = new StringBuilder("This week: " + duration(total) + " commuting over " + count + (count == 1 ? " trip" : " trips") + " (" + km(meters) + ").");
-        if (prevTotal > 0) {
-            long pct = Math.round((total - prevTotal) * 100.0 / prevTotal);
-            if (Math.abs(pct) >= 5) body.append(" That's ").append(Math.abs(pct)).append("% ").append(pct < 0 ? "less" : "more").append(" than last week.");
+        if (counted > 0 && usualCount >= MIN_USUAL_TRIPS) {
+            long average = countedTotal / counted;
+            long diffMinutes = Math.round((average - usualTotal / (double) usualCount) / 60.0);
+            body.append(" Your average trip was ").append(duration(average));
+            if (diffMinutes == 0) body.append(", about the same as the last ").append(USUAL_WEEKS).append(" weeks.");
+            else body.append(", ").append(Math.abs(diffMinutes)).append(" min ").append(diffMinutes < 0 ? "quicker" : "slower").append(" than the last ").append(USUAL_WEEKS).append(" weeks.");
         }
         return new Message("Your week in commutes", body.toString());
     }

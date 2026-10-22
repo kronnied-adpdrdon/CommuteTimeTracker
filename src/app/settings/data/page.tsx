@@ -28,7 +28,7 @@ export default function DataPage() {
           )}
           {confirmingDelete && (
             <div className={`${styles.banner} ${styles.bannerError}`}>
-              <span>Delete all {tripCount} trips? This can&apos;t be undone.</span>
+              <span>{tripCount === 1 ? 'Delete your 1 trip?' : `Delete all ${tripCount} trips?`} This can&apos;t be undone.</span>
               <div className={styles.bannerActions}>
                 <button
                   className={styles.linkButton}

@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The widget copies the app's tracking card ("Metro Line"): an asphalt card with signal amber, the same in light
+     and dark mode, with the app's green Start and red Stop. -->
 <resources>
-    <color name="widget_background">#FBFAF8</color>
-    <color name="widget_text_primary">#16181D</color>
-    <color name="widget_text_secondary">#656A73</color>
-    <!-- Green: the "go" colour for Start, and the notification tint. -->
-    <color name="widget_accent">#1E9D5D</color>
-    <color name="widget_danger">#C62F35</color>
-    <color name="widget_success">#1B8A55</color>
-    <color name="widget_pill">#ECEAE4</color>
-    <color name="widget_on_accent">#FFFFFF</color>
+    <color name="widget_background_top">#232832</color>
+    <color name="widget_background_bottom">#0E1014</color>
+    <color name="widget_border">#4DFFB400</color>
+    <color name="widget_text_primary">#F4F2EC</color>
+    <color name="widget_text_secondary">#9EF4F2EC</color>
+    <color name="widget_brand">#FFB400</color>
+    <color name="widget_pill">#1AFFFFFF</color>
+    <color name="widget_pill_live">#FFB400</color>
+    <color name="widget_on_live">#16181D</color>
+    <color name="widget_go_start">#43DA8B</color>
+    <color name="widget_go_end">#25B26A</color>
+    <color name="widget_stop_start">#E5484D</color>
+    <color name="widget_stop_end">#C93339</color>
 </resources>

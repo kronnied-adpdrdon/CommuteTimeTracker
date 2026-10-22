@@ -4,6 +4,6 @@
     <string name="title_activity_main">MYCE</string>
     <string name="package_name">com.provibsol.myce</string>
     <string name="custom_url_scheme">com.provibsol.myce</string>
-    <string name="widget_description">Start and stop your commute from the home screen, with a live timer and distance.</string>
+    <string name="widget_description">Start and stop your commute from the home screen, with a live timer and today\'s total.</string>
     <string name="tracking_channel_name">Commute tracking</string>
 </resources>

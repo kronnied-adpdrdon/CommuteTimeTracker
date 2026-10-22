@@ -45,44 +45,60 @@ export function groupByDay(trips: Trip[]): DaySummary[] {
     .sort((a, b) => b.dayStart - a.dayStart);
 }
 
+/** Trips shorter than this are left out of averages and the quickest trip: usually Start tapped by mistake. */
+export const MIN_COUNTED_SECONDS = 5 * 60;
+/** "Your usual trip" is the average over this many full weeks before the current one. */
+export const USUAL_WEEKS = 4;
+/** ...and needs at least this many trips, so one odd trip doesn't set it. */
+export const MIN_USUAL_TRIPS = 3;
+/** The quickest trip is picked from this many days, today included. */
+export const QUICKEST_DAYS = 30;
+
 export interface WeeklySummary {
   totalSeconds: number;
   totalMeters: number;
-  daysWithTrips: number;
-  /** Average over days that had at least one trip, not over all seven days. */
-  avgSecondsPerDay: number;
+  tripCount: number;
+  /** Average trip this week, over trips of 5 min or more. Null if there are none. */
+  avgSecondsPerTrip: number | null;
+  /** Average trip over the 4 full weeks before this one. Null with fewer than 3 trips there. */
+  usualSecondsPerTrip: number | null;
   /**
-   * Whole-number % change in total commute time vs the same part of last week (Monday up to this time a week ago),
-   * so a Monday isn't measured against a whole week. Positive = longer. Null if this week has no trips yet, or last
-   * week had none by this time.
+   * This week's average trip minus the usual one, in seconds. Negative = quicker. Averages per trip, not totals,
+   * so commuting on more days doesn't read as a slower commute. Null when either average is missing.
    */
-  changePercent: number | null;
+  changeSeconds: number | null;
+  /** Quickest trip of 5 min or more in the last 30 days, today included. */
+  quickest: Trip | null;
 }
 
-/** Totals for the Monday-to-Sunday week containing `now`, compared with the same part of the week before. */
+/** Totals for the Monday-to-Sunday week containing `now`, with the average trip compared against the 4 weeks before. */
 export function weeklySummary(trips: Trip[], now: Date): WeeklySummary {
   const weekStart = startOfWeek(now);
-  const nextWeekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7);
-  const prevWeekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() - 7);
-  const aWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, now.getHours(), now.getMinutes(), now.getSeconds());
-
+  const addDays = (date: Date, days: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
   const inRange = (from: Date, to: Date) =>
     trips.filter((t) => t.startedAt >= from.getTime() && t.startedAt < to.getTime());
+  const counted = (list: Trip[]) => list.filter((t) => t.durationSeconds >= MIN_COUNTED_SECONDS);
+  const average = (list: Trip[]) =>
+    list.length === 0 ? null : Math.round(list.reduce((sum, t) => sum + t.durationSeconds, 0) / list.length);
 
-  const thisWeek = inRange(weekStart, nextWeekStart);
-  const lastWeekSoFar = inRange(prevWeekStart, aWeekAgo);
+  const thisWeek = inRange(weekStart, addDays(weekStart, 7));
+  const usualTrips = counted(inRange(addDays(weekStart, -7 * USUAL_WEEKS), weekStart));
+  const avgSecondsPerTrip = average(counted(thisWeek));
+  const usualSecondsPerTrip = usualTrips.length >= MIN_USUAL_TRIPS ? average(usualTrips) : null;
 
-  const totalSeconds = thisWeek.reduce((sum, t) => sum + t.durationSeconds, 0);
-  const totalMeters = thisWeek.reduce((sum, t) => sum + t.distanceMeters, 0);
-  const prevSeconds = lastWeekSoFar.reduce((sum, t) => sum + t.durationSeconds, 0);
-  const daysWithTrips = new Set(thisWeek.map((t) => dayKey(t.startedAt))).size;
+  const quickest = counted(tripsSince(trips, windowStart(now, QUICKEST_DAYS))).reduce<Trip | null>(
+    (best, t) => (best === null || t.durationSeconds < best.durationSeconds ? t : best),
+    null,
+  );
 
   return {
-    totalSeconds,
-    totalMeters,
-    daysWithTrips,
-    avgSecondsPerDay: daysWithTrips === 0 ? 0 : Math.round(totalSeconds / daysWithTrips),
-    changePercent: thisWeek.length === 0 || prevSeconds === 0 ? null : Math.round(((totalSeconds - prevSeconds) / prevSeconds) * 100),
+    totalSeconds: thisWeek.reduce((sum, t) => sum + t.durationSeconds, 0),
+    totalMeters: thisWeek.reduce((sum, t) => sum + t.distanceMeters, 0),
+    tripCount: thisWeek.length,
+    avgSecondsPerTrip,
+    usualSecondsPerTrip,
+    changeSeconds: avgSecondsPerTrip === null || usualSecondsPerTrip === null ? null : avgSecondsPerTrip - usualSecondsPerTrip,
+    quickest,
   };
 }
 
