@@ -45,6 +45,10 @@
   --danger-color: #c62f35;
   --danger-light: #fbe5e5;
   --success-color: #177d4d;
+  /* "To home" trips: a second transit-line colour beside amber "to work". */
+  --home-line: #3f78cf;
+  --home-soft: #e3ecf9;
+  --home-ink: #1f4f99;
 
   /* Hero (tracking card) */
   --hero-bg: linear-gradient(160deg, #232832 0%, #171a21 58%, #0e1014 100%);
@@ -91,6 +95,9 @@
     --danger-color: #ff6b70;
     --danger-light: #3a1a1c;
     --success-color: #3dd68c;
+  --home-line: #6b9be6;
+  --home-soft: #18243a;
+  --home-ink: #a3c2f3;
     --hero-bg: linear-gradient(160deg, #1f232c 0%, #14171c 58%, #0a0c0f 100%);
     --hero-border: rgba(255, 180, 0, 0.26);
     --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
@@ -121,6 +128,9 @@
   --danger-color: #ff6b70;
   --danger-light: #3a1a1c;
   --success-color: #3dd68c;
+  --home-line: #6b9be6;
+  --home-soft: #18243a;
+  --home-ink: #a3c2f3;
   --hero-bg: linear-gradient(160deg, #1f232c 0%, #14171c 58%, #0a0c0f 100%);
   --hero-border: rgba(255, 180, 0, 0.26);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset;

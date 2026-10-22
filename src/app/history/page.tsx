@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import styles from '../page.module.css';
+import { SectionHeading, StatStrip } from '@/components/StatStrip';
 import TripRow from '@/components/TripRow';
 import { commute, useCommute } from '@/lib/commute';
 import { EditProblem, TripForm, speedWarning, tripForm } from '@/lib/trips/edit';
@@ -151,19 +152,15 @@ export default function HistoryPage() {
 
       <div className={styles.homeContainer}>
         {phase !== 'loading' && visible.length > 0 && (
-          <div className={styles.historySummary} aria-label="Last 2 weeks">
-            <div className={styles.historySummaryItem}>
-              <div className={styles.historySummaryValue}>{totals.tripCount}</div>
-              <div className={styles.historySummaryLabel}>Trips</div>
-            </div>
-            <div className={styles.historySummaryItem}>
-              <div className={styles.historySummaryValue}>{formatDuration(totals.totalSeconds)}</div>
-              <div className={styles.historySummaryLabel}>Time</div>
-            </div>
-            <div className={styles.historySummaryItem}>
-              <div className={styles.historySummaryValue}>{formatDistanceKm(totals.totalMeters)}</div>
-              <div className={styles.historySummaryLabel}>Distance</div>
-            </div>
+          <div className={styles.summaryCard}>
+            <SectionHeading icon="calendar">Last 2 weeks</SectionHeading>
+            <StatStrip
+              stats={[
+                { value: String(totals.tripCount), label: 'Trips' },
+                { value: formatDuration(totals.totalSeconds), label: 'Time' },
+                { value: formatDistanceKm(totals.totalMeters), label: 'Distance' },
+              ]}
+            />
           </div>
         )}
 

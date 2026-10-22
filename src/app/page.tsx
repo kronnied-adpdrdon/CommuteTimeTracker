@@ -7,6 +7,7 @@ import RouteLine from '@/components/RouteLine';
 import AutoPausedBanner from '@/components/AutoPausedBanner';
 import SetupChecklist from '@/components/SetupChecklist';
 import { CommutePromptCard } from '@/components/SharingCard';
+import { SectionHeading, StatStrip } from '@/components/StatStrip';
 import TripRow from '@/components/TripRow';
 import { useAutoTracking } from '@/lib/auto';
 import { TRIAL_DAYS } from '@/lib/commute/trial';
@@ -16,17 +17,6 @@ import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
 import { USUAL_WEEKS, WeeklySummary, recentTrips, weeklySummary } from '@/lib/trips/stats';
-
-/** One column of the week card: a big number, what it is, and one line of context. */
-function Stat({ value, label, detail }: { value: string; label: string; detail: string }) {
-  return (
-    <div className={styles.weekStat}>
-      <div className={styles.weekValue}>{value}</div>
-      <div className={styles.weekLabel}>{label}</div>
-      <div className={styles.weekDetail}>{detail}</div>
-    </div>
-  );
-}
 
 /** This week's average trip against the usual one, in whole minutes; under a minute either way reads as the same. */
 function TrendLine({ week }: { week: WeeklySummary }) {
@@ -224,23 +214,22 @@ export default function Home() {
           <>
             {/* This Week Summary */}
             <div className={styles.summaryCard}>
-              <div className={styles.summaryHeader}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                This Week
-              </div>
-              <div className={styles.weekStrip}>
-                <Stat value={formatDuration(week.totalSeconds)} label="Total" detail={week.tripCount === 1 ? '1 trip' : `${week.tripCount} trips`} />
-                <Stat
-                  value={week.avgSecondsPerTrip === null ? '–' : formatDuration(week.avgSecondsPerTrip)}
-                  label="Avg. trip"
-                  detail={week.usualSecondsPerTrip === null ? 'this week' : `usual ${formatDuration(week.usualSecondsPerTrip)}`}
-                />
-                <Stat
-                  value={week.quickest ? formatDuration(week.quickest.durationSeconds) : '–'}
-                  label="Quickest"
-                  detail={week.quickest ? formatDayLabel(week.quickest.startedAt) : 'last 30 days'}
-                />
-              </div>
+              <SectionHeading icon="calendar">This Week</SectionHeading>
+              <StatStrip
+                stats={[
+                  { value: formatDuration(week.totalSeconds), label: 'Total', detail: week.tripCount === 1 ? '1 trip' : `${week.tripCount} trips` },
+                  {
+                    value: week.avgSecondsPerTrip === null ? '–' : formatDuration(week.avgSecondsPerTrip),
+                    label: 'Avg. trip',
+                    detail: week.usualSecondsPerTrip === null ? 'this week' : `usual ${formatDuration(week.usualSecondsPerTrip)}`,
+                  },
+                  {
+                    value: week.quickest ? formatDuration(week.quickest.durationSeconds) : '–',
+                    label: 'Quickest',
+                    detail: week.quickest ? formatDayLabel(week.quickest.startedAt) : 'last 30 days',
+                  },
+                ]}
+              />
               <div className={styles.trendRow}>
                 <TrendLine week={week} />
               </div>
@@ -248,10 +237,9 @@ export default function Home() {
 
             {/* Recent Commutes */}
             <div className={styles.historySection}>
-              <div className={styles.historyHeader}>
-                <div className={styles.historyTitle}>Recent Commutes</div>
-                <Link href="/history" className={styles.seeAllBtn}>See All</Link>
-              </div>
+              <SectionHeading icon="clock" action={<Link href="/history" className={styles.seeAllBtn}>See All</Link>}>
+                Recent Commutes
+              </SectionHeading>
 
               {recent.map((t, i) => (
                 <div key={t.id}>

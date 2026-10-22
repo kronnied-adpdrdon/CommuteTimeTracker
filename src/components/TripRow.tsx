@@ -41,7 +41,7 @@ export default function TripRow({ trip, showDay, inset, actions, children }: Tri
   return (
     <div>
       <div className={`${styles.tripRow} ${inset ? styles.tripRowInset : ''}`}>
-        <div className={styles.tripIcon}>
+        <div className={`${styles.tripIcon} ${trip.direction === 'home' ? styles.tripIconHome : ''}`}>
           <DirectionIcon direction={trip.direction} />
         </div>
         <div className={styles.tripMain}>

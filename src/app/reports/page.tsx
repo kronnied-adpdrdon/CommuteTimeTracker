@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from '../page.module.css';
 import ProFeatureList, { PRO_FEATURES } from '@/components/ProFeatureList';
-import TripRow from '@/components/TripRow';
+import { SectionHeading, Stat, StatStrip } from '@/components/StatStrip';
+import TripRow, { DirectionIcon } from '@/components/TripRow';
 import { useCommute } from '@/lib/commute';
 import { PRO_PRICE_FALLBACK, inTrial, proUnlocked, trialDaysLeft } from '@/lib/commute/trial';
 import { useNow } from '@/lib/useNow';
@@ -22,7 +23,7 @@ import {
   tripsInPeriod,
 } from '@/lib/reports/summary';
 import { formatDayLabel, formatDistanceKm, formatDuration } from '@/lib/trips/format';
-import { Trip } from '@/lib/trips/types';
+import { Trip, TripDirection } from '@/lib/trips/types';
 
 const PRESETS: { id: PeriodPreset; label: string }[] = [
   { id: 'this-week', label: 'This Week' },
@@ -50,15 +51,21 @@ function LockIcon() {
   );
 }
 
-function Stats({ values }: { values: { label: string; value: string }[] }) {
+function Stats({ values }: { values: Stat[] }) {
+  return <StatStrip stats={values} columns={2} />;
+}
+
+/** One line under the totals: the direction's icon, how many trips, and their average. */
+function DirectionSplitRow({ direction, label, count, average }: { direction: TripDirection; label: string; count: number; average?: string }) {
   return (
-    <div className={styles.statGrid}>
-      {values.map((v) => (
-        <div className={styles.stat} key={v.label}>
-          <div className={styles.statValue}>{v.value}</div>
-          <div className={styles.statLabel}>{v.label}</div>
-        </div>
-      ))}
+    <div className={styles.directionSplitRow}>
+      <span className={`${styles.tripIcon} ${styles.tripIconSmall} ${direction === 'home' ? styles.tripIconHome : ''}`}>
+        <DirectionIcon direction={direction} size={14} />
+      </span>
+      <span>
+        <strong>{label}</strong> · {count === 1 ? '1 trip' : `${count} trips`}
+        {average !== undefined && count > 0 ? ` · avg ${average}` : ''}
+      </span>
     </div>
   );
 }
@@ -105,7 +112,7 @@ function LockedReports() {
 
       <div className={styles.card} aria-hidden style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{ filter: 'blur(5px)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div className={styles.cardTitle}>28 Sep – 4 Oct 2026</div>
+          <SectionHeading icon="chart">28 Sep – 4 Oct 2026</SectionHeading>
           <Stats
             values={[
               { label: 'Trips', value: '10' },
@@ -190,7 +197,7 @@ function ProReports() {
       ) : (
         <>
           <div className={styles.card}>
-            <div className={styles.cardTitle}>{label}</div>
+            <SectionHeading icon="chart">{label}</SectionHeading>
             <Stats
               values={[
                 { label: 'Trips', value: String(summary.tripCount) },
@@ -199,15 +206,15 @@ function ProReports() {
                 { label: 'Avg per trip', value: formatDuration(summary.avgSecondsPerTrip) },
               ]}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <span>To work: {work.count} · avg {avg(work)}</span>
-              <span>To home: {home.count} · avg {avg(home)}</span>
-              {unknown.count > 0 && <span>Other: {unknown.count}</span>}
+            <div className={styles.directionSplit}>
+              <DirectionSplitRow direction="work" label="To work" count={work.count} average={avg(work)} />
+              <DirectionSplitRow direction="home" label="To home" count={home.count} average={avg(home)} />
+              {unknown.count > 0 && <DirectionSplitRow direction="unknown" label="Other" count={unknown.count} />}
             </div>
           </div>
 
           <div className={styles.card}>
-            <div className={styles.cardTitle}>Trips in this report</div>
+            <SectionHeading icon="list">Trips in this report</SectionHeading>
             {inPeriod.length === 0 && <p className={styles.cardText}>No trips in this period.</p>}
             {inPeriod.slice(0, PREVIEW_TRIPS).map((t, i) => (
               <div key={t.id}>
@@ -221,7 +228,7 @@ function ProReports() {
           </div>
 
           <div className={styles.card}>
-            <div className={styles.cardTitle}>Export</div>
+            <SectionHeading icon="share">Export</SectionHeading>
             <label className={styles.cardText}>
               Prepared for (optional, PDF only)
               <input

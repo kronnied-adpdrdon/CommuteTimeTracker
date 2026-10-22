@@ -298,13 +298,28 @@
   text-transform: uppercase;
 }
 
-/* Week card: three equal columns split by dashed "lane" lines, like the hero's time and distance. */
-.weekStrip {
+/* Stat strips (Home's week, History's totals, Reports): equal columns split by dashed "lane" lines, like the
+   hero's time and distance. Two-column strips wrap into a 2 x 2 grid. */
+.stripGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
 }
 
-.weekStat {
+.stripGrid2 {
+  grid-template-columns: repeat(2, 1fr);
+  row-gap: 14px;
+}
+
+.stripGrid2 .stripStat:nth-child(odd) {
+  border-left: none;
+}
+
+.stripGrid2 .stripStat:nth-child(n + 3) {
+  border-top: 1.5px dashed var(--divider-muted);
+  padding-top: 14px;
+}
+
+.stripStat {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -314,11 +329,11 @@
   min-width: 0;
 }
 
-.weekStat + .weekStat {
+.stripStat + .stripStat {
   border-left: 1.5px dashed var(--divider-muted);
 }
 
-.weekValue {
+.stripValue {
   font-family: var(--font-display);
   font-size: 1.85rem;
   font-weight: 500;
@@ -329,7 +344,7 @@
   white-space: nowrap;
 }
 
-.weekLabel {
+.stripLabel {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -337,7 +352,7 @@
   color: var(--text-primary);
 }
 
-.weekDetail {
+.stripDetail {
   font-size: 0.78rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -346,9 +361,9 @@
   max-width: 100%;
 }
 
-.weekValue { grid-area: value; }
-.weekLabel { grid-area: label; }
-.weekDetail { grid-area: detail; }
+.stripValue { grid-area: value; }
+.stripLabel { grid-area: label; }
+.stripDetail { grid-area: detail; }
 
 /* Large text (see lib/textScale): side-by-side numbers would overlap, so the hero stacks time over distance and
    the week card becomes rows of label on the left, number on the right. */
@@ -363,11 +378,11 @@
   padding-top: 10px;
 }
 
-:global(html[data-large-text]) .weekStrip {
+:global(html[data-large-text]) .stripGrid {
   grid-template-columns: 1fr;
 }
 
-:global(html[data-large-text]) .weekStat {
+:global(html[data-large-text]) .stripStat {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: 'label value' 'detail value';
@@ -377,9 +392,13 @@
   padding: 10px 0;
 }
 
-:global(html[data-large-text]) .weekStat + .weekStat {
+:global(html[data-large-text]) .stripStat + .stripStat {
   border-left: none;
   border-top: 1.5px dashed var(--divider-muted);
+}
+
+:global(html[data-large-text]) .stripGrid2 .stripStat:nth-child(n + 3) {
+  padding-top: 10px;
 }
 
 .trendRow {
@@ -407,6 +426,10 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-card);
+}
+
+.historySection .sectionHeading {
+  margin-bottom: 8px;
 }
 
 .historyHeader {
@@ -642,6 +665,18 @@
   justify-content: center;
 }
 
+.tripIconHome {
+  border-color: var(--home-line);
+  background: var(--home-soft);
+  color: var(--home-ink);
+}
+
+.tripIconSmall {
+  width: 26px;
+  height: 26px;
+  border-width: 1.5px;
+}
+
 .tripMain {
   flex: 1;
   min-width: 0;
@@ -711,37 +746,6 @@
 }
 
 /* History */
-.historySummary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
-  padding: 18px 4px;
-  box-shadow: var(--shadow-card);
-}
-
-.historySummaryItem {
-  text-align: center;
-}
-
-.historySummaryItem + .historySummaryItem {
-  border-left: 1px solid var(--border-color);
-}
-
-.historySummaryValue {
-  font-family: var(--font-display);
-  font-size: 1.56rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.historySummaryLabel {
-  margin-top: 2px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
 .dayHeader {
   display: flex;
   justify-content: space-between;
@@ -1818,28 +1822,6 @@
   margin-left: auto;
 }
 
-:global(html[data-large-text]) .historySummary {
-  grid-template-columns: 1fr;
-  padding: 6px 18px;
-}
-
-:global(html[data-large-text]) .historySummaryItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding: 8px 0;
-}
-
-:global(html[data-large-text]) .historySummaryItem + .historySummaryItem {
-  border-left: none;
-  border-top: 1px solid var(--border-color);
-}
-
-:global(html[data-large-text]) .historySummaryValue {
-  order: 2;
-}
-
 :global(html[data-large-text]) .dayHeader {
   flex-wrap: wrap;
   gap: 2px 12px;
@@ -1847,4 +1829,38 @@
 
 :global(html[data-large-text]) .statGrid {
   grid-template-columns: 1fr;
+}
+
+/* Section heading row: the small amber heading, with an optional link (e.g. See All) on the right. */
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionHeading .summaryHeader {
+  margin: 0;
+}
+
+/* Reports: to work / to home under the totals, each with its trip icon. */
+.directionSplit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--divider-muted);
+}
+
+.directionSplitRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.directionSplitRow strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
