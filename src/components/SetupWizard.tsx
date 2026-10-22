@@ -409,10 +409,25 @@ function Reminders() {
 }
 
 function Battery() {
-  const { manufacturer } = useSetup();
+  const { manufacturer, batteryUnrestricted } = useSetup();
   const [opened, setOpened] = useState(false);
   const advice = batteryAdvice(manufacturer);
   const brand = advice?.brand ?? 'Your phone';
+  // Android's "Unrestricted" is read again whenever the app comes back. Where it's the whole story (Samsung and
+  // others), the step finishes only once it's really on; elsewhere the maker's own switches can't be read, so the
+  // user is asked.
+  const readable = advice?.readable ?? true;
+  const verified = readable && batteryUnrestricted === true;
+
+  const openSettings = async () => {
+    setOpened(true);
+    await autoTracking.returnWhenChanged('battery');
+    await commute.openSettings();
+  };
+  const finish = async (changed: boolean) => {
+    if (changed) await setup.answer({ battery: 'done' });
+    await setup.next();
+  };
 
   return (
     <>
@@ -423,32 +438,37 @@ function Battery() {
       <ol className={styles.setupList}>
         <li>Tap <strong>Open app settings</strong>.</li>
         <li>{advice?.advice ?? 'Tap Battery and choose "Unrestricted".'}</li>
-        <li>Come back here and tap <strong>Done</strong>.</li>
+        <li>{readable ? 'MYCE comes back by itself once it\u2019s set, or press Back.' : 'Press Back to come back here.'}</li>
       </ol>
-      <div className={styles.setupActions}>
-        {opened ? (
-          <button
-            className="btn-primary"
-            onClick={async () => {
-              await setup.answer({ battery: 'done' });
-              await setup.next();
-            }}
-          >
-            Done
-          </button>
+      {verified ? (
+        <p className={styles.cardText} style={{ color: 'var(--success-color)', fontWeight: 600 }} role="status">
+          ✓ Battery is set to Unrestricted. MYCE can keep working in the background.
+        </p>
+      ) : (
+        opened &&
+        (readable ? (
+          <p className={styles.fieldError} role="status">
+            Not changed yet: battery is still optimised, so {brand === 'Your phone' ? 'the phone' : brand} may stop MYCE in the background.
+          </p>
         ) : (
-          <button
-            className="btn-primary"
-            onClick={() => {
-              setOpened(true);
-              void commute.openSettings();
-            }}
-          >
-            Open app settings
-          </button>
+          <p className={styles.cardText} role="status">
+            MYCE can&apos;t check this setting on {brand} phones. Did you change it?
+          </p>
+        ))
+      )}
+      <div className={styles.setupActions}>
+        {verified ? (
+          <button className="btn-primary" onClick={() => void finish(true)}>Continue</button>
+        ) : opened && !readable ? (
+          <>
+            <button className="btn-primary" onClick={() => void finish(true)}>Yes, I changed it</button>
+            <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => void openSettings()}>Open app settings again</button>
+          </>
+        ) : (
+          <button className="btn-primary" onClick={() => void openSettings()}>{opened ? 'Open app settings again' : 'Open app settings'}</button>
         )}
-        {opened && (
-          <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => commute.openSettings()}>Open app settings again</button>
+        {!verified && (
+          <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => void finish(false)}>Skip for now</button>
         )}
       </div>
     </>

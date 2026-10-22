@@ -284,12 +284,19 @@ public class CommuteTrackerPlugin extends Plugin {
         }
     }
 
+    /**
+     * MYCE's page in the phone's settings. Opened from the app's own screen when there is one, so it sits in MYCE's
+     * task and Back returns to MYCE (as a separate task, Back could land on the home screen instead).
+     */
     @PluginMethod
     public void openSettings(PluginCall call) {
         Context context = getContext();
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.getPackageName(), null));
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        if (getActivity() != null) {
+            getActivity().startActivity(intent);
+        } else {
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        }
         call.resolve();
     }
 

@@ -34,6 +34,7 @@ interface AutoTrackingPlugin {
   checkBackground(): Promise<PermissionStatus>;
   requestBackground(): Promise<PermissionStatus>;
   fixAccuracy(): Promise<PermissionStatus>;
+  returnWhenChanged(options: { kind: 'background' | 'battery' }): Promise<void>;
   /** Location or Location Accuracy was switched on or off while the app was away (or behind Google's dialog). */
   addListener(event: 'statusChanged', cb: (status: PermissionStatus) => void): Promise<unknown>;
   simulate(options: { event: AutoEvent; place?: AutoPlace; at?: number }): Promise<AutoDecision>;
@@ -145,6 +146,17 @@ export const autoTracking = {
       return true;
     } catch {
       return false;
+    }
+  },
+  /**
+   * Call just before sending the user to a phone settings page: MYCE comes back by itself as soon as "Allow all the
+   * time" (background) or "Unrestricted" (battery) is set, where Android allows it. Otherwise Back still works.
+   */
+  async returnWhenChanged(kind: 'background' | 'battery'): Promise<void> {
+    try {
+      if (await isNativeApp()) await (await plugin()).native.returnWhenChanged({ kind });
+    } catch {
+      // Only a convenience.
     }
   },
   /** Turns on location and Google Location Accuracy: Google's one-tap dialog, or the phone's location settings. */

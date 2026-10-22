@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from '../../page.module.css';
 import PageHeader from '@/components/PageHeader';
 import { SettingsGroup } from '@/components/SettingsList';
+import { autoTracking } from '@/lib/auto';
 import { commute } from '@/lib/commute';
 import { batteryAdvice } from '@/lib/setup/logic';
 import { useSetup } from '@/lib/setup';
@@ -68,8 +69,16 @@ export default function HelpPage() {
             <ol className={styles.setupList}>
               <li>Tap <strong>Open app settings</strong> below.</li>
               <li>{advice?.advice ?? 'Tap Battery and choose "Unrestricted".'}</li>
+              <li>MYCE comes back by itself once it&apos;s set, or press Back.</li>
             </ol>
-            <button className={styles.secondaryButton} style={{ marginTop: 4 }} onClick={() => commute.openSettings()}>
+            <button
+              className={styles.secondaryButton}
+              style={{ marginTop: 4 }}
+              onClick={async () => {
+                await autoTracking.returnWhenChanged('battery');
+                await commute.openSettings();
+              }}
+            >
               Open app settings
             </button>
           </HelpItem>

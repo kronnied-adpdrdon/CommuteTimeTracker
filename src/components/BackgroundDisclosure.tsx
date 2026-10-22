@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from '@/app/page.module.css';
-import { autoTracking } from '@/lib/auto';
+import { autoTracking, useAutoTracking } from '@/lib/auto';
 import { commute } from '@/lib/commute';
 
 /**
@@ -13,6 +13,7 @@ import { commute } from '@/lib/commute';
 export default function BackgroundDisclosure({ onEnabled, onCancel, page = false }: { onEnabled: () => void; onCancel: () => void; page?: boolean }) {
   const [asking, setAsking] = useState(false);
   const [refused, setRefused] = useState(false);
+  const { background } = useAutoTracking();
 
   const allow = async () => {
     setAsking(true);
@@ -22,6 +23,25 @@ export default function BackgroundDisclosure({ onEnabled, onCancel, page = false
     else setRefused(true);
   };
 
+  const openPhoneSettings = async () => {
+    await autoTracking.returnWhenChanged('background');
+    await commute.openSettings();
+  };
+
+  // Changed in the phone's settings after a refusal: carry on as if they had allowed it here (checked on return).
+  const resuming = useRef(false);
+  useEffect(() => {
+    if (!refused || !background || resuming.current) return;
+    resuming.current = true;
+    void autoTracking.enable().then((on) => {
+      resuming.current = false;
+      if (on) {
+        setRefused(false);
+        onEnabled();
+      }
+    });
+  }, [refused, background, onEnabled]);
+
   const text = (
     <>
       <strong>Location in the background</strong>
@@ -29,7 +49,7 @@ export default function BackgroundDisclosure({ onEnabled, onCancel, page = false
         MYCE collects location data to start and stop your commute automatically when you leave or arrive at Home or the Office, even when the app is closed or not in use. Your location stays on this phone, unless you turn on Share commute times, which shares only the rough area (about 5 km across) where each trip starts and ends.
       </span>
       <span>
-        On the next screen, choose <strong>Allow all the time</strong>. You can turn this off in Settings at any time.
+        On the next screen, choose <strong>Allow all the time</strong>. MYCE comes back by itself, or press Back. You can turn this off in Settings at any time.
       </span>
       {refused && (
         <span className={styles.fieldError}>
@@ -48,7 +68,7 @@ export default function BackgroundDisclosure({ onEnabled, onCancel, page = false
         <div className={styles.setupActions}>
           <button className="btn-primary" disabled={asking} onClick={allow}>{refused ? 'Try again' : 'Continue'}</button>
           {refused && (
-            <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => commute.openSettings()}>Open phone settings</button>
+            <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => void openPhoneSettings()}>Open phone settings</button>
           )}
           <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={onCancel}>Not now</button>
         </div>
@@ -61,7 +81,7 @@ export default function BackgroundDisclosure({ onEnabled, onCancel, page = false
       {text}
       <div className={styles.bannerActions} style={{ flexWrap: 'wrap' }}>
         <button className={styles.linkButton} disabled={asking} onClick={allow}>{refused ? 'Try again' : 'Continue'}</button>
-        {refused && <button className={styles.linkButton} onClick={() => commute.openSettings()}>Open phone settings</button>}
+        {refused && <button className={styles.linkButton} onClick={() => void openPhoneSettings()}>Open phone settings</button>}
         <button className={styles.linkButton} style={{ color: 'var(--text-secondary)' }} onClick={onCancel}>Not now</button>
       </div>
     </div>

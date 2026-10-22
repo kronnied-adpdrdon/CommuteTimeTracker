@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+import com.provibsol.myce.MainActivity;
 import android.os.PowerManager;
 import android.provider.Settings;
 import com.provibsol.myce.support.DiagLog;
@@ -49,9 +53,12 @@ public class AutoTrackingPlugin extends Plugin {
     /**
      * Back in the app, e.g. from phone settings or Google's dialog: if location came back on, set the circles up
      * again, and tell the screen (Google's dialog doesn't hide the app, so the page can't notice by itself).
+     * Also ends any `returnWhenChanged` watch: the user is back.
      */
     @Override
     protected void handleOnResume() {
+        // A resume right after starting is the screen settling (e.g. the location pop-up closing), not the user back.
+        if (SystemClock.uptimeMillis() - watchStartedAt > 1500) stopWatching();
         boolean on = AutoGeofences.accuracyOn(getContext());
         if (on && !accuracyWasOn) {
             DiagLog.log("auto", "Location Accuracy is back on: setting the circles up again");
@@ -125,6 +132,8 @@ public class AutoTrackingPlugin extends Plugin {
         if (getPermissionState("location") != PermissionState.GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || AutoGeofences.hasBackgroundLocation(getContext())) {
             afterBackground(call);
         } else {
+            // Android 11+ sends the user to a settings page for "Allow all the time": bring them back once it's set.
+            startWatching(false);
             requestPermissionForAlias("background", call, "afterBackground");
         }
     }
@@ -149,16 +158,73 @@ public class AutoTrackingPlugin extends Plugin {
         return result;
     }
 
+    private static final long WATCH_MS = 3 * 60_000;
+    private final Handler watcher = new Handler(Looper.getMainLooper());
+    private Runnable watching;
+    private long watchStartedAt;
+
+    /**
+     * Call just before sending the user to a phone settings page ({ kind: "background" | "battery" }). While they
+     * are there, checks once a second and brings MYCE back as soon as the change is made, so they don't have to find
+     * their way back. Gives up after 3 minutes or when they come back by themselves. If Android doesn't allow an app
+     * to come forward like this, nothing happens and Back works as usual.
+     */
+    @PluginMethod
+    public void returnWhenChanged(PluginCall call) {
+        startWatching("battery".equals(call.getString("kind")));
+        call.resolve();
+    }
+
+    private void startWatching(boolean battery) {
+        stopWatching();
+        watchStartedAt = SystemClock.uptimeMillis();
+        long until = watchStartedAt + WATCH_MS;
+        watching = new Runnable() {
+            @Override
+            public void run() {
+                if (battery ? ignoringBatteryOptimizations() : AutoGeofences.hasBackgroundLocation(getContext())) {
+                    watching = null;
+                    bringToFront();
+                } else if (SystemClock.uptimeMillis() < until) {
+                    watcher.postDelayed(this, 1000);
+                } else {
+                    watching = null;
+                }
+            }
+        };
+        watcher.postDelayed(watching, 1000);
+    }
+
+    private void stopWatching() {
+        if (watching != null) watcher.removeCallbacks(watching);
+        watching = null;
+    }
+
+    /** The main screen is singleTask, so this also closes the settings page above it in MYCE's task. */
+    private void bringToFront() {
+        try {
+            Intent intent = new Intent(getContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            getContext().startActivity(intent);
+            DiagLog.log("auto", "setting changed: brought MYCE back");
+        } catch (RuntimeException e) {
+            DiagLog.log("auto", "setting changed, but Android kept MYCE in the background");
+        }
+    }
+
+    private boolean ignoringBatteryOptimizations() {
+        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        return power != null && power.isIgnoringBatteryOptimizations(getContext().getPackageName());
+    }
+
     /**
      * For the first-time setup's battery step: who made the phone (some makers stop background apps), and
      * whether Android's battery setting for this app is "Unrestricted".
      */
     @PluginMethod
     public void checkBattery(PluginCall call) {
-        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
         JSObject result = new JSObject();
         result.put("manufacturer", Build.MANUFACTURER);
-        result.put("unrestricted", power != null && power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
+        result.put("unrestricted", ignoringBatteryOptimizations());
         call.resolve(result);
     }
 

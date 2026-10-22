@@ -129,7 +129,9 @@ export function itemDone(item: ChecklistItem, progress: SetupProgress, facts: Se
       return progress.reminders === 'off' || facts.notificationsAllowed !== false;
     case 'battery': {
       const advice = batteryAdvice(facts.manufacturer);
-      return advice === null || progress.battery === 'done' || (advice.readable && facts.batteryUnrestricted === true);
+      // Readable phones are done only when Android's setting really is Unrestricted; elsewhere the user's word counts.
+      if (advice === null) return true;
+      return advice.readable ? facts.batteryUnrestricted === true : progress.battery === 'done';
     }
   }
 }

@@ -106,6 +106,9 @@ describe('first-time setup: the Home checklist', () => {
     expect(xiaomi.find((i) => i.item === 'battery')?.done).toBe(false);
     const confirmed = checklist(progress({ battery: 'done' }), { ...NEW_USER, manufacturer: 'Xiaomi' });
     expect(confirmed.find((i) => i.item === 'battery')?.done).toBe(true);
+    // Saying "done" on Samsung doesn't count while Android still shows the app as optimised.
+    const claimed = checklist(progress({ battery: 'done' }), { ...NEW_USER, manufacturer: 'samsung', batteryUnrestricted: false });
+    expect(claimed.find((i) => i.item === 'battery')?.done).toBe(false);
   });
 });
 

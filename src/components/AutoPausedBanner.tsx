@@ -24,7 +24,15 @@ export default function AutoPausedBanner() {
       )}
       <div className={styles.bannerActions}>
         {reason === 'permission' ? (
-          <button className={styles.linkButton} onClick={() => commute.openSettings()}>Open phone settings</button>
+          <button
+            className={styles.linkButton}
+            onClick={async () => {
+              await autoTracking.returnWhenChanged('background');
+              await commute.openSettings();
+            }}
+          >
+            Open phone settings
+          </button>
         ) : (
           <button className={styles.linkButton} onClick={() => void autoTracking.fixAccuracy()}>Turn it on</button>
         )}
