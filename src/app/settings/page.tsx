@@ -10,6 +10,7 @@ import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { PRO_PRICE_FALLBACK, inTrial, trialDaysLeft } from '@/lib/commute/trial';
 import { useDevTools } from '@/lib/devtools';
+import { openStorePage } from '@/lib/review';
 import { useSharing } from '@/lib/sharing';
 import { ThemePreference, useTheme } from '@/lib/theme';
 import { SavedPlace } from '@/lib/trips/direction';
@@ -115,8 +116,10 @@ export default function SettingsPage() {
         </SettingsGroup>
 
         <SettingsGroup title="Help">
+          <SettingsRow icon="help" title="Help and FAQ" summary="How MYCE works, and common questions" href="/settings/help" />
           <SettingsRow icon="chat" title="Send feedback" summary="Ideas and comments, with screenshots" href="/feedback" />
           <SettingsRow icon="bug" title="Report a bug" summary="Sends a diagnostics log to the developer" href="/report-bug" />
+          <SettingsRow icon="star" title="Rate MYCE" summary="Tell others what you think on Google Play" onClick={() => void openStorePage()} />
         </SettingsGroup>
 
         <SettingsGroup title="About">

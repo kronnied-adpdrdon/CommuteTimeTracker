@@ -1,6 +1,7 @@
 package com.provibsol.myce.support;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -22,6 +23,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -54,6 +57,41 @@ public class SupportPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("debuggable", (getContext().getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
         call.resolve(result);
+    }
+
+    /** "Rate MYCE": opens the app's page in the Play Store app, or in the browser if there is no Play Store. */
+    @PluginMethod
+    public void openStorePage(PluginCall call) {
+        Context context = getContext();
+        String id = context.getPackageName();
+        try {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + id)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (ActivityNotFoundException e) {
+            try {
+                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + id)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (ActivityNotFoundException ignored) {
+                call.reject("Couldn't open Google Play.", "NO_STORE");
+                return;
+            }
+        }
+        call.resolve();
+    }
+
+    /**
+     * Google Play's in-app rating card. Google decides whether it actually appears (it limits how often, and never
+     * for apps not installed from Play), and doesn't say whether the person rated, so this always resolves.
+     */
+    @PluginMethod
+    public void requestReview(PluginCall call) {
+        ReviewManager manager = ReviewManagerFactory.create(getContext());
+        manager.requestReviewFlow().addOnCompleteListener(request -> {
+            if (!request.isSuccessful() || getActivity() == null) {
+                DiagLog.log("Review", "Rating card not available");
+                call.resolve();
+                return;
+            }
+            manager.launchReviewFlow(getActivity(), request.getResult()).addOnCompleteListener(done -> call.resolve());
+        });
     }
 
     /** Adds a line from the web layer (e.g. an uncaught error) to the same log the native code writes. */

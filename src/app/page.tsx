@@ -9,6 +9,9 @@ import SetupChecklist from '@/components/SetupChecklist';
 import { CommutePromptCard } from '@/components/SharingCard';
 import TripRow from '@/components/TripRow';
 import { useAutoTracking } from '@/lib/auto';
+import { TRIAL_DAYS } from '@/lib/commute/trial';
+import { maybeAskForReview } from '@/lib/review';
+import { preferencesStore } from '@/lib/storage/preferences';
 import { commute, useCommute } from '@/lib/commute';
 import { canOpenSettings, errorMessage } from '@/lib/commute/messages';
 import { formatClock, formatDayLabel, formatDistanceKm, formatDuration, formatTimeOfDay } from '@/lib/trips/format';
@@ -85,6 +88,12 @@ export default function Home() {
   const auto = tracking && session.auto === true;
   const autoFrom = session?.autoFrom === 'office' ? 'the Office' : 'Home';
   const autoTo = session?.autoFrom === 'office' ? 'Home' : 'the Office';
+
+  // Google's rating card, once, a week after first use (the free month starts on first use).
+  const firstUseAt = state.trialEndsAt === null ? null : state.trialEndsAt - TRIAL_DAYS * 24 * 60 * 60 * 1000;
+  useEffect(() => {
+    if (phase === 'idle') void maybeAskForReview(preferencesStore, { firstUseAt, trips }, Date.now());
+  }, [phase, firstUseAt, trips]);
 
   const week = weeklySummary(trips, new Date(now));
   const recent = recentTrips(trips, 3);

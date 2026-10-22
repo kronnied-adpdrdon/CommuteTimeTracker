@@ -16,6 +16,8 @@ const ICONS = {
   doc: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></>,
   code: <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />,
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>,
+  help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" /></>,
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
   wrench: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />,
 };
 
@@ -38,7 +40,22 @@ export function SettingsGroup({ title, children }: { title: string; children: Re
 }
 
 /** One row: icon, title, a short summary of the current choice, and an arrow when it opens another screen. */
-export function SettingsRow({ icon, title, summary, href, value }: { icon: SettingsIcon; title: string; summary?: string; href?: string; value?: ReactNode }) {
+export function SettingsRow({
+  icon,
+  title,
+  summary,
+  href,
+  onClick,
+  value,
+}: {
+  icon: SettingsIcon;
+  title: string;
+  summary?: string;
+  href?: string;
+  /** For rows that do something (e.g. open the Play Store) instead of opening another screen. */
+  onClick?: () => void;
+  value?: ReactNode;
+}) {
   const content = (
     <>
       <span className={styles.settingsIcon} aria-hidden>
@@ -51,9 +68,16 @@ export function SettingsRow({ icon, title, summary, href, value }: { icon: Setti
         {summary && <span className={styles.navRowSub}>{summary}</span>}
       </span>
       {value}
-      {href && <Arrow />}
+      {(href || onClick) && <Arrow />}
     </>
   );
+  if (onClick) {
+    return (
+      <button type="button" className={styles.navRow} style={{ textAlign: 'left' }} onClick={onClick}>
+        {content}
+      </button>
+    );
+  }
   return href ? (
     <Link href={href} className={styles.navRow}>{content}</Link>
   ) : (

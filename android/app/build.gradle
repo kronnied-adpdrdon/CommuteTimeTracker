@@ -58,6 +58,8 @@ dependencies {
     implementation project(':capacitor-android')
     implementation "com.google.android.gms:play-services-location:21.4.0"
     implementation "com.android.billingclient:billing:9.1.0"
+    // Google Play's in-app rating card ("Rate MYCE" after a week of use).
+    implementation "com.google.android.play:review:2.0.2"
     // Optional "Help improve MYCE" sharing: app-usage statistics (off until the user agrees) and App Check.
     implementation platform("com.google.firebase:firebase-bom:35.0.0")
     implementation "com.google.firebase:firebase-analytics"

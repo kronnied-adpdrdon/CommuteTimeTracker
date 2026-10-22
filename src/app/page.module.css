@@ -1717,3 +1717,45 @@
   line-height: 1.5;
   color: var(--text-secondary);
 }
+
+/* Help and FAQ: questions that open in place, in a Settings-style card. */
+.helpItem summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.helpItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.helpChevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.helpItem[open] .helpChevron {
+  transform: rotate(180deg);
+}
+
+.helpBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.helpBody strong {
+  color: var(--text-primary);
+}
