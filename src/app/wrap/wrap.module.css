@@ -1,0 +1,933 @@
+/*
+  The Wrap: full-screen story cards over everything, including the tab bar. Cards take turns between the app's
+  three "Metro Line" surfaces (asphalt, signal amber, concrete), each lit by soft glows that drift slowly, like city
+  lights through a windscreen at night. Green and blue appear only as small accents, as in the app. Colours are
+  fixed: they look the same in light and dark mode (canvas.ts PALETTES draws the same ones in share images).
+
+  Motion follows iOS: things ease out and settle rather than snap (--ease), small things land with a soft spring
+  (--spring), text comes in out of a blur, and cards crossfade into each other.
+*/
+.screen {
+  --bg: linear-gradient(160deg, #232832 0%, #171a21 58%, #0e1014 100%);
+  --ink: #f4f2ec;
+  --muted: rgba(244, 242, 236, 0.66);
+  --accent: #ffb400;
+  --track: rgba(244, 242, 236, 0.22);
+  --on-accent: #16181d;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #0e1014;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 22px calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+
+.asphalt {
+  --bg: linear-gradient(160deg, #1d2129 0%, #14171d 55%, #0b0d10 100%);
+  --glow0: rgba(255, 180, 0, 0.34);
+  --glow1: rgba(255, 112, 40, 0.22);
+  --glow2: rgba(63, 120, 207, 0.24);
+  --ink: #f4f2ec;
+  --muted: rgba(244, 242, 236, 0.66);
+  --accent: #ffb400;
+  --track: rgba(244, 242, 236, 0.22);
+  --on-accent: #16181d;
+}
+
+.amber {
+  --bg: linear-gradient(160deg, #ffc21f 0%, #ffb400 55%, #f5a300 100%);
+  --glow0: rgba(255, 240, 190, 0.75);
+  --glow1: rgba(240, 120, 0, 0.5);
+  --glow2: rgba(255, 214, 90, 0.8);
+  --ink: #16181d;
+  --muted: rgba(22, 24, 29, 0.72);
+  --accent: #16181d;
+  --track: rgba(22, 24, 29, 0.2);
+  --on-accent: #ffb400;
+}
+
+.concrete {
+  --bg: linear-gradient(160deg, #f7f6f3 0%, #f2f1ee 55%, #ebe8e1 100%);
+  --glow0: rgba(255, 196, 64, 0.38);
+  --glow1: rgba(255, 255, 255, 0.95);
+  --glow2: rgba(214, 200, 172, 0.55);
+  --ink: #16181d;
+  --muted: #565b64;
+  --accent: #8a5f00;
+  --track: rgba(22, 24, 29, 0.14);
+  --on-accent: #ffffff;
+}
+
+/* The card's colour. The new card's backdrop fades in over the old one, so colours blend instead of flashing. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  /* An even fade (not the ease-out the text uses), so the two colours visibly blend. */
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.backdropBehind {
+  animation: none;
+}
+
+/* Soft, slowly drifting lights. Gradients and transforms only (no blur filter), so it stays smooth on any phone. */
+.glow {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  will-change: transform;
+  animation: drift 16s ease-in-out infinite alternate;
+}
+
+.glow:nth-child(2) {
+  animation-duration: 21s;
+  animation-direction: alternate-reverse;
+}
+
+.glow:nth-child(3) {
+  animation-duration: 26s;
+}
+
+.tone0 { background: radial-gradient(closest-side, var(--glow0), transparent); }
+.tone1 { background: radial-gradient(closest-side, var(--glow1), transparent); }
+.tone2 { background: radial-gradient(closest-side, var(--glow2), transparent); }
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6%, -4%) scale(1.08);
+  }
+  100% {
+    transform: translate(-5%, 5%) scale(0.95);
+  }
+}
+
+.top {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+}
+
+/* Each segment is a button with a taller hit area than the thin bar: tapping it jumps to that card. */
+.progressHit {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.progressSegment {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--ink);
+  transition: width 0.35s var(--ease);
+}
+
+.progressDone {
+  width: 100%;
+}
+
+.progressRunning {
+  animation: fill var(--card-ms) linear forwards;
+}
+
+.paused .progressRunning {
+  animation-play-state: paused;
+}
+
+@keyframes fill {
+  to {
+    width: 100%;
+  }
+}
+
+.close {
+  background: none;
+  border: none;
+  color: var(--ink);
+  padding: 6px;
+  display: flex;
+  cursor: pointer;
+}
+
+.brand {
+  position: relative;
+  z-index: 3;
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+}
+
+.brand span {
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Holds the card and, for a moment after moving on, the card before it fading out on top. */
+.stageArea {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  transition: transform 0.45s var(--ease);
+}
+
+/* Holding a finger down presses the card in slightly, as on iOS. */
+.paused .stageArea {
+  transform: scale(0.975);
+}
+
+/* Taps on the left third go back, anywhere else goes on; holding pauses. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: cardIn 0.6s var(--ease) both;
+}
+
+.stageBack {
+  animation-name: cardInBack;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.985);
+  }
+}
+
+@keyframes cardInBack {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.985);
+  }
+}
+
+/* The card being left: shown as it was, then it dissolves. */
+.leaving {
+  pointer-events: none;
+  z-index: 1;
+  animation: cardOut 0.45s var(--ease) both;
+}
+
+.leavingBack {
+  animation-name: cardOutBack;
+}
+
+@keyframes cardOut {
+  to {
+    opacity: 0;
+    transform: translateX(-36px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+
+@keyframes cardOutBack {
+  to {
+    opacity: 0;
+    transform: translateX(36px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+
+.tapBack,
+.tapNext {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tapBack {
+  left: -22px;
+  width: 34%;
+}
+
+.tapNext {
+  right: -22px;
+  width: calc(66% + 44px);
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.question {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 9vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.02;
+}
+
+.huge {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 28vw, 7.6rem);
+  font-weight: 700;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.huge small {
+  font-size: 0.36em;
+  letter-spacing: 0;
+  margin-left: 0.12em;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 17vw, 4.6rem);
+  font-weight: 700;
+  line-height: 0.92;
+}
+
+.answer {
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.note {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* Reveal: things come up out of a soft blur, one after another, easing to a stop. */
+.reveal {
+  opacity: 0;
+  animation: rise 0.9s var(--ease) forwards;
+}
+
+.d1 { animation-delay: 0.12s; }
+.d2 { animation-delay: 0.42s; }
+.d3 { animation-delay: 0.78s; }
+.d4 { animation-delay: 1.14s; }
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.98);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Intro: the month's three numbers as stations on a line. */
+.stations {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-left: 44px;
+}
+
+.stations::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 18px;
+  bottom: 18px;
+  border-left: 4px dashed var(--accent);
+  opacity: 0.6;
+}
+
+.station {
+  position: relative;
+}
+
+.stationDot {
+  position: absolute;
+  left: -44px;
+  top: 50%;
+  margin-top: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px #171a21;
+}
+
+.stationStart {
+  background: #43da8b;
+}
+
+.stationEnd {
+  background: #171a21;
+  border: 5px solid var(--ink);
+}
+
+.stationValue {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 14vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stationLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Distance: from one city to the other, with a dot that travels the route. */
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.routeTrack {
+  position: relative;
+  height: 30px;
+}
+
+.routeTrack::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  border-top: 4px dashed var(--track);
+  transform: translateY(-50%);
+}
+
+.routeDone {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: grow 1.5s cubic-bezier(0.65, 0, 0.35, 1) 0.6s both;
+}
+
+@keyframes grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: calc(100% - 20px);
+  }
+}
+
+.routeStart,
+.routeEnd,
+.routeCar {
+  position: absolute;
+  top: 50%;
+  border-radius: 50%;
+}
+
+.routeStart {
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  background: #43da8b;
+}
+
+.routeEnd {
+  right: 0;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  border: 5px solid var(--ink);
+  background: transparent;
+}
+
+.routeCar {
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px rgba(255, 180, 0, 0.3);
+  animation: drive 1.5s cubic-bezier(0.65, 0, 0.35, 1) 0.6s both;
+}
+
+@keyframes drive {
+  from {
+    left: 4px;
+  }
+  to {
+    left: calc(100% - 22px);
+  }
+}
+
+.routeEnds {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.times {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.loop {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+.loopTrack {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px dashed var(--track);
+}
+
+.loopCar {
+  position: absolute;
+  inset: 0;
+  animation: spin 2.4s linear infinite;
+}
+
+.loopCar::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  margin-left: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Time: one tile per film. */
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tile {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: pop 0.5s var(--spring) forwards;
+}
+
+/* Office days: the month as a calendar, office days filled. */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendarHead {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid var(--track);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0;
+  animation: pop 0.5s var(--spring) forwards;
+}
+
+.calendarOffice {
+  background: #ffb400;
+  border-color: #ffb400;
+  color: #16181d;
+}
+
+/* Yearly bar charts: one bar per month, the highlighted one darker and labelled. */
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 160px;
+}
+
+.barCol {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  opacity: 0.55;
+  transform-origin: bottom;
+  animation: barUp 0.9s var(--ease) both;
+}
+
+.barTop {
+  opacity: 1;
+}
+
+.barEmpty {
+  background: transparent;
+  border: 2px dashed var(--track);
+  border-bottom: none;
+  opacity: 1;
+}
+
+@keyframes barUp {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+.barLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Fastest: a stopwatch ring filled to the fastest trip's share of the usual one. */
+.watch {
+  position: relative;
+  width: min(62vw, 250px);
+  aspect-ratio: 1;
+  align-self: center;
+}
+
+.watch svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.watchArc {
+  animation: arc 1.6s var(--ease) 0.4s both;
+}
+
+@keyframes arc {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+.watchCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.watchValue {
+  font-family: var(--font-display);
+  font-size: clamp(3.4rem, 18vw, 4.6rem);
+  font-weight: 700;
+  line-height: 0.9;
+}
+
+.watchUnit {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Personality: a diamond road sign with the emoji in it. */
+.sign {
+  width: min(42vw, 170px);
+  aspect-ratio: 1;
+  position: relative;
+  margin: 18px 0 8px 18px;
+  animation: signIn 1s var(--spring) 0.3s both;
+}
+
+.sign::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: #16181d;
+  box-shadow: inset 0 0 0 7px #16181d, inset 0 0 0 11px #ffb400;
+  transform: rotate(45deg);
+}
+
+.signIcon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffb400;
+}
+
+.signIcon svg {
+  width: 44%;
+  height: 44%;
+}
+
+@keyframes signIn {
+  from {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--track);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* An icon beside a line of text, in the card's accent. */
+.withIcon {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.withIcon svg {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+  color: var(--accent);
+}
+
+/* Less motion asked for, or a card being left (shown as it ended): everything in its final state, no animation. */
+.leaving .reveal,
+.leaving .tile,
+.leaving .calendarDay,
+.leaving .sign,
+.leaving .bar,
+.leaving .watchArc {
+  animation: none;
+  opacity: 1;
+}
+
+.leaving .routeDone {
+  animation: none;
+  width: calc(100% - 20px);
+}
+
+.leaving .routeCar {
+  animation: none;
+  left: calc(100% - 22px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .tile,
+  .calendarDay,
+  .sign,
+  .bar,
+  .backdrop,
+  .stage,
+  .leaving,
+  .glow,
+  .loopCar,
+  .watchArc {
+    animation: none;
+    opacity: 1;
+  }
+  .leaving {
+    display: none;
+  }
+  .routeDone {
+    animation: none;
+    width: calc(100% - 20px);
+  }
+  .routeCar {
+    animation: none;
+    left: calc(100% - 22px);
+  }
+}
+
+/* The last card: the share card itself, and how to share it. */
+.preview {
+  position: relative;
+  z-index: 6;
+  align-self: center;
+  height: min(40vh, 400px);
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 180, 0, 0.35);
+  background: #171a21;
+  transform: rotate(-2deg);
+}
+
+.shareActions {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shareSecondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border: 1px solid rgba(244, 242, 236, 0.2);
+  border-radius: var(--radius-control);
+  padding: 14px;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shareLink {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.error {
+  color: #ff8a8e;
+  font-size: 0.85rem;
+}
+
+.empty {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}

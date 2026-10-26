@@ -10,13 +10,16 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.RemoteViews;
+import com.provibsol.myce.reminders.ReminderLogic;
 import com.provibsol.myce.reminders.ReminderScheduler;
 import com.provibsol.myce.tracking.TrackingService;
 import com.provibsol.myce.tracking.TrackingStore;
+import java.util.List;
 import java.util.Locale;
 
 /**
- * Home-screen widget: live timer and distance with a Start / Stop button, and today's total when no trip is running.
+ * Home-screen widget: live timer and distance with a Start / Stop button, and today's total when no trip is running
+ * (with "Your October Wrap is ready" under it for a week after a Wrap comes out, until it's opened).
  * The button controls the native recorder directly, so the app doesn't open; tapping anywhere else opens the app.
  */
 public class CommuteWidgetProvider extends AppWidgetProvider {
@@ -74,7 +77,11 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.widget_caption, "Paused · tap ▶ to resume");
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_RESUME, 3));
         } else {
-            WidgetToday today = WidgetToday.of(ReminderScheduler.trips(context), store.peekFinished(), System.currentTimeMillis());
+            long now = System.currentTimeMillis();
+            List<ReminderLogic.Trip> saved = ReminderScheduler.trips(context);
+            WidgetToday today = WidgetToday.of(saved, store.peekFinished(), now);
+            String seen = context.getSharedPreferences(ReminderScheduler.APP_STORAGE, Context.MODE_PRIVATE).getString(WidgetWrap.SEEN_KEY, null);
+            String wrap = WidgetWrap.readyLine(saved, seen, now);
             showStaticTime(views, WidgetToday.duration(today.seconds));
             views.setTextViewText(R.id.widget_distance, km(today.meters));
             views.setTextViewText(R.id.widget_status, "READY");
@@ -84,7 +91,7 @@ public class CommuteWidgetProvider extends AppWidgetProvider {
             views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start);
             views.setContentDescription(R.id.widget_button, "Start tracking");
             views.setTextViewText(R.id.widget_button_label, "Start");
-            views.setTextViewText(R.id.widget_caption, today.caption());
+            views.setTextViewText(R.id.widget_caption, wrap != null ? wrap : today.caption());
             views.setOnClickPendingIntent(R.id.widget_button, startAction(context, TrackingService.ACTION_START, 1));
         }
         views.setOnClickPendingIntent(android.R.id.background, openApp(context));

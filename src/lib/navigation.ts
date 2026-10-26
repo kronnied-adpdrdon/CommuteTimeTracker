@@ -1,5 +1,5 @@
 /** The bottom-bar tabs. Switching between them replaces the screen instead of stacking up history. */
-export const TABS = ['/', '/history', '/reports', '/settings'] as const;
+export const TABS = ['/', '/history', '/insights', '/reports', '/settings'] as const;
 
 /** Settings and the screens opened from it, which keep the Settings tab lit. */
 export const isSettingsScreen = (pathname: string) => /^\/(settings|notifications|feedback|report-bug|privacy|terms|licenses)(\/|$)/.test(pathname);
@@ -16,5 +16,5 @@ export function backAction(pathname: string, canGoBack: boolean): BackAction {
   if ((TABS as readonly string[]).includes(path)) return { kind: 'replace', path: '/' };
   if (canGoBack) return { kind: 'history' };
   // Opened with nothing behind it: go up to the screen it belongs to.
-  return { kind: 'replace', path: isSettingsScreen(path) ? '/settings' : '/' };
+  return { kind: 'replace', path: isSettingsScreen(path) ? '/settings' : path === '/wrap' ? '/insights' : '/' };
 }

@@ -9,6 +9,7 @@ import SetupChecklist from '@/components/SetupChecklist';
 import { CommutePromptCard } from '@/components/SharingCard';
 import { SectionHeading, StatStrip } from '@/components/StatStrip';
 import TripRow from '@/components/TripRow';
+import WrapReadyCard from '@/components/WrapReadyCard';
 import { useAutoTracking } from '@/lib/auto';
 import { TRIAL_DAYS } from '@/lib/commute/trial';
 import { maybeAskForReview } from '@/lib/review';
@@ -207,6 +208,7 @@ export default function Home() {
         )}
 
         {phase === 'idle' && <CommutePromptCard />}
+        {!tracking && <WrapReadyCard />}
 
         {phase !== 'loading' && trips.length === 0 ? (
           <WelcomeCard tracking={tracking} autoOn={autoOn} />

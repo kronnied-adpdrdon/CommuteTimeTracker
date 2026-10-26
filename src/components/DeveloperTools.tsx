@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import styles from '@/app/page.module.css';
 import { AutoDecision, autoTracking } from '@/lib/auto';
 import { SCENARIOS, Scenario, runScenario } from '@/lib/auto/scenarios';
@@ -10,6 +11,9 @@ import { setup } from '@/lib/setup';
 import { formatTimeOfDay } from '@/lib/trips/format';
 import { useNow } from '@/lib/useNow';
 import { generateSampleTrips, isSampleTrip } from '@/lib/trips/sample';
+import { wrapsSeen } from '@/lib/insights/seen';
+import { monthPeriod } from '@/lib/insights/wraps';
+import { nativeTracker } from '@/lib/tracking/nativeTracker';
 
 const REMINDERS: { kind: ReminderKind; label: string; pro?: boolean }[] = [
   { kind: 'leaveNow', label: 'Time to leave' },
@@ -43,6 +47,8 @@ export default function DeveloperTools() {
   const now = useNow();
   const [message, setMessage] = useState<string | null>(null);
   const sampleCount = state.trips.filter(isSampleTrip).length;
+  const previous = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - 1, 1);
+  const lastMonth = monthPeriod(previous.getFullYear(), previous.getMonth());
 
   async function tryScenario(scenario: Scenario) {
     try {
@@ -118,6 +124,27 @@ export default function DeveloperTools() {
       </button>
       <button className={styles.secondaryButton} style={{ marginTop: 0 }} onClick={() => setup.preview()}>
         Show every first-time setup screen
+      </button>
+
+      <div className="eyebrow" style={{ marginTop: '6px' }}>Preview a Wrap</div>
+      <p className={styles.cardText}>Opens a Wrap now, before it comes out. Sample trips cover enough for all three.</p>
+      <div className={styles.buttonRow}>
+        {[
+          { id: lastMonth.id, label: lastMonth.title },
+          { id: `year-${new Date(now).getFullYear()}`, label: 'This year' },
+          { id: 'first', label: 'First month' },
+        ].map((w) => (
+          <Link key={w.id} href={`/wrap?id=${w.id}`} className={styles.pillButton} style={{ textDecoration: 'none' }}>
+            {w.label}
+          </Link>
+        ))}
+      </div>
+      <button
+        className={styles.secondaryButton}
+        style={{ marginTop: 0 }}
+        onClick={() => void wrapsSeen.reset().then(() => nativeTracker.refreshWidget()).then(() => setMessage('Every Wrap counts as unopened again.'))}
+      >
+        Mark every Wrap unopened
       </button>
 
       <div className="eyebrow" style={{ marginTop: '6px' }}>Fire a reminder now</div>

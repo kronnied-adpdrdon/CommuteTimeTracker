@@ -26,7 +26,8 @@ public final class ReminderScheduler {
     private static final String SETUP_ANCHOR = "setupAnchor";
     private static final String SETUP_SENT = "setupSent";
     /** Capacitor Preferences' own storage, where the app keeps its trips. */
-    private static final String APP_STORAGE = "CapacitorStorage";
+    /** The app's own storage (Capacitor Preferences). */
+    public static final String APP_STORAGE = "CapacitorStorage";
     private static final String TRIPS_KEY = "trips.v1";
     static final String CHANNEL_ID = "commute_reminders";
     static final String ACTION_FIRE = "com.provibsol.myce.action.REMINDER";

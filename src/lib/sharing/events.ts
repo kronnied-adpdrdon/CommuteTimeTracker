@@ -17,7 +17,12 @@ export type UsageEvent =
   | { name: 'upgrade_tap'; params: { from: string } }
   | { name: 'pro_purchased'; params?: undefined }
   | { name: 'commute_sharing'; params: { enabled: boolean } }
-  | { name: 'commute_prompt'; params: { answer: 'yes' | 'no' } };
+  | { name: 'commute_prompt'; params: { answer: 'yes' | 'no' } }
+  // Which kind of Wrap (month, year, first) and how it was shared: never what it showed.
+  | { name: 'wrap_opened'; params: { kind: string } }
+  | { name: 'wrap_finished'; params: { kind: string } }
+  // format: 'story' or 'square' (the summary), 'card' (one card, named in `card`) or 'all' (the whole story).
+  | { name: 'wrap_shared'; params: { kind: string; format: string; numbers: boolean; card?: string } };
 
 /** What changed in the saved trips, as usage events. Sample trips from Developer tools don't count. */
 export function tripEvents(before: Trip[], after: Trip[]): UsageEvent[] {

@@ -19,6 +19,13 @@ const HistoryIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
+const InsightsIcon = ({ active }: { active: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4l1.9 6.1L19 12l-6.1 1.9L11 20l-1.9-6.1L3 12l6.1-1.9z"></path>
+    <path d="M19 2v4M17 4h4" fill="none"></path>
+  </svg>
+);
+
 const ReportsIcon = ({ active }: { active: boolean }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke={active ? 'none' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -42,6 +49,7 @@ export default function BottomNav() {
   const tabs = [
     { name: 'Home', path: '/', icon: HomeIcon },
     { name: 'History', path: '/history', icon: HistoryIcon },
+    { name: 'Insights', path: '/insights', icon: InsightsIcon },
     { name: 'Reports', path: '/reports', icon: ReportsIcon },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ];
@@ -65,7 +73,7 @@ export default function BottomNav() {
               textDecoration: 'none',
               color: isActive ? 'var(--link)' : 'var(--text-secondary)',
               gap: '4px',
-              width: '25%',
+              width: `${100 / tabs.length}%`,
               paddingTop: '8px',
               position: 'relative',
             }}

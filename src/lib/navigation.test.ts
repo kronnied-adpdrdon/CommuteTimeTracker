@@ -8,7 +8,7 @@ describe('Android Back', () => {
   });
 
   it('on another tab, goes to Home', () => {
-    for (const tab of ['/history', '/reports', '/settings', '/settings/']) {
+    for (const tab of ['/history', '/insights', '/reports', '/settings', '/settings/']) {
       expect(backAction(tab, true)).toEqual({ kind: 'replace', path: '/' });
     }
   });
@@ -22,5 +22,6 @@ describe('Android Back', () => {
     expect(backAction('/settings/sharing', false)).toEqual({ kind: 'replace', path: '/settings' });
     expect(backAction('/terms/', false)).toEqual({ kind: 'replace', path: '/settings' });
     expect(backAction('/pricing', false)).toEqual({ kind: 'replace', path: '/' });
+    expect(backAction('/wrap', false)).toEqual({ kind: 'replace', path: '/insights' });
   });
 });
