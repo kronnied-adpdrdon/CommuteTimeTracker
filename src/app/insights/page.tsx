@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import pageStyles from '../page.module.css';
 import styles from './insights.module.css';
@@ -7,7 +8,7 @@ import InsightIcon from '@/components/InsightIcon';
 import { SectionHeading, StatStrip } from '@/components/StatStrip';
 import WrapReadyCard from '@/components/WrapReadyCard';
 import { useCommute } from '@/lib/commute';
-import { compareDistance, compareTime, formatDaysHours, formatHours } from '@/lib/insights/equivalents';
+import { Analogy, analogies, compareDistance, dayNumber, firstTiles, formatDaysHours, formatHours, nextTile } from '@/lib/insights/equivalents';
 import { IconName } from '@/lib/insights/icons';
 import { useWrapsSeen } from '@/lib/insights/seen';
 import {
@@ -36,10 +37,66 @@ function Line({ icon, children }: { icon: IconName; children: React.ReactNode })
   );
 }
 
+/** Steps through a list of comparisons, one tap at a time. */
+function useTurns(length: number): [number, () => void] {
+  const [turn, setTurn] = useState(0);
+  return [turn, () => setTurn((t) => (t + 1) % Math.max(1, length))];
+}
+
+const at = (list: Analogy[], turn: number, i: number) => (list.length > i ? list[(turn + i) % list.length] : null);
+
+/** One comparison as a line of text; tapping shows the next one. */
+function AnalogyLine({ list, lead }: { list: Analogy[]; lead: string }) {
+  const [turn, next] = useTurns(list.length);
+  const a = at(list, turn, 0);
+  if (!a) return null;
+  return (
+    <button className={`${styles.line} ${styles.lineButton}`} onClick={next} aria-label={`${lead} ${a.value} ${a.label}. Tap for another comparison.`}>
+      <span className={styles.lineIcon}>
+        <InsightIcon name={a.icon} size={18} />
+      </span>
+      <span key={a.id} className={styles.swapIn}>
+        {lead} <strong>{a.value}</strong> {a.label}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * The All-time tiles: two distance comparisons, then two time ones. Each tile changes on its own when tapped, and no
+ * two tiles ever show the same comparison or the same sort of thing (see `nextTile`).
+ */
+function AnalogyGrid({ far, long }: { far: Analogy[]; long: Analogy[] }) {
+  const [set, setSet] = useState(() => firstTiles([far, far, long, long]));
+  return (
+    <div className={styles.tiles}>
+      {set.picks.map((pick, tile) => {
+        const a = set.lists[tile][pick];
+        return a && <AnalogyTile key={tile} a={a} onTap={() => setSet((s) => nextTile(s, tile))} />;
+      })}
+    </div>
+  );
+}
+
+function AnalogyTile({ a, onTap }: { a: Analogy; onTap: () => void }) {
+  return (
+    <button className={styles.tile} onClick={onTap} aria-label={`${a.value} ${a.label}. Tap for another comparison.`}>
+      <span key={a.id} className={styles.swapIn}>
+        <span className={styles.tileIcon}>
+          <InsightIcon name={a.icon} size={18} />
+        </span>
+        <span className={styles.tileValue}>{a.value}</span>
+        <span className={styles.tileLabel}>{a.label}</span>
+      </span>
+    </button>
+  );
+}
+
 function ThisMonth({ trips, now }: { trips: Trip[]; now: number }) {
   const month = startOfMonth(new Date(now));
   const t = totals(between(trips, month.getTime(), now + 1));
   const distance = compareDistance(t.totalMeters);
+  const time = analogies('time', t.totalSeconds, dayNumber(now));
   return (
     <div className={pageStyles.summaryCard}>
       <SectionHeading icon="calendar">{monthName(month.getMonth())} so far</SectionHeading>
@@ -51,15 +108,19 @@ function ThisMonth({ trips, now }: { trips: Trip[]; now: number }) {
         ]}
       />
       {distance && <Line icon="route">{distance.text}, this month</Line>}
+      <AnalogyLine list={time} lead="Time enough for" />
     </div>
   );
 }
 
-function AllTime({ trips }: { trips: Trip[] }) {
+function AllTime({ trips, now }: { trips: Trip[]; now: number }) {
   const t = totals(trips);
   const first = Math.min(...trips.map((trip) => trip.startedAt));
   const distance = compareDistance(t.totalMeters);
-  const time = compareTime(t.totalSeconds);
+  const day = dayNumber(now);
+  // The route line may already be "once around the Earth": don't say it twice.
+  const far = analogies('distance', t.totalMeters, day, distance?.text.includes('Earth') ? ['earth'] : []);
+  const long = analogies('time', t.totalSeconds, day);
   return (
     <div className={pageStyles.card}>
       <SectionHeading icon="chart">All time</SectionHeading>
@@ -70,7 +131,12 @@ function AllTime({ trips }: { trips: Trip[] }) {
         </div>
       </div>
       {distance && <Line icon="route">{distance.text}</Line>}
-      {time && <Line icon="film">{time[0].toUpperCase() + time.slice(1)}</Line>}
+      {far.length + long.length > 0 && (
+        <>
+          <AnalogyGrid key={[...far, ...long].map((x) => x.id).join()} far={far} long={long} />
+          <p className={pageStyles.cardText}>Tap a tile for another comparison.</p>
+        </>
+      )}
     </div>
   );
 }
@@ -226,7 +292,7 @@ export default function InsightsPage() {
             <ThisMonth trips={trips} now={now} />
             <YourWeek trips={trips} now={now} />
             <Records trips={trips} />
-            <AllTime trips={trips} />
+            <AllTime trips={trips} now={now} />
             <Wraps trips={trips} now={now} />
           </>
         )}

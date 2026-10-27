@@ -14,6 +14,7 @@
   --accent: #ffb400;
   --track: rgba(244, 242, 236, 0.22);
   --on-accent: #16181d;
+  --tile: rgba(244, 242, 236, 0.08);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   position: fixed;
@@ -39,6 +40,7 @@
   --accent: #ffb400;
   --track: rgba(244, 242, 236, 0.22);
   --on-accent: #16181d;
+  --tile: rgba(244, 242, 236, 0.08);
 }
 
 .amber {
@@ -51,6 +53,7 @@
   --accent: #16181d;
   --track: rgba(22, 24, 29, 0.2);
   --on-accent: #ffb400;
+  --tile: rgba(22, 24, 29, 0.09);
 }
 
 .concrete {
@@ -63,6 +66,7 @@
   --accent: #8a5f00;
   --track: rgba(22, 24, 29, 0.14);
   --on-accent: #ffffff;
+  --tile: rgba(22, 24, 29, 0.05);
 }
 
 /* The card's colour. The new card's backdrop fades in over the old one, so colours blend instead of flashing. */
@@ -589,24 +593,40 @@
   }
 }
 
-/* Time: one tile per film. */
-.tiles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Everyday comparisons under the distance and time numbers. */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.tile {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--accent);
-  color: var(--on-accent);
+.compareTile {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  animation: pop 0.5s var(--spring) forwards;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 16px 18px;
+  border-radius: 20px;
+  background: var(--tile);
+}
+
+.compareIcon {
+  display: flex;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.compareValue {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 11vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.compareLabel {
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--muted);
 }
 
 /* Office days: the month as a calendar, office days filled. */
@@ -813,7 +833,6 @@
 
 /* Less motion asked for, or a card being left (shown as it ended): everything in its final state, no animation. */
 .leaving .reveal,
-.leaving .tile,
 .leaving .calendarDay,
 .leaving .sign,
 .leaving .bar,
@@ -834,7 +853,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .tile,
   .calendarDay,
   .sign,
   .bar,

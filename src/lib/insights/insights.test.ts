@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Trip, TripDirection } from '../trips/types';
-import { compareDistance, compareTime, formatDaysHours, formatHours } from './equivalents';
+import { analogies, compareDistance, dayNumber, firstTiles, formatDaysHours, formatHours, nextTile } from './equivalents';
 import { wrapCards } from './cards';
 import { parseSeen } from './seen';
 import { goingVsComingBack, officeDays, records, weekdayPattern } from './stats';
@@ -33,18 +33,83 @@ describe('everyday comparisons', () => {
     expect(compareDistance(1_000)).toBeNull();
   });
 
-  it('words time as movies, or podcast episodes when short', () => {
-    expect(compareTime(33 * 3600)).toBe("13 movies' worth of time");
-    expect(compareTime(2 * 3600)).toBe('2 podcast episodes of time');
-    expect(compareTime(10 * 60)).toBeNull();
-  });
-
   it('formats headline hours and days', () => {
     expect(formatHours(33 * 3600 + 1800)).toBe('33 h');
     expect(formatHours(4 * 3600 + 20 * 60)).toBe('4 h 20 min');
     expect(formatHours(45 * 60)).toBe('45 min');
     expect(formatDaysHours((4 * 24 + 6) * 3600)).toBe('4 days 6 hours');
     expect(formatDaysHours(3600)).toBe('1 hour');
+  });
+});
+
+describe('everyday comparisons for Insights', () => {
+  const ids = (list: { id: string }[]) => list.map((a) => a.id);
+
+  it('only offers sensible numbers', () => {
+    for (const a of [...analogies('distance', 500_000, 0), ...analogies('time', 30 * 3600, 0)]) {
+      const n = Number(a.value.replace(/[,%]/g, ''));
+      expect(n).toBeGreaterThanOrEqual(a.value.endsWith('%') ? 1 : 2);
+      expect(n).toBeLessThanOrEqual(500);
+    }
+    expect(analogies('distance', 500_000, 0).find((a) => a.id === 'marathon')).toMatchObject({ value: '11', label: 'marathons' });
+  });
+
+  it('keeps the Earth and the Moon for big totals only', () => {
+    expect(ids(analogies('distance', 600_000, 0))).not.toContain('moon');
+    expect(ids(analogies('distance', 600_000, 0))).not.toContain('earth');
+    const year = analogies('distance', 45_000_000, 0);
+    expect(year.find((a) => a.id === 'earth')).toMatchObject({ value: '1', label: 'trip around the Earth' });
+    expect(year.find((a) => a.id === 'moon')).toMatchObject({ value: '11%', label: 'of the way to the Moon' });
+  });
+
+  it('takes turns at the top from day to day, and skips what is already shown', () => {
+    const today = analogies('time', 40 * 3600, 100);
+    const tomorrow = analogies('time', 40 * 3600, 101);
+    expect(today[0].id).not.toBe(tomorrow[0].id);
+    expect(new Set(ids(today))).toEqual(new Set(ids(tomorrow)));
+    expect(ids(analogies('time', 40 * 3600, 100, ['movies']))).not.toContain('movies');
+    expect(dayNumber(new Date(2026, 9, 26, 23, 59).getTime()) - dayNumber(new Date(2026, 9, 26, 0, 1).getTime())).toBe(0);
+  });
+
+  it('never shows the same comparison or topic on two of the four tiles, however they are tapped', () => {
+    for (const [meters, seconds] of [[1_163_000, 63 * 3600], [45_000_000, 300 * 3600], [600_000, 25 * 3600]]) {
+      const far = analogies('distance', meters, 3);
+      const long = analogies('time', seconds, 3);
+      let set = firstTiles([far, far, long, long]);
+      const check = () => {
+        const shown = set.picks.flatMap((p, t) => (p < 0 ? [] : [set.lists[t][p]]));
+        expect(new Set(shown.map((a) => a.id)).size).toBe(shown.length);
+        expect(new Set(shown.map((a) => a.topic)).size).toBe(shown.length);
+      };
+      check();
+      // Every tile, tapped many times in a mixed order.
+      for (let i = 0; i < 60; i++) {
+        set = nextTile(set, (i * 7) % 4);
+        check();
+      }
+    }
+  });
+
+  it('keeps the Moon distance and the Apollo trip apart, and rail apart from rail', () => {
+    const far = analogies('distance', 45_000_000, 0);
+    const long = analogies('time', 300 * 3600, 0);
+    expect(far.find((a) => a.id === 'moon')?.topic).toBe(long.find((a) => a.id === 'apollo')?.topic);
+    const commute = analogies('distance', 1_163_000, 0);
+    expect(commute.find((a) => a.id === 'delhi-metro')?.topic).toBe(long.find((a) => a.id === 'rajdhani')?.topic);
+  });
+
+  it('changes only the tapped tile', () => {
+    const far = analogies('distance', 1_163_000, 3);
+    const long = analogies('time', 63 * 3600, 3);
+    const set = firstTiles([far, far, long, long]);
+    const after = nextTile(set, 1);
+    expect(after.picks[1]).not.toBe(set.picks[1]);
+    expect([after.picks[0], after.picks[2], after.picks[3]]).toEqual([set.picks[0], set.picks[2], set.picks[3]]);
+  });
+
+  it('mixes Indian and global references for time', () => {
+    const all = ids(analogies('time', 200 * 3600, 0));
+    expect(all).toEqual(expect.arrayContaining(['rajdhani', 'london', 'test', 'apollo']));
   });
 });
 
@@ -141,7 +206,14 @@ describe('wraps', () => {
     expect(s.distance).toMatchObject({ text: 'As far as Bengaluru → Chennai', from: 'Bengaluru', to: 'Chennai', times: 1 });
     expect(s.calendar).toHaveLength(31);
     expect(s.calendar!.filter((d) => d.office)).toHaveLength(22);
-    expect(s.movies).toBe(Math.floor((22 * 85 * 60) / 9000));
+    const all = [...s.comparisons.distance, ...s.comparisons.time];
+    expect(s.comparisons.distance.length).toBe(2);
+    expect(s.comparisons.time.length).toBe(2);
+    expect(new Set(all.map((c) => c.topic)).size).toBe(4);
+    // Movies lead the time card, as a tile like the rest.
+    expect(s.comparisons.time[0]).toMatchObject({ id: 'movies', value: '12', label: 'movies' });
+    // The same Wrap always shows the same comparisons.
+    expect(summarizeWrap(periodFor('month-2026-10', trips)!, trips, Date.now() + 5 * 86_400_000).comparisons).toEqual(s.comparisons);
   });
 
   it('picks the quickest and busiest months in a year', () => {

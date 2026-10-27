@@ -22,9 +22,10 @@ import {
   paragraph,
   roundRect,
   sign,
+  wrapLines,
 } from './canvas';
 import { WrapCardId, WrapCardInfo, wrapCards } from './cards';
-import { formatHours } from './equivalents';
+import { Analogy, formatHours } from './equivalents';
 import { IconName } from './icons';
 import { weekdayName, weekdayOf } from './stats';
 import { WrapSummary, wrapName } from './wraps';
@@ -255,10 +256,10 @@ function introCard(ctx: Ctx, p: Palette, s: WrapSummary) {
 
 function distanceCard(ctx: Ctx, p: Palette, s: WrapSummary) {
   const d = s.distance!;
-  question(ctx, p, 'How far did you go?', 560);
-  huge(ctx, p, km(s.totalMeters), 'km', 870);
+  question(ctx, p, 'How far did you go?', 520);
+  huge(ctx, p, km(s.totalMeters), 'km', 800);
 
-  const y = 1060;
+  const y = 960;
   if (d.from && d.to) {
     const x0 = PAD + 22;
     const x1 = PAD + INNER - 26;
@@ -307,34 +308,40 @@ function distanceCard(ctx: Ctx, p: Palette, s: WrapSummary) {
     circle(ctx, PAD + 110, y - 40, 22);
     ctx.fill();
   }
-  answer(ctx, p, `${d.text}.`, 1360);
+  const below = answer(ctx, p, `${d.text}.`, 1240);
+  comparisonTiles(ctx, p, s.comparisons.distance, below + 30);
+}
+
+/** Lowest y a card's content may reach, leaving clear space above the footer. */
+const CONTENT_END = 1650;
+const COMPARE_HEIGHT = 262;
+
+/** Up to two comparisons side by side, as on the Wrap screen: icon, big number, what it counts. */
+function comparisonTiles(ctx: Ctx, p: Palette, list: Analogy[], y: number) {
+  if (list.length === 0 || y + COMPARE_HEIGHT > CONTENT_END) return;
+  const gap = 24;
+  const w = (INNER - gap) / 2;
+  list.slice(0, 2).forEach((a, i) => {
+    const x = PAD + i * (w + gap);
+    ctx.fillStyle = p.dark ? 'rgba(244, 242, 236, 0.08)' : 'rgba(22, 24, 29, 0.07)';
+    roundRect(ctx, x, y, w, COMPARE_HEIGHT, 30);
+    ctx.fill();
+    icon(ctx, a.icon, x + 56, y + 54, 50, p.accent, 2.2);
+    ctx.fillStyle = p.ink;
+    fit(ctx, a.value, 700, 96, 'd', w - 64);
+    ctx.fillText(a.value, x + 32, y + 158);
+    ctx.fillStyle = p.muted;
+    ctx.font = font(500, 34, 'b');
+    const lines = wrapLines(ctx, a.label, w - 64);
+    lines.slice(0, 2).forEach((line, l) => ctx.fillText(l === 1 && lines.length > 2 ? `${line}…` : line, x + 32, y + 204 + l * 38));
+  });
 }
 
 function timeCard(ctx: Ctx, p: Palette, s: WrapSummary) {
   question(ctx, p, 'How long were you on the road?', 560);
   const baseline = huge(ctx, p, formatHours(s.totalSeconds), '', 920);
-  let y = baseline + 90;
-  if (s.movies >= 2) {
-    const perTile = Math.max(1, Math.ceil(s.movies / 40));
-    const tiles = Math.ceil(s.movies / perTile);
-    const size = tiles > 24 ? 80 : 100;
-    const gap = size * 0.16;
-    const perRow = Math.floor((INNER + gap) / (size + gap));
-    for (let i = 0; i < tiles; i++) {
-      const tx = PAD + (i % perRow) * (size + gap);
-      const ty = y + Math.floor(i / perRow) * (size + gap);
-      ctx.fillStyle = p.accent;
-      roundRect(ctx, tx, ty, size, size, size * 0.26);
-      ctx.fill();
-      icon(ctx, 'film', tx + size / 2, ty + size / 2, size * 0.55, p.onAccent, 2);
-    }
-    y += Math.ceil(tiles / perRow) * (size + gap) + 70;
-    const words = s.time ? s.time[0].toUpperCase() + s.time.slice(1) : 'Time well spent';
-    y = answer(ctx, p, `${words}${perTile > 1 ? ` (each tile is ${perTile} films)` : ''}.`, y);
-  } else if (s.time) {
-    y = answer(ctx, p, `${s.time[0].toUpperCase() + s.time.slice(1)}.`, y + 40);
-  }
-  note(ctx, p, 'Time for podcasts, music and calls home.', y + 10);
+  const below = answer(ctx, p, "That's time enough for:", baseline + 130);
+  comparisonTiles(ctx, p, s.comparisons.time, below + 30);
 }
 
 /** One bar per month, the highlighted one solid and the rest faded; dashed outlines for months with nothing. */

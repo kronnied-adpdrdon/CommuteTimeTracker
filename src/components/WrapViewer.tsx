@@ -6,7 +6,7 @@ import styles from '@/app/wrap/wrap.module.css';
 import InsightIcon from '@/components/InsightIcon';
 import Switch from '@/components/Switch';
 import { useCommute } from '@/lib/commute';
-import { formatHours } from '@/lib/insights/equivalents';
+import { Analogy, formatHours } from '@/lib/insights/equivalents';
 import { wrapsSeen } from '@/lib/insights/seen';
 import { GLOWS, WrapCardId, WrapCardInfo, wrapCards } from '@/lib/insights/cards';
 import { HASHTAG, ShareFormat, drawCard, drawShareCard, drawStory, toPng } from '@/lib/insights/shareImage';
@@ -56,6 +56,24 @@ function Reveal({ step, children, style }: { step: 1 | 2 | 3 | 4; children: Reac
 }
 
 const km = (meters: number) => Math.round(meters / 1000);
+
+/** Everyday comparisons under a card's main number, as on Insights' All-time tiles (not tappable here). */
+function Comparisons({ list }: { list: Analogy[] }) {
+  if (list.length === 0) return null;
+  return (
+    <div className={styles.compare}>
+      {list.map((a) => (
+        <div key={a.id} className={styles.compareTile}>
+          <span className={styles.compareIcon}>
+            <InsightIcon name={a.icon} size={24} />
+          </span>
+          <span className={styles.compareValue}>{a.value}</span>
+          <span className={styles.compareLabel}>{a.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 const WEEK_HEAD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 function IntroCard({ s }: { s: WrapSummary }) {
@@ -133,16 +151,14 @@ function DistanceCard({ s }: { s: WrapSummary }) {
       <Reveal step={3}>
         <div className={styles.answer}>{d.text}.</div>
       </Reveal>
+      <Reveal step={4}>
+        <Comparisons list={s.comparisons.distance} />
+      </Reveal>
     </>
   );
 }
 
-/** At most this many film tiles; above it, each tile stands for several films. */
-const MAX_TILES = 40;
-
 function TimeCard({ s }: { s: WrapSummary }) {
-  const perTile = Math.max(1, Math.ceil(s.movies / MAX_TILES));
-  const tiles = Math.ceil(s.movies / perTile);
   return (
     <>
       <Reveal step={1}>
@@ -153,21 +169,11 @@ function TimeCard({ s }: { s: WrapSummary }) {
           <CountUp to={Math.floor(s.totalSeconds / 60)} format={(m) => formatHours(m * 60)} />
         </div>
       </Reveal>
-      {s.movies >= 2 && (
-        <div className={styles.tiles} aria-hidden>
-          {Array.from({ length: tiles }, (_, i) => (
-            <span key={i} className={styles.tile} style={{ animationDelay: `${0.7 + i * 0.04}s` }}>
-              <InsightIcon name="film" size={18} />
-            </span>
-          ))}
-        </div>
-      )}
+      <Reveal step={2}>
+        <div className={styles.answer}>That&apos;s time enough for:</div>
+      </Reveal>
       <Reveal step={3}>
-        <div className={styles.answer}>
-          {s.time ? s.time[0].toUpperCase() + s.time.slice(1) : 'Time well spent'}
-          {perTile > 1 ? ` (each tile is ${perTile} films)` : ''}.
-        </div>
-        <div className={styles.note} style={{ marginTop: '6px' }}>Time for podcasts, music and calls home.</div>
+        <Comparisons list={s.comparisons.time} />
       </Reveal>
     </>
   );

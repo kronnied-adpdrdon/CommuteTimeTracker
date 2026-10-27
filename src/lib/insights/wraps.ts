@@ -1,5 +1,5 @@
 import { Trip } from '../trips/types';
-import { DistanceComparison, MOVIE_SECONDS, compareDistance, compareTime } from './equivalents';
+import { Analogy, DistanceComparison, analogies, compareDistance, dayNumber, firstTiles } from './equivalents';
 import { dayKey } from '../trips/stats';
 import { IconName } from './icons';
 import { Totals, average, between, commutes, counted, minuteOfDay, officeDays, quickest, totals } from './stats';
@@ -245,9 +245,11 @@ export interface WrapSummary extends Totals {
   fastest: Trip | null;
   personality: Personality;
   distance: DistanceComparison | null;
-  time: string | null;
-  /** Whole films that fit in the time on the road. */
-  movies: number;
+  /**
+   * Everyday comparisons for the distance and time cards, up to two each, never repeating one another (Insights'
+   * rule). Fixed for the Wrap, so the cards and their share images always agree.
+   */
+  comparisons: { distance: Analogy[]; time: Analogy[] };
   /** Monthly and first-month: every day of the period, and whether it was an office day. */
   calendar?: CalendarDay[];
   /** Yearly only: January to the last month so far. */
@@ -268,8 +270,7 @@ export function summarizeWrap(period: WrapPeriod, trips: Trip[], now: number): W
     fastest: quickest(commutes(inPeriod)),
     personality: personalityFor(inPeriod),
     distance: compareDistance(sums.totalMeters),
-    time: compareTime(sums.totalSeconds),
-    movies: Math.floor(sums.totalSeconds / MOVIE_SECONDS),
+    comparisons: wrapComparisons(sums.totalMeters, sums.totalSeconds, period, compareDistance(sums.totalMeters)),
   };
   if (period.kind === 'year') {
     const year = new Date(period.from).getFullYear();
@@ -295,6 +296,20 @@ export function summarizeWrap(period: WrapPeriod, trips: Trip[], now: number): W
     }
   }
   return summary;
+}
+
+/**
+ * Two distance and two time comparisons for a Wrap. Movies lead on the time card when they fit, as the comparison
+ * everyone gets; the Earth is left out when the route line already says "once around the Earth".
+ */
+function wrapComparisons(meters: number, seconds: number, period: WrapPeriod, route: DistanceComparison | null) {
+  const day = dayNumber(period.from);
+  const far = analogies('distance', meters, day, route?.text.includes('Earth') ? ['earth'] : []);
+  const time = analogies('time', seconds, day);
+  const long = [...time.filter((a) => a.id === 'movies'), ...time.filter((a) => a.id !== 'movies')];
+  const set = firstTiles([far, far, long, long]);
+  const shown = (tiles: number[]) => tiles.flatMap((t) => (set.picks[t] >= 0 ? [set.lists[t][set.picks[t]]] : []));
+  return { distance: shown([0, 1]), time: shown([2, 3]) };
 }
 
 /** What the Wrap is called on screen and on share cards: "October 2026 Wrap", "2026 Wrap", "My first month with MYCE". */
